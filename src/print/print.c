@@ -35,11 +35,11 @@ struct INFO {
 static info *MakeInfo()
 {
   info *result;
-  
+
   result = MEMmalloc(sizeof(info));
 
   INFO_FIRSTERROR(result) = FALSE;
-  
+
   return result;
 }
 
@@ -72,9 +72,93 @@ PRTstmts (node * arg_node, info * arg_info)
   DBUG_ENTER ("PRTstmts");
 
   STMTS_STMT( arg_node) = TRAVdo( STMTS_STMT( arg_node), arg_info);
-  
+
   STMTS_NEXT( arg_node) = TRAVopt( STMTS_NEXT( arg_node), arg_info);
-  
+
+  DBUG_RETURN (arg_node);
+}
+
+/** <!--******************************************************************-->
+ *
+ * @fn PRTfundec
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node BinOp node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTfundec (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTfundec");
+
+  DBUG_RETURN (arg_node);
+}
+
+/** <!--******************************************************************-->
+ *
+ * @fn PRTfundef
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node fundec node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTfundef (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTfundef");
+
+  DBUG_RETURN (arg_node);
+}
+
+/** <!--******************************************************************-->
+ *
+ * @fn PRTfundec
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node fundef node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTglobaldec (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTglobaldec");
+
+  DBUG_RETURN (arg_node);
+}
+
+/** <!--******************************************************************-->
+ *
+ * @fn PRTfundec
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node BinOp node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTglobaldef (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTglobaldef");
+
   DBUG_RETURN (arg_node);
 }
 
@@ -101,11 +185,124 @@ PRTassign (node * arg_node, info * arg_info)
     ASSIGN_LET( arg_node) = TRAVdo( ASSIGN_LET( arg_node), arg_info);
     printf( " = ");
   }
-  
+
   ASSIGN_EXPR( arg_node) = TRAVdo( ASSIGN_EXPR( arg_node), arg_info);
-  
+
   printf( ";\n");
-  
+
+  DBUG_RETURN (arg_node);
+}
+
+/** <!--******************************************************************-->
+ *
+ * @fn PRTif
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node If node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTif (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTif");
+
+  printf("if");
+
+  DBUG_RETURN (arg_node);
+}
+
+/** <!--******************************************************************-->
+ *
+ * @fn PRTwhile
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node While node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTwhile (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTwhile");
+
+  printf("while");
+
+  DBUG_RETURN (arg_node);
+}
+
+/** <!--******************************************************************-->
+ *
+ * @fn PRTDo
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node do node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTdo (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTdo");
+
+  printf("do");
+
+  DBUG_RETURN (arg_node);
+}
+
+/** <!--******************************************************************-->
+ *
+ * @fn PRTfor
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node for node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTfor (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTfor");
+
+  printf("for");
+
+  DBUG_RETURN (arg_node);
+}
+
+/** <!--******************************************************************-->
+ *
+ * @fn PRTreturn
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node return node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTreturn (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTreturn");
+
   DBUG_RETURN (arg_node);
 }
 
@@ -187,6 +384,29 @@ PRTbinop (node * arg_node, info * arg_info)
   DBUG_RETURN (arg_node);
 }
 
+/** <!--******************************************************************-->
+ *
+ * @fn PRTif
+ *
+ * @brief Prints the node and its sons/attributes
+ *
+ * @param arg_node If node to process
+ * @param arg_info pointer to info structure
+ *
+ * @return processed node
+ *
+ ***************************************************************************/
+
+node *
+PRTmonop (node * arg_node, info * arg_info)
+{
+  DBUG_ENTER ("PRTmonop");
+
+  printf("Random monop");
+
+  DBUG_RETURN (arg_node);
+}
+
 
 /** <!--******************************************************************-->
  *
@@ -261,7 +481,7 @@ PRTbool (node * arg_node, info * arg_info)
   else {
     printf( "false");
   }
-  
+
   DBUG_RETURN (arg_node);
 }
 
@@ -387,17 +607,17 @@ PRTerror (node * arg_node, info * arg_info)
 
 /** <!-- ****************************************************************** -->
  * @brief Prints the given syntaxtree
- * 
+ *
  * @param syntaxtree a node structure
- * 
+ *
  * @return the unchanged nodestructure
  ******************************************************************************/
 
-node 
+node
 *PRTdoPrint( node *syntaxtree)
 {
   info *info;
-  
+
   DBUG_ENTER("PRTdoPrint");
 
   DBUG_ASSERT( (syntaxtree!= NULL), "PRTdoPrint called with empty syntaxtree");
@@ -405,7 +625,7 @@ node
   printf( "\n\n------------------------------\n\n");
 
   info = MakeInfo();
-  
+
   TRAVpush( TR_prt);
 
   syntaxtree = TRAVdo( syntaxtree, info);
