@@ -152,7 +152,7 @@ expr: ID
       {
         $$ = TBmakeBinop( $3, $2, $4);
       }
-    | INTVAL<F3>
+    | INTVAL
       {
         $$ = TBmakeNum($1);
       }
