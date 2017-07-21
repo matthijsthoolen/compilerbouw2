@@ -77,4 +77,4 @@ scanparse   = civic.tab.o civic.lex.o
 
 print       = print.o
 
-codegen     = gen_byte_code.io
+codegen     = gen_byte_code.o

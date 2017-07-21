@@ -63,11 +63,22 @@ ty: BOOL    { $$ = TY_bool; }
   | FLOAT   { $$ = TY_float; } 
   | VOID    { $$ = TY_void; };
 
-program: stmts 
-         {
-           parseresult = $1;
-         }
-         ;
+program: {
+            DBUG_ASSERT(cur_scope== NULL, "program is not reentrant");
+            cur_scope = TBmakeScope(NULL, NULL);
+            SCOPE_VARSTAIL(cur_scope) = &SCOPE_VARS(cur_scope);
+            SCOPE_FUNSTAIL(cur_scope) = &SCOPE_FUNS(cur_scope);
+         } 
+         program_
+        {
+            DBUG_ASSERT(cur_scope_is_global(), "current scope is not global");
+            parseresult = TBmakeProgram(cur_scope);
+            cur_scope = NULL;
+        };
+
+program_: global_prefix     fun     { FUN_PREFIX($2) = $1; } program_    {}
+        | global_prefix     vardef  { VARDEF_PREFIX($2) = $1; } program_ {}
+        |                                                                {};
 
 global_prefix: EXTERN { $$ = global_prefix_extern; }
              | EXPORT { $$ = global_prefix_export; }
