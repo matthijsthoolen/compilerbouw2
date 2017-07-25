@@ -9,11 +9,13 @@
 
 struct INFO {
     node *currentScope;
+    bool checkedFun;
     int externalFuns;
     int externalVars;
 };
 
 #define INFO_CURSCOPE(n)        ((n)->currentScope)
+#define INFO_CHECKEDFUN(n)      ((n)->checkedFun)
 #define INFO_EXTERNALFUNS(n)    ((n)->externalFuns)
 #define INFO_EXTERNALVARS(n)    ((n)->externalVars)
 
@@ -24,9 +26,10 @@ static info *MakeInfo()
     info *result;
 
     result = MEMmalloc(sizeof(info));
-    INFO_CURSCOPE(result) = NULL;
-    INFO_EXTERNALFUNS(result) = 0;
-    INFO_EXTERNALVARS(result) = 0;    
+    INFO_CURSCOPE(result)       = NULL;
+    INFO_EXTERNALFUNS(result)   = 0;
+    INFO_EXTERNALVARS(result)   = 0;    
+    INFO_CHECKEDFUN(result)     = FALSE;
 
     DBUG_RETURN(result);
 }
@@ -57,6 +60,22 @@ void registerFunction(node *function, info *arg_info)
         
 }
 
+/**
+ * Check a function if not checked already
+ */
+void checkFunction(node *fun, info *arg_info)
+{
+
+    if (INFO_CHECKEDFUN(arg_info) == TRUE) {
+        printf("Already checked");
+        return;
+    }
+
+    printf("Not checked yet");
+    INFO_CHECKEDFUN(arg_info) = TRUE;
+
+}
+
 node *CAscope(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAscope");
@@ -80,9 +99,7 @@ node *CAfun(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAfun");
 
-    if (FUN_SCOPE(arg_node) === NULL) {
-        DBUG_RETURN(arg_node);
-    }
+    checkFunction(arg_node, arg_info);
 
     printf("Aangenaam, dit is de grappenmaker van het stel %s \n", FUN_ID(arg_node));
 
