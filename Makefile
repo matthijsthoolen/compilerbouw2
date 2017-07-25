@@ -47,7 +47,6 @@
 
 
 
-
 #######################################################################################
 #
 # general setup:
@@ -118,6 +117,9 @@ devel:
 
 make_devel: makefiles civicc.go 
 
+test: civicc
+	@testsuite/test.sh
+    
 makefiles: $(SOURCE_MAKEFILES)
 
 src/%/Makefile: Makefile.Source

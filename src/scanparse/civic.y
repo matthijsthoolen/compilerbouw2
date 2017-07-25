@@ -8,35 +8,42 @@
 
 #include "types.h"
 #include "tree_basic.h"
+#include "node_basic.h"
 #include "str.h"
 #include "dbug.h"
 #include "ctinfo.h"
 #include "free.h"
 #include "globals.h"
 
-static node *parseresult = NULL;
-
 extern int yylex();
 static int yyerror( char *errname);
+
+static node *parseresult = NULL;
+static node *cur_scope = NULL;
+
+static bool cur_scope_is_global() {
+    return SCOPE_PARENT(cur_scope) == NULL;
+}
 
 %}
 
 %union {
-    node               *node; 
+    node               *node;
     nodetype            nodetype;
     char               *id;
     int                 cint;
     float               cflt;
     binop               cbinop;
-    monop               cminop;
+    monop               cmonop;
     type                ctype;
     enum global_prefix  cglobal_prefix;
 }
 
-%token BRACKET_L BRACKET_R COMMA SEMICOLON ANBRACKET_L ANBRACKET_R SQBRACKET_L SQBRACKET_R 
+%token BRACKET_L BRACKET_R COMMA SEMICOLON
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
 %token TRUEVAL FALSEVAL LET
 %token WHILE DO FOR IF ELSE RETURN BOOL
+%token ANBRACKET_L ANBRACKET_R SQBRACKET_L SQBRACKET_R
 %token NOT EXTERN EXPORT VOID FLOAT INT
 
 %token <cint> INTVAL
@@ -45,172 +52,202 @@ static int yyerror( char *errname);
 
 %type <node> program vardef fun fun_params fun_body_defs fun_body_vardefs
 %type <node> stmts stmt var assign stmt_return
-%type <node> stmt_if stmt_if_else stmt_while stmt_do stmt_for stmt_for_opt
-%type <node> expr
-%type <cbinop> binop
-%type <cmonop> monop
+%type <node> stmt_if stmt_if_else stmt_while stmt_do_while stmt_for stmt_for_
+%type <node> call_args call
+
+%type <node> expr expr0 expr2 expr3 expr4 expr6 expr7 expr11 expr12
+%type <cbinop> binop3 binop4 binop6 binop7 binop11 binop12
+
+%type <cmonop> monop2
 %type <ctype> ty
 %type <cglobal_prefix> global_prefix
 %type <node> vardef_init
-
 
 %start program
 
 %%
 
 ty: BOOL    { $$ = TY_bool; }
-  | INT     { $$ = TY_INT; }
-  | FLOAT   { $$ = TY_float; } 
-  | VOID    { $$ = TY_void; };
+  | INT     { $$ = TY_int; }
+  | FLOAT   { $$ = TY_float; }
+  | VOID    { $$ = TY_void; }
+  ;
+
 
 program: {
-            DBUG_ASSERT(cur_scope== NULL, "program is not reentrant");
+            DBUG_ASSERT(cur_scope == NULL, "program is not reentrant");
             cur_scope = TBmakeScope(NULL, NULL);
             SCOPE_VARSTAIL(cur_scope) = &SCOPE_VARS(cur_scope);
             SCOPE_FUNSTAIL(cur_scope) = &SCOPE_FUNS(cur_scope);
-         } 
+         }
          program_
-        {
+         {
             DBUG_ASSERT(cur_scope_is_global(), "current scope is not global");
             parseresult = TBmakeProgram(cur_scope);
             cur_scope = NULL;
-        };
+         }
+       ;
+program_: global_prefix    fun {    FUN_PREFIX($2) = $1; } program_ {}
+        | global_prefix vardef { VARDEF_PREFIX($2) = $1; } program_ {}
+        |                                                           {}
+        ;
 
-program_: global_prefix     fun     { FUN_PREFIX($2) = $1; } program_    {}
-        | global_prefix     vardef  { VARDEF_PREFIX($2) = $1; } program_ {}
-        |                                                                {};
-
-global_prefix: EXTERN { $$ = global_prefix_extern; }
-             | EXPORT { $$ = global_prefix_export; }
-             |        { $$ = global_prefix_none; };
+global_prefix: EXTERN   { $$ = global_prefix_extern; }
+             | EXPORT   { $$ = global_prefix_export; }
+             |          { $$ = global_prefix_none; }
+             ;
 
 vardef: ty ID vardef_init SEMICOLON
         {
-            $$ = $3;
+            node *x = TBmakeVardef($1, $2, $3, NULL);
+            *SCOPE_VARSTAIL(cur_scope) = x;
+            SCOPE_VARSTAIL(cur_scope) = &VARDEF_NEXT(x);
+            $$ = x;
         };
+vardef_init: LET expr   { $$ = $2; }
+             |          { $$ = NULL; }
+             ;
 
-vardef_init: LET expr { $$ = $2; }
-           |          { $$ = NULL; };
-            
 
-stmts: stmt stmts
-        {
-          $$ = TBmakeStmts( $1, $2);
-        }
-      | { $$ = NULL ;};
+fun_params: ty ID COMMA fun_params  { $$ = TBmakeFunparam($1, $2, $4); }
+          | ty ID                   { $$ = TBmakeFunparam($1, $2, NULL); }
+          |                         { $$ = NULL; }
+          ;
 
-stmt:   assign
-        {
-            $$ = $1;
-        }
-    |   stmt_if
-        {
-            $$ = $1;
-        }
-    |   stmt_while
-        {
-            $$ = $1;
-        }
-    |   stmt_do
-        {
-            $$ = $1;
-        }
-    |   stmt_for
-        {
-            $$ = $1;
-        }
-    |   stmt_return
-        {
-            $$ = $1;
-        };
+fun: ty ID BRACKET_L fun_params BRACKET_R
+     {
+         node *scope = TBmakeScope(NULL, NULL);
+         SCOPE_PARENT(scope) = cur_scope;
+         SCOPE_VARSTAIL(scope) = &SCOPE_VARS(scope);
+         SCOPE_FUNSTAIL(scope) = &SCOPE_FUNS(scope);
+         cur_scope = scope;
+
+         node **tail = &SCOPE_VARS(scope);
+         node *n = $4;
+         while (n != NULL) {
+             node *x = TBmakeVardef(FUNPARAM_TY(n), FUNPARAM_ID(n), NULL, NULL);
+             *tail = x;
+             tail = &VARDEF_NEXT(x);
+             n = FUNPARAM_NEXT(n);
+         }
+     }
+     ANBRACKET_L fun_body_defs stmts ANBRACKET_R
+     {
+         node *body = TBmakeBlock(cur_scope, $9);
+         cur_scope = SCOPE_PARENT(cur_scope);
+
+         node *x = TBmakeFun($1, $2, $4, body, NULL);
+         *SCOPE_FUNSTAIL(cur_scope) = x;
+         SCOPE_FUNSTAIL(cur_scope) = &FUN_NEXT(x);
+
+         $$ = x;
+     };
+
+fun_body_defs: fun_body_vardefs           { $$ = $1; };
+fun_body_vardefs: vardef fun_body_vardefs { $$ = $1; }
+                |                         { $$ = NULL; }
+
+stmts: stmt stmts       { $$ = TBmakeStmts($1, $2); }
+     |                  { $$ = NULL; }
+     ;
+stmt: assign            { $$ = $1; }
+    | call SEMICOLON    { $$ = TBmakeAssign(NULL, $1); }
+    | stmt_if           { $$ = $1; }
+    | stmt_while        { $$ = $1; }
+    | stmt_do_while     { $$ = $1; }
+    | stmt_for          { $$ = $1; }
+    | stmt_return       { $$ = $1; }
+    ;
 
 var: ID { $$ = TBmakeVar($1); };
 
-assign: var LET expr SEMICOLON
-        {
-          $$ = TBmakeAssign( $1, $3);
-        }
-        ;
+assign: var LET expr SEMICOLON { $$ = TBmakeAssign($1, $3); };
 
-stmt_return: RETURN expr SEMICOLON 
-             {
-                $$ = TBmakeReturn($2);
-             };
+call: ID BRACKET_L call_args BRACKET_R  { $$ = TBmakeCall($1, $3); };
+call_args: expr COMMA call_args         { $$ = TBmakeExprlist($1, $3); }
+         | expr                         { $$ = TBmakeExprlist($1, NULL); }
+         |                              { $$ = NULL; }
+         ;
+
+stmt_return: RETURN expr SEMICOLON      { $$ = TBmakeReturn($2); };
 
 stmt_if: IF BRACKET_L expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R stmt_if_else
-        { $$ = TBmakeIf($3, $6, $8); };
-
+            { $$ = TBmakeIf($3, $6, $8); }
+            ;
 stmt_if_else: ELSE ANBRACKET_L stmts ANBRACKET_R    { $$ = $3; }
-            |                                       { $$ = NULL; };
+            |                                       { $$ = NULL; }
+            ;
 
 stmt_while: WHILE BRACKET_L expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R
-        { $$ = TBmakeWhile($3, $6); };
+                { $$ = TBmakeWhile($3, $6); };
 
-stmt_do: DO ANBRACKET_L stmts ANBRACKET_R WHILE BRACKET_L expr BRACKET_R SEMICOLON
-        { $$ = TBmakeDo($3, $7); };
+stmt_do_while: DO ANBRACKET_L stmts ANBRACKET_R WHILE BRACKET_L expr BRACKET_R SEMICOLON
+                { $$ = TBmakeDowhile($3, $7); };
 
-stmt_for: FOR BRACKET_L INT ID LET expr COMMA expr stmt_for_opt BRACKET_R ANBRACKET_L stmts ANBRACKET_R
-        { $$ = TBmakeFor ($4, $6, $8, $9); };
+stmt_for: FOR BRACKET_L INT ID LET expr COMMA expr stmt_for_ BRACKET_R ANBRACKET_L stmts ANBRACKET_R
+                { $$ = TBmakeFor($4, $6, $8, $9, $12); };
+stmt_for_: COMMA expr   { $$ = $2; }
+         |              { $$ = NULL; }
 
-stmt_for_opt: COMMA expr    { $$ = $2; }
-            |               { $$ = NULL; };
-
-expr: ID
-      {
-        $$ = TBmakeVar( STRcpy( $1));
-      }
-    | BRACKET_L expr binop expr BRACKET_R
-      {
-        $$ = TBmakeBinop( $3, $2, $4);
-      }
-    | INTVAL
-      {
-        $$ = TBmakeNum($1);
-      }
-    | FLOATVAL
-      {
-        $$ = TBmakeFloat($1);
-      }     
-    ;
-
-fun_params: ty ID COMMA fun_params { $$ = TBmakeFunParam($1, $2, $4); }
-          | ty ID                  { $$ = TBmakeFunParam($1, $2, NULL); }
-          |                        { $$ = NULL; };
-
-fun: ty ID BRACKET_L fun_params BRACKET_R
-    {
-    }
-    ANBRACKET_L fun_body_defs stmts ANBRACKET_R
-    {
-    };
-
-fun_body_defs: fun_body_vardefs     { $$ = $1; };
-
-fun_body_vardefs: vardef fun_body_vardefs { $$ = $1; }
-
-binop: PLUS      { $$ = BO_add; }
-     | MINUS     { $$ = BO_sub; }
-     | STAR      { $$ = BO_mul; }
-     | SLASH     { $$ = BO_div; }
-     | PERCENT   { $$ = BO_mod; }
-     | LE        { $$ = BO_le; }
-     | LT        { $$ = BO_lt; }
-     | GE        { $$ = BO_ge; }
-     | GT        { $$ = BO_gt; }
-     | EQ        { $$ = BO_eq; }
-     | NE        { $$ = BO_ne; }
-     | OR        { $$ = BO_or; }
-     | AND       { $$ = BO_and; }
+expr: expr12 { $$ = $1; };
+expr12: expr12 binop12 expr11           { $$ = TBmakeBinop($2, $1, $3); }
+      | expr11                          { $$ = $1; }
+      ;
+expr11: expr11 binop11 expr7            { $$ = TBmakeBinop($2, $1, $3); }
+     | expr7                            { $$ = $1; }
+     ;
+expr7: expr7 binop7 expr6               { $$ = TBmakeBinop($2, $1, $3); }
+     | expr6                            { $$ = $1; }
+     ;
+expr6: expr6 binop6 expr4               { $$ = TBmakeBinop($2, $1, $3); }
+     | expr4                            { $$ = $1; }
+     ;
+expr4: expr4 binop4 expr3               { $$ = TBmakeBinop($2, $1, $3); }
+     | expr3                            { $$ = $1; }
+     ;
+expr3: expr3 binop3 expr2               { $$ = TBmakeBinop($2, $1, $3); }
+     | expr2                            { $$ = $1; }
+     ;
+expr2: BRACKET_L ty BRACKET_R expr2     { $$ = TBmakeCast($2, $4); }
+     | monop2 expr2                     { $$ = TBmakeMonop($1, $2); }
+     | expr0                            { $$ = $1; }
+     ;
+expr0: call                             { $$ = $1; }
+     | var                              { $$ = $1; }
+     | FLOATVAL                         { $$ = TBmakeFloat($1); }
+     | INTVAL                           { $$ = TBmakeInt($1); }
+     | TRUEVAL                          { $$ = TBmakeBool(TRUE); }
+     | FALSEVAL                         { $$ = TBmakeBool(FALSE); }
+     | BRACKET_L expr BRACKET_R         { $$ = $2; }
      ;
 
-monop:      MINUS { $$ = MO_neg; }
-     |      NOT   { $$ = MO_NOT; };
-      
+binop12:         OR { $$ = BO_or; };
+binop11:        AND { $$ = BO_and; };
+binop7:          EQ { $$ = BO_eq; }
+      |          NE { $$ = BO_ne; }
+      ;
+binop6:          LT { $$ = BO_lt; }
+      |          LE { $$ = BO_le; }
+      |          GT { $$ = BO_gt; }
+      |          GE { $$ = BO_ge; }
+      ;
+binop4:        PLUS { $$ = BO_add; }
+      |       MINUS { $$ = BO_sub; }
+      ;
+binop3:        STAR { $$ = BO_mul; }
+      |       SLASH { $$ = BO_div; }
+      |     PERCENT { $$ = BO_mod; }
+      ;
+monop2:       MINUS { $$ = MO_neg; }
+      |         NOT { $$ = MO_not; }
+      ;
+
+
 %%
 
 static int yyerror( char *error)
 {
-  CTIabort( "line %d, col %d\nError parsing source code: %s\n", 
+  CTIabort( "line %d, col %d\nError parsing source code: %s\n",
             global.line, global.col, error);
 
   return( 0);
@@ -218,10 +255,12 @@ static int yyerror( char *error)
 
 node *YYparseTree( void)
 {
-  DBUG_ENTER("YYparseTree");
+    DBUG_ENTER("YYparseTree");
 
-  yyparse();
+    // Correct for global.line starting on line 0
+    global.line = 1;
 
-  DBUG_RETURN( parseresult);
+    yyparse();
+
+    DBUG_RETURN( parseresult);
 }
-
