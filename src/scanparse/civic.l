@@ -57,23 +57,23 @@
 "||"                       { FILTER( OR);    }
 
 "="                        { FILTER( LET);    }
-"!"                        { FILTER( NOT);    }
-
-"true"                     { FILTER( TRUEVAL); }
-"false"                    { FILTER( FALSEVAL); }
+"!"                        { FILTER( NOT);  }
 
 "bool"                     { FILTER( BOOL); }
 "do"					   { FILTER( DO); }
 "else"					   { FILTER( ELSE); }
 "extern"                   { FILTER( EXTERN); }
 "export"                   { FILTER( EXPORT); }
+"false"                    { FILTER( FALSEVAL); }
 "float"                    { FILTER( FLOAT); }
 "for"					   { FILTER( FOR); }
 "if"					   { FILTER( IF); }
 "int"                      { FILTER( INT); }
 "return"				   { FILTER( RETURN); }
+"true"                     { FILTER( TRUEVAL); }
 "void"                     { FILTER( VOID); }
 "while"                    { FILTER( WHILE); }
+
 
 [A-Za-z][A-Za-z0-9_]*      { yylval.id = STRcpy(yytext);
                              FILTER( ID);
@@ -90,4 +90,3 @@
 
 [ \t]                      { global.col += yyleng;
                            }
-

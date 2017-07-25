@@ -1,12 +1,5 @@
-<!--
- This XML file is the "command center" of your compiler.
- Here, we define the structure of the abstract syntax tree as well as the
- traversals to process it.
--->
-
 <?xml-stylesheet href="ast.html.xsl" type="text/xsl" name="HTML" media="screen"?>
 <definition version="0.9">
-
   <attributetypes>
     <type name="String" ctype="char*" init="NULL" copy="function" />
     <type name="Int" ctype="int" init="0" copy="literal" />
@@ -15,38 +8,24 @@
     <type name="MonOp" ctype="monop" init="MO_unknown" copy="literal" />
     <type name="BinOp" ctype="binop" init="BO_unknown" copy="literal" />
     <type name="Link" ctype="node*" init="NULL" copy="lookup" />
+    <type name="Link2" ctype="node**" init="NULL" copy="null" />
     <type name="CompilerPhase" ctype="compiler_phase_t" init="PH_initial" copy="literal" />
     <type name="Type" ctype="type" init="TY_unknown" copy="literal" />
     <type name="GlobalPrefix" ctype="enum global_prefix" init="global_prefix_none" copy="literal" />
   </attributetypes>
-  
   <phases>
-	<!-- id is the short id of the traversal
-         name is a descriptive name
-         default gives the default traversal mode
-           user  a user defined function
-           sons  TravSons
-           none  TravNone
-           error TravError
-         include the include file needed for the traversal
-    -->
     <general>
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />
       <traversal id="FREE" name="Free Syntax Tree" default="user" include="free_node.h" />
       <traversal id="CHK" name="Check Syntax Tree" default="user" include="check.h" />
-	  
-		<!--<traversal id="SI" name="Sum ins" default="sons" include="sum_ints.h">
-			<travuser>
-				<node name="Num"/>
-			</travuser>
-		</traversal>
-
-		<traversal id="OS" name="Optimise subtraction" default="sons" include="opt_sub.h">
-			<travuser>
-				<node name="BinOp"/>
-			</travuser>
-		</traversal>-->
+      
+      <traversal id="CA" name="Context analysis" default="sons" include="context.h">
+        <travuser>
+          <node name="Scope" />
+          <node name="Fun" />
+        </travuser>
+      </traversal>
     </general>
   </phases>
   <nodesets>
@@ -55,10 +34,10 @@
         <node name="MonOp" />
         <node name="BinOp" />
         <node name="Var" />
-        <node name="Num" />
+        <node name="Int" />
         <node name="Float" />
         <node name="Bool" />
-        <node name="FunCall" />
+        <node name="Call" />
         <node name="Cast" />
       </target>
     </nodeset>
@@ -67,15 +46,13 @@
         <node name="Assign" />
         <node name="If" />
         <node name="While" />
-        <node name="Do" />
+        <node name="DoWhile" />
         <node name="For" />
         <node name="Return" />
       </target>
     </nodeset>
   </nodesets>
   <syntaxtree>
-  
-	<!-- Node Program: -->
     <node name="Program">
       <description>represents the entire compilation unit</description>
       <sons>
@@ -93,7 +70,6 @@
       </sons>
     </node>
 
-	<!-- Node Scope: -->
     <node name="Scope">
       <description>a (global) scope</description>
       <sons>
@@ -109,7 +85,7 @@
           </targets>
         </son>
         <son name="Funs">
-          <description>the variables defined in this scope</description>
+          <description>the functions defined in this scope</description>
           <targets>
             <target mandatory="no">
               <node name="Fun" />
@@ -133,10 +109,33 @@
             </targets>
           </type>
         </attribute>
+        <attribute name="VarsTail">
+          <description>the tail of Vars (warning! must be initialized after TBmakeScope)</description>
+          <type name="Link2">
+            <targets>
+              <target mandatory="no">
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+        <attribute name="FunsTail">
+          <description>the tail of Funs (warning! must be initialized after TBmakeScope)</description>
+          <type name="Link2">
+            <targets>
+              <target mandatory="no">
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
       </attributes>
     </node>
 
-	<!-- Node VarDef: -->
     <node name="VarDef">
       <description>a variable definition and the remaining definitions in the scope</description>
       <sons>
@@ -164,9 +163,9 @@
         </son>
       </sons>
       <attributes>
-        <attribute name="Export">
-          <description>export the variable (only in global scope)</description>
-          <type name="Bool">
+        <attribute name="Prefix">
+          <description>the prefix of the definition</description>
+          <type name="GlobalPrefix">
             <targets>
               <target mandatory="no">
                 <phases>
@@ -175,7 +174,7 @@
               </target>
             </targets>
           </type>
-        </attribute>
+      </attribute>
         <attribute name="Ty">
           <description>the variable type</description>
           <type name="Type">
@@ -203,7 +202,6 @@
       </attributes>
     </node>
 
-	<!-- Node Fun: -->
     <node name="Fun">
       <description>a function definition and the remaining definitions in the scope</description>
       <sons>
@@ -242,9 +240,9 @@
         </son>
       </sons>
       <attributes>
-        <attribute name="Export">
-          <description>export the variable (only in global scope)</description>
-          <type name="Bool">
+        <attribute name="Prefix">
+          <description>the prefix of the definition</description>
+          <type name="GlobalPrefix">
             <targets>
               <target mandatory="no">
                 <phases>
@@ -281,7 +279,6 @@
       </attributes>
     </node>
 
-	<!-- Node FunParam: -->
     <node name="FunParam">
       <description>a function parameter (must be copied to the body's scope if it exists)</description>
       <sons>
@@ -325,7 +322,6 @@
       </attributes>
     </node>
 
-	<!-- Node Block: -->
     <node name="Block">
       <description>a function block</description>
       <sons>
@@ -354,7 +350,6 @@
       </sons>
     </node>
 
-	<!-- Node Stmts: -->
     <node name="Stmts">
       <description>a list of statements</description>
       <sons>
@@ -362,7 +357,7 @@
           <description>the first statement</description>
           <targets>
             <target mandatory="yes">
-              <node name="Scope" />
+              <set name="Stmt" />
               <phases>
                 <all />
               </phases>
@@ -383,7 +378,7 @@
       </sons>
     </node>
 
-	<!-- Node Assign: -->
+
     <node name="Assign">
       <description>represents assignment statement</description>
       <sons>
@@ -391,7 +386,7 @@
           <description>left hand side variable; can be missing to represent procedure calls</description>
           <targets>
             <target mandatory="no">
-              <set name="Expr" />
+              <node name="Var" />
               <phases>
                 <all />
               </phases>
@@ -412,7 +407,6 @@
       </sons>
     </node>
 
-	<!-- Node if: -->
     <node name="If">
       <description>an if(-else) statement</description>
       <sons>
@@ -431,7 +425,7 @@
           <description>the true block</description>
           <targets>
             <target mandatory="yes">
-              <node name="Block" />
+              <node name="Stmts" />
               <phases>
                 <all />
               </phases>
@@ -442,7 +436,7 @@
           <description>the false block</description>
           <targets>
             <target mandatory="no">
-              <node name="Block" />
+              <node name="Stmts" />
               <phases>
                 <all />
               </phases>
@@ -452,7 +446,6 @@
       </sons>
     </node>
 
-	<!-- Node While: -->
     <node name="While">
       <description>a while statement</description>
       <sons>
@@ -481,9 +474,8 @@
       </sons>
     </node>
 
-	<!-- Node Do: -->
-    <node name="Do">
-      <description>a do statement</description>
+    <node name="DoWhile">
+      <description>a do-while statement</description>
       <sons>
         <son name="Block">
           <description>the block</description>
@@ -510,7 +502,6 @@
       </sons>
     </node>
 
-	<!-- Node For: -->
     <node name="For">
       <description>a for statement</description>
       <sons>
@@ -547,6 +538,17 @@
             </target>
           </targets>
         </son>
+        <son name="Block">
+          <description>the block</description>
+          <targets>
+            <target mandatory="yes">
+              <node name="Block" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
       </sons>
       <attributes>
         <attribute name="Ind">
@@ -564,7 +566,6 @@
       </attributes>
     </node>
 
-	<!-- Node Return: -->
     <node name="Return">
       <description>a return statement</description>
       <sons>
@@ -582,7 +583,7 @@
       </sons>
     </node>
 
-	<!-- Node ExprList: -->
+
     <node name="ExprList">
       <description>a list of expressions</description>
       <sons>
@@ -611,8 +612,7 @@
       </sons>
     </node>
 
-	<!-- Node FunCall: -->
-    <node name="FunCall">
+    <node name="Call">
       <description>a function call expression</description>
       <sons>
         <son name="Args">
@@ -643,7 +643,6 @@
       </attributes>
     </node>
 
-	<!-- Node Cast: -->
     <node name="Cast">
       <description>a cast expression</description>
       <sons>
@@ -675,7 +674,6 @@
       </attributes>
     </node>
 
-	<!-- Node MonOp: -->
     <node name="MonOp">
       <description>represents unary operator application</description>
       <sons>
@@ -707,8 +705,6 @@
         </attribute>
       </attributes>
     </node>
-	
-	<!-- Node BinOp: -->
     <node name="BinOp">
       <description>represents binary operator application</description>
       <sons>
@@ -751,9 +747,7 @@
         </attribute>
       </attributes>
     </node>
-	
-	<!-- Node Int: -->
-    <node name="Num">
+    <node name="Int">
       <description>represents integer constant</description>
       <sons></sons>
       <attributes>
@@ -770,8 +764,6 @@
         </attribute>
       </attributes>
     </node>
-	
-	<!-- Node Float: -->
     <node name="Float">
       <description>represents floating point constant</description>
       <sons></sons>
@@ -789,8 +781,6 @@
         </attribute>
       </attributes>
     </node>
-	
-	<!-- Node Bool -->
     <node name="Bool">
       <description>represents Boolean constant (true/false)</description>
       <sons></sons>
@@ -808,13 +798,11 @@
         </attribute>
       </attributes>
     </node>
-	
-	<!-- Node var -->
     <node name="Var">
-      <description>represents an identifier constant</description>
+      <description>represents an variable</description>
       <sons></sons>
       <attributes>
-        <attribute name="Var">
+        <attribute name="Name">
           <type name="String">
             <targets>
               <target mandatory="yes">
@@ -828,7 +816,6 @@
       </attributes>
     </node>
 
-	<!-- Node Error -->
     <node name="Error">
       <description>represents internal Error representation constructor</description>
       <sons>

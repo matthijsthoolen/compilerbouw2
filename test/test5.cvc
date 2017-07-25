@@ -1,0 +1,14 @@
+int x = 0;
+int foo() {}
+void bar(int a) { x = 1 + 2; }
+bool baz(int v0, int v1, int v2) { print(v0 + v1 + v2, v1 + v2); }
+
+int a() {
+    if (c + 5) {
+        f();
+    } else {
+        if (c == 8 && !n) {
+            g();
+        }
+    }
+}
