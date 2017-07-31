@@ -16,7 +16,8 @@ hashmap*    push(hashmap *map, void *key, void *value);
 hashmap*    push_reverse(hashmap *map, void *key, void *value);
 bool        is_empty(hasmap *map);
 bool        has(hashmap *map, void *key);
-void        clear(hashmap *map);
+hashmap*    remove(hashmap *map, void *key);
+void        free(hashmap *map);
 void        print(hashmap *map);
 
 
