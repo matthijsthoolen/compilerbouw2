@@ -3,10 +3,8 @@
 #include <string.h>
 #include "memory.h"
 #include "str.h"
+#include "dbug.h"
 #include "hash_list.h"
-
-typedef struct hashmap hashmap;
-#define ADD_HASH(h, key, val, nxt) h->key = key; h->val = val; h->nxt = nxt;
 
 /**
  * Creates and returns a new hashmap
@@ -16,7 +14,7 @@ typedef struct hashmap hashmap;
 hashmap* new_map()
 {
     hashmap *map;
-    map = (hashmap *) MEMalloc(sizeof(map));
+    map = (hashmap *) MEMmalloc(sizeof(hashmap));
     
     ADD_HASH(map, NULL, NULL, NULL);
     return map;
@@ -28,8 +26,18 @@ hashmap* new_map()
  * @params  {hashmap}   map
  * @returns {hashmap}
  */
-hashmap* pop(hashmap *map)
+hashmap* map_pop(hashmap *map)
 {
+    if (!map) {
+        return NULL;
+    }
+
+    hashmap *pop;
+    pop = map->next;
+    map->next = pop->next;
+    pop->next = NULL;
+    
+    return pop;
 }
 
 /**
@@ -38,8 +46,9 @@ hashmap* pop(hashmap *map)
  * @params  {hashmap} map
  * @returns {hashmap} map
  */
-hashmap* pop_reverse(hashmap *map)
+hashmap* map_pop_reverse(hashmap *map)
 {
+    return map;
 }
 
 /**
@@ -49,8 +58,23 @@ hashmap* pop_reverse(hashmap *map)
  * @param   {void}      key
  * @param   {void}      value
  */
-hashmap* push(hashmap *map, void *key, void *value)
+bool map_push(hashmap *map, void *key, void *value)
 {
+    DBUG_ENTER("map_push"); 
+
+    if (!map) {
+        printf("3\n");
+        DBUG_RETURN(FALSE);
+    }
+    
+    hashmap *new;
+    new = new_map();
+
+    ADD_HASH(new, key, value, map->next);
+
+    map->next = new;
+
+    DBUG_RETURN(TRUE);
 }
 
 /**
@@ -59,7 +83,16 @@ hashmap* push(hashmap *map, void *key, void *value)
  * @param   {hashmap}   map
  * @returns {bool}
  */
-bool is_empty(hasmap *map) {
+bool map_is_empty(hashmap *map) {
+    if (!map) {
+        return NULL;
+    }
+    
+    if (map->next == NULL) {
+        return TRUE;
+    }
+    
+    return FALSE;
 }
 
 /**
@@ -69,16 +102,73 @@ bool is_empty(hasmap *map) {
  * @param   {void}      key
  * @returns {bool}
  */
-bool has(hashmap *map, void *key) {
+bool map_has(hashmap *map, void *key) {
+    DBUG_ENTER("map_has");
+
+    if (!map) {
+        DBUG_RETURN(NULL);
+    }
+
+    while(map = map->next) {
+        printf(".");
+        if(STReq(map->key, key)) {
+            DBUG_RETURN(TRUE);
+        }
+    }
+
+    DBUG_RETURN(FALSE);
 }
 
+/**
+ * Get a key/value pair if the hashmap contains a key/value pair with the given key
+ *
+ * @param   {hashmap}   map
+ * @param   {void}      key
+ * @returns {hashmap}
+ */
+hashmap* map_get(hashmap *map, void *key) {
+    DBUG_ENTER("map_has");
+
+    if (!map) {
+        DBUG_RETURN(NULL);
+    }
+
+    while(map = map->next) {
+        printf(".");
+        if(STReq(map->key, key)) {
+            DBUG_RETURN(map);
+        }
+    }
+
+    DBUG_RETURN(FALSE);
+}
 /**
  * Remove the key.value pair with the given key
  *
  * @param   {hashmap}   map
  * @param   {void}      key
+ * @returns {bool}
  */
-hashmap* remove(hashmap *map, void *key) {
+bool map_remove(hashmap *map, void *key)
+{
+    if (!map) {
+        return FALSE;
+    }
+
+    hashmap *tmp;
+
+    while(map->next) {
+        tmp = map->next;
+
+        if(STReq(tmp->key, key)) {
+            map->next = tmp->next;
+            MEMfree(tmp);
+            return TRUE;
+        }
+        map = map->next;
+    }
+
+    return FALSE;
 }
 
 /**
@@ -86,8 +176,20 @@ hashmap* remove(hashmap *map, void *key) {
  *
  * @param   {hashmap}   map
  */
-void free(hashmap *map)
+void map_free(hashmap *map)
 {
+    if (!map) {
+        return;
+    }
+
+    hashmap *tmp;
+
+    while(map) {
+        tmp = map;
+        map = map->next;
+        tmp->next = NULL;
+        MEMfree(tmp);
+    }
 }
 
 /**
@@ -95,11 +197,11 @@ void free(hashmap *map)
  *
  * @param   {hashmap}   map
  */
-void print(hashmap *map)
+void map_print(hashmap *map)
 {
     printf("Hashmap = {");
 
-    if (map != null) {
+    if (map != NULL) {
         while (map->next) {
             printf("%s: ", (char*)map->key);
             printf("<%p>, ", map->value);            

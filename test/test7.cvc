@@ -1,0 +1,19 @@
+int foo() {
+    int x = 0;
+    for (int i = 0, 20, 2) {
+        x = x + f();
+    }
+    return x;
+}
+
+void bar() {
+    int x;
+    while (baz()) {
+        do {
+            x = g();
+        } while (x < foo());
+    }
+}
+
+int bar() {
+}

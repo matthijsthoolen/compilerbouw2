@@ -20,10 +20,11 @@
       <traversal id="FREE" name="Free Syntax Tree" default="user" include="free_node.h" />
       <traversal id="CHK" name="Check Syntax Tree" default="user" include="check.h" />
       
-      <traversal id="CA" name="Context analysis" default="sons" include="context.h">
+      <traversal id="CA" name="Context Analysis Functions" default="sons" include="context_functions.h">
         <travuser>
           <node name="Scope" />
           <node name="Fun" />
+          <node name="Call" />
         </travuser>
       </traversal>
     </general>

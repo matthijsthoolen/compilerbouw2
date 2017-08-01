@@ -33,15 +33,15 @@ PHASE(  con,
         "Do context analysis",
         ALWAYS)
 
-SUBPHASE( prt,
+/*SUBPHASE( prt,
           "Print ast",
           PRTdoPrint,
           ALWAYS,
-          con)
+          con)*/
 
 SUBPHASE( ca,
-          "Analysis",
-          CAdoContextAnalysis,
+          "AnalysisFun",
+          CAdoContextAnalysisFun,
           ALWAYS,
           con)
 

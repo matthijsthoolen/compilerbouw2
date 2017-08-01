@@ -69,7 +69,8 @@ framework   = memory.o str.o ctinfo.o main_args.o dbug.o globals.o \
               phase.o phase_drivers.o phase_info.o phase_options.o \
               check_lib.o node_basic.o free_node.o copy_node.o \
               traverse_tables.o traverse_helper.o check.o \
-              check_node.o check_attribs.o lookup_table.o map.o
+              check_node.o check_attribs.o lookup_table.o map.o \
+              hash_list.o
 
 global      = options.o usage.o myglobals.o
 
@@ -79,4 +80,4 @@ print       = print.o
 
 codegen     = gen_byte_code.o
 
-context     = context.o
+context     = context_functions.o

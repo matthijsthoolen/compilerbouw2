@@ -8,19 +8,19 @@
 #include "ctinfo.h"
 #include "hash_list.h"
 
-#include "context.h"
+#include "context_functions.h"
 
 struct INFO {
-    node *currentScope;
-    bool checkedFun;
-    int externalFuns;
-    int externalVars;
+    node    *currentScope;
+    bool     checkedFun;
+    hashmap *funs;
+    hashmap *calls;
 };
 
 #define INFO_CURSCOPE(n)        ((n)->currentScope)
 #define INFO_CHECKEDFUN(n)      ((n)->checkedFun)
-#define INFO_EXTERNALFUNS(n)    ((n)->externalFuns)
-#define INFO_EXTERNALVARS(n)    ((n)->externalVars)
+#define INFO_FUNS(n)            ((n)->funs)
+#define INFO_CALLS(n)           ((n)->calls)
 
 static info *MakeInfo()
 {
@@ -29,10 +29,10 @@ static info *MakeInfo()
     info *result;
 
     result = MEMmalloc(sizeof(info));
-    INFO_CURSCOPE(result)       = NULL;
-    INFO_EXTERNALFUNS(result)   = 0;
-    INFO_EXTERNALVARS(result)   = 0;    
-    INFO_CHECKEDFUN(result)     = FALSE;
+    INFO_CURSCOPE(result)   = NULL;
+    INFO_FUNS(result)       = new_map();
+    INFO_CALLS(result)      = new_map();    
+    INFO_CHECKEDFUN(result) = FALSE;
 
     DBUG_RETURN(result);
 }
@@ -40,6 +40,10 @@ static info *MakeInfo()
 static info *FreeInfo(info *info)
 {
     DBUG_ENTER("FreeInfo");
+
+    // Clear the hashmaps
+    free(info->funs);
+    free(info->calls);
 
     info = MEMfree(info);
 
@@ -68,30 +72,42 @@ void registerFunction(node *function, info *arg_info)
  */
 node *checkFunction(node *fun, info *arg_info)
 {
+    DBUG_ENTER("checkFunction");
 
     if (INFO_CHECKEDFUN(arg_info) == TRUE) {
         printf("Already checked");
-        return fun;
+        DBUG_RETURN(fun);
     }
 
-    
-    CTIerror("Function \"%s\" already defined (first defined at %d:%d)", 
-            FUN_ID(fun),
-            NODE_LINE(fun),
-            NODE_COL(fun)
-    );
+    if (map_has(INFO_FUNS(arg_info), FUN_ID(fun))) {    
+        CTIerror("Function \"%s\" already defined (first defined at %d:%d)", 
+                FUN_ID(fun),
+                NODE_LINE(fun),
+                NODE_COL(fun)
+        );
+
+        DBUG_RETURN(fun);
+    }
+
+    map_push(INFO_FUNS(arg_info), FUN_ID(fun), fun);
 
     printf("Not checked yet");
     INFO_CHECKEDFUN(arg_info) = TRUE;
 
-    return fun;
+    DBUG_RETURN(fun);
 }
 
 node *CAscope(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAscope");
- 
-    SCOPE_FUNS(arg_node) = TRAVdo(SCOPE_FUNS(arg_node), arg_info);
+
+    node *function;
+
+    function = SCOPE_FUNS(arg_node);
+
+    if (SCOPE_FUNS(arg_node) != NULL) { 
+        SCOPE_FUNS(arg_node) = TRAVdo(SCOPE_FUNS(arg_node), arg_info);
+    }
     //SCOPE_VARS(arg_node) = TRAVdo(SCOPE_VARS(arg_node), arg_info);
 
     DBUG_RETURN( arg_node); 
@@ -101,22 +117,35 @@ node *CAfun(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAfun");
 
-    if (INFO_CHECKEDFUN(arg_info) == FALSE) {
-        DBUG_RETURN(checkFunction(arg_node, arg_info));
+    printf("Going to check %s now", FUN_ID(arg_node));
+
+    if (map_has(INFO_FUNS(arg_info), FUN_ID(arg_node))) {    
+        CTIerror("Function \"%s\" already defined (first defined at %d:%d)", 
+                FUN_ID(arg_node),
+                NODE_LINE(arg_node),
+                NODE_COL(arg_node)
+        );
+
+        DBUG_RETURN(arg_node);
     }
 
-    printf("Aangenaam, dit is de grappenmaker van het stel %s \n", FUN_ID(arg_node));
+    map_push(INFO_FUNS(arg_info), FUN_ID(arg_node), arg_node);
 
-    FUN_BODY(arg_node) = TRAVdo(FUN_BODY(arg_node), arg_info);
+    FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);
 
     DBUG_RETURN( arg_node);
 }
 
-node *CAdoContextAnalysis(node *syntaxtree)
+node *CAcall(node *arg_node, info *arg_info)
 {
-    DBUG_ENTER("Do context analysis");
+    DBUG_ENTER("CAcall");
 
-    printf("HELLO");
+    DBUG_RETURN( arg_node);
+}
+
+node *CAdoContextAnalysisFun(node *syntaxtree)
+{
+    DBUG_ENTER("CAdoContextAnalysisFun");
 
     info *info;
     info = MakeInfo();
