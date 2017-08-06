@@ -84,15 +84,17 @@ bool map_push(hashmap *map, void *key, void *value)
  * @returns {bool}
  */
 bool map_is_empty(hashmap *map) {
+    DBUG_ENTER("map_is_empty");
+
     if (!map) {
-        return NULL;
+        DBUG_RETURN(FALSE);
     }
     
     if (map->next == NULL) {
-        return TRUE;
+        DBUG_RETURN(TRUE);
     }
     
-    return FALSE;
+    DBUG_RETURN(FALSE);
 }
 
 /**
@@ -106,10 +108,10 @@ bool map_has(hashmap *map, void *key) {
     DBUG_ENTER("map_has");
 
     if (!map) {
-        DBUG_RETURN(NULL);
+        DBUG_RETURN(FALSE);
     }
 
-    while(map = map->next) {
+    while((map = map->next)) {
         printf(".");
         if(STReq(map->key, key)) {
             DBUG_RETURN(TRUE);
@@ -130,17 +132,17 @@ hashmap* map_get(hashmap *map, void *key) {
     DBUG_ENTER("map_has");
 
     if (!map) {
-        DBUG_RETURN(NULL);
+        DBUG_RETURN(map);
     }
 
-    while(map = map->next) {
+    while((map = map->next)) {
         printf(".");
         if(STReq(map->key, key)) {
             DBUG_RETURN(map);
         }
     }
 
-    DBUG_RETURN(FALSE);
+    DBUG_RETURN(NULL);
 }
 /**
  * Remove the key.value pair with the given key
@@ -151,24 +153,26 @@ hashmap* map_get(hashmap *map, void *key) {
  */
 bool map_remove(hashmap *map, void *key)
 {
+    DBUG_ENTER("map_remove");
+
     if (!map) {
-        return FALSE;
+        DBUG_RETURN(FALSE);
     }
 
     hashmap *tmp;
 
-    while(map->next) {
+    while((map->next)) {
         tmp = map->next;
 
         if(STReq(tmp->key, key)) {
             map->next = tmp->next;
             MEMfree(tmp);
-            return TRUE;
+            DBUG_RETURN(TRUE);
         }
         map = map->next;
     }
 
-    return FALSE;
+    DBUG_RETURN(FALSE);
 }
 
 /**

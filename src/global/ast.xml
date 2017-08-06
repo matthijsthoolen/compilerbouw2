@@ -465,7 +465,7 @@
           <description>the block</description>
           <targets>
             <target mandatory="yes">
-              <node name="Block" />
+              <node name="Stmts" />
               <phases>
                 <all />
               </phases>
@@ -482,7 +482,7 @@
           <description>the block</description>
           <targets>
             <target mandatory="yes">
-              <node name="Block" />
+              <node name="Stmts" />
               <phases>
                 <all />
               </phases>
@@ -506,11 +506,11 @@
     <node name="For">
       <description>a for statement</description>
       <sons>
-        <son name="Init">
-          <description>the initial value</description>
+        <son name="VarDef">
+          <description>the name and value for the counter var</description>
           <targets>
             <target mandatory="yes">
-              <node name="Block" />
+              <node name="VarDef" />
               <phases>
                 <all />
               </phases>
@@ -543,7 +543,7 @@
           <description>the block</description>
           <targets>
             <target mandatory="yes">
-              <node name="Block" />
+              <node name="Stmts" />
               <phases>
                 <all />
               </phases>
@@ -551,20 +551,6 @@
           </targets>
         </son>
       </sons>
-      <attributes>
-        <attribute name="Ind">
-          <description>the induction variable identifier</description>
-          <type name="String">
-            <targets>
-              <target mandatory="yes">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-      </attributes>
     </node>
 
     <node name="Return">

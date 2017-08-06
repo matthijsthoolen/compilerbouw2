@@ -473,7 +473,7 @@ extern node *PRTvardef (node * arg_node, info * arg_info) {
         printf(" = ");
         VARDEF_INIT(arg_node) = TRAVdo(init, arg_info);
     }
-    printf(";\n"); newline(arg_info);
+    //printf(";\n"); newline(arg_info);
 
     VARDEF_NEXT(arg_node) = TRAVopt(VARDEF_NEXT(arg_node), arg_info);
 
@@ -523,7 +523,6 @@ static void print_blocklike(node **stmts, info *arg_info) {
     }
     indent(arg_info);
     printf("}");
-    DBUG_RETURN(NULL);
 }
 
 extern node *PRTblock (node * arg_node, info * arg_info) {
@@ -583,8 +582,8 @@ extern node *PRTfor (node * arg_node, info * arg_info) {
     DBUG_ENTER("PRTfor");
 
     indent(arg_info);
-    printf("for (int %s = ", FOR_IND(arg_node));
-    FOR_INIT(arg_node) = TRAVdo(FOR_INIT(arg_node), arg_info);
+    printf("for (");
+    FOR_VARDEF(arg_node) = TRAVdo(FOR_VARDEF(arg_node), arg_info);
     printf(", ");
     FOR_UPPER(arg_node) = TRAVdo(FOR_UPPER(arg_node), arg_info);
     if (FOR_STEP(arg_node) != NULL) {

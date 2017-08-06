@@ -185,7 +185,7 @@ stmt_do_while: DO ANBRACKET_L stmts ANBRACKET_R WHILE BRACKET_L expr BRACKET_R S
                 { $$ = TBmakeDowhile($3, $7); };
 
 stmt_for: FOR BRACKET_L INT ID LET expr COMMA expr stmt_for_ BRACKET_R ANBRACKET_L stmts ANBRACKET_R
-                { $$ = TBmakeFor($4, $6, $8, $9, $12); };
+                { $$ = TBmakeFor(TBmakeVardef(TY_int, $4, $6, NULL), $8, $9, $12); };
 stmt_for_: COMMA expr   { $$ = $2; }
          |              { $$ = NULL; }
 
