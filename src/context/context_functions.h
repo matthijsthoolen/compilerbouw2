@@ -7,5 +7,6 @@ node *CAscope(node *arg_node, info *arg_info);
 node *CAfun(node *arg_node, info *arg_info);
 node *CAcall(node *arg_node, info *arg_info);
 node *CAdoContextAnalysisFun(node *syntaxtree);
+void check_fun_calls(info *arg_info);
 
 #endif 

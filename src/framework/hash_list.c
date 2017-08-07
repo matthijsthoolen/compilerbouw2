@@ -28,8 +28,10 @@ hashmap* new_map()
  */
 hashmap* map_pop(hashmap *map)
 {
+    DBUG_ENTER("map_pop");
+
     if (!map) {
-        return NULL;
+        DBUG_RETURN(map);
     }
 
     hashmap *pop;
@@ -37,7 +39,7 @@ hashmap* map_pop(hashmap *map)
     map->next = pop->next;
     pop->next = NULL;
     
-    return pop;
+    DBUG_RETURN(pop);
 }
 
 /**
@@ -48,7 +50,18 @@ hashmap* map_pop(hashmap *map)
  */
 hashmap* map_pop_reverse(hashmap *map)
 {
-    return map;
+    DBUG_ENTER("map_pop_reverse");
+
+    if (!map) {
+        DBUG_RETURN(map);
+    }    
+
+    hashmap *pop;
+    pop = map->next;
+    map->next = pop->next;
+    pop->next = NULL; 
+
+    DBUG_RETURN(pop);
 }
 
 /**
@@ -63,7 +76,6 @@ bool map_push(hashmap *map, void *key, void *value)
     DBUG_ENTER("map_push"); 
 
     if (!map) {
-        printf("3\n");
         DBUG_RETURN(FALSE);
     }
     
@@ -87,7 +99,7 @@ bool map_is_empty(hashmap *map) {
     DBUG_ENTER("map_is_empty");
 
     if (!map) {
-        DBUG_RETURN(FALSE);
+        DBUG_RETURN(TRUE);
     }
     
     if (map->next == NULL) {

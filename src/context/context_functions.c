@@ -12,13 +12,11 @@
 
 struct INFO {
     node    *currentScope;
-    bool     checkedFun;
     hashmap *funs;
     hashmap *calls;
 };
 
 #define INFO_CURSCOPE(n)        ((n)->currentScope)
-#define INFO_CHECKEDFUN(n)      ((n)->checkedFun)
 #define INFO_FUNS(n)            ((n)->funs)
 #define INFO_CALLS(n)           ((n)->calls)
 
@@ -32,7 +30,6 @@ static info *MakeInfo()
     INFO_CURSCOPE(result)   = NULL;
     INFO_FUNS(result)       = new_map();
     INFO_CALLS(result)      = new_map();    
-    INFO_CHECKEDFUN(result) = FALSE;
 
     DBUG_RETURN(result);
 }
@@ -116,6 +113,20 @@ node *CAcall(node *arg_node, info *arg_info)
     DBUG_RETURN( arg_node);
 }
 
+/**
+ * Check if all function calls have a callable function in the same scope
+ */
+void check_fun_calls(info *arg_info) 
+{
+    hashmap *tmp;
+
+    while(!map_is_empty(INFO_CALLS(arg_info))) {
+        tmp = map_pop_reverse(INFO_CALLS(arg_info));
+
+        CTIerror("On line %d\nundefined function '%s'", NODE_LINE((node *)tmp->value), (char *)tmp->key);
+    }
+}
+
 node *CAdoContextAnalysisFun(node *syntaxtree)
 {
     DBUG_ENTER("CAdoContextAnalysisFun");
@@ -126,6 +137,8 @@ node *CAdoContextAnalysisFun(node *syntaxtree)
     TRAVpush(TR_ca);
 
     syntaxtree = TRAVdo( syntaxtree, info);
+
+    check_fun_calls(info);
 
     TRAVpop();
 
