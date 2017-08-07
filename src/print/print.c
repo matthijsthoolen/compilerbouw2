@@ -511,8 +511,6 @@ extern node *PRTfunparam (node * arg_node, info * arg_info) {
 }
 
 static void print_blocklike(node **stmts, info *arg_info) {
-    DBUG_ENTER("print_blocklike");
-
     indent(arg_info);
     printf("{");
     if (*stmts != NULL) {
@@ -623,7 +621,7 @@ extern node *PRTexprlist (node * arg_node, info * arg_info) {
 extern node *PRTcall (node * arg_node, info * arg_info) {
     DBUG_ENTER("PRTcall");
 
-    printf("%s(", CALL_ID(arg_node));
+    printf("%s(", VAR_NAME(CALL_ID(arg_node)));
     CALL_ARGS( arg_node) = TRAVopt( CALL_ARGS( arg_node), arg_info);
     printf(")");
     

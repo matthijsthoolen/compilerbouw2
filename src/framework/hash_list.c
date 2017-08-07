@@ -128,22 +128,23 @@ bool map_has(hashmap *map, void *key) {
  * @param   {void}      key
  * @returns {hashmap}
  */
-hashmap* map_get(hashmap *map, void *key) {
+void* map_get(hashmap *map, void *key) {
     DBUG_ENTER("map_has");
 
     if (!map) {
-        DBUG_RETURN(map);
+        DBUG_RETURN(NULL);
     }
 
     while((map = map->next)) {
         printf(".");
         if(STReq(map->key, key)) {
-            DBUG_RETURN(map);
+            DBUG_RETURN(map->value);
         }
     }
 
     DBUG_RETURN(NULL);
 }
+
 /**
  * Remove the key.value pair with the given key
  *

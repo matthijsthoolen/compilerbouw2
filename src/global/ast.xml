@@ -602,6 +602,16 @@
     <node name="Call">
       <description>a function call expression</description>
       <sons>
+        <son name="Id">
+            <targets>
+                <target mandatory="yes">
+                    <node name="Var" />
+                    <phases>
+                        <all />
+                    </phases>
+                </target>
+            </targets>
+        </son>
         <son name="Args">
           <description>the function arguments</description>
           <targets>
@@ -614,20 +624,7 @@
           </targets>
         </son>
       </sons>
-      <attributes>
-        <attribute name="Id">
-          <description>the function name</description>
-          <type name="String">
-            <targets>
-              <target mandatory="yes">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-      </attributes>
+      <attributes />
     </node>
 
     <node name="Cast">
@@ -734,6 +731,7 @@
         </attribute>
       </attributes>
     </node>
+
     <node name="Int">
       <description>represents integer constant</description>
       <sons></sons>
@@ -751,6 +749,7 @@
         </attribute>
       </attributes>
     </node>
+
     <node name="Float">
       <description>represents floating point constant</description>
       <sons></sons>
@@ -768,6 +767,7 @@
         </attribute>
       </attributes>
     </node>
+
     <node name="Bool">
       <description>represents Boolean constant (true/false)</description>
       <sons></sons>
@@ -785,6 +785,7 @@
         </attribute>
       </attributes>
     </node>
+
     <node name="Var">
       <description>represents an variable</description>
       <sons></sons>
@@ -799,6 +800,17 @@
               </target>
             </targets>
           </type>
+        </attribute>
+        <attribute name="Decl">
+            <type name="Link">
+                <targets>
+                    <target mandatory="no">
+                        <phases>
+                            <all />
+                        </phases>
+                    </target>
+                </targets>
+            </type>
         </attribute>
       </attributes>
     </node>

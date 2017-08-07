@@ -163,7 +163,7 @@ var: ID { $$ = TBmakeVar($1); };
 
 assign: var LET expr SEMICOLON { $$ = TBmakeAssign($1, $3); };
 
-call: ID BRACKET_L call_args BRACKET_R  { $$ = TBmakeCall($1, $3); };
+call: var BRACKET_L call_args BRACKET_R  { $$ = TBmakeCall($1, $3); };
 call_args: expr COMMA call_args         { $$ = TBmakeExprlist($1, $3); }
          | expr                         { $$ = TBmakeExprlist($1, NULL); }
          |                              { $$ = NULL; }

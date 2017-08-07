@@ -18,7 +18,7 @@ bool        map_push(hashmap *map, void *key, void *value);
 bool        map_push_reverse(hashmap *map, void *key, void *value);
 bool        map_is_empty(hashmap *map);
 bool        map_has(hashmap *map, void *key);
-hashmap*    map_get(hashmap *map, void *key);
+void*       map_get(hashmap *map, void *key);
 bool        map_remove(hashmap *map, void *key);
 void        map_free(hashmap *map);
 void        map_print(hashmap *map);
