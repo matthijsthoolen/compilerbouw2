@@ -6,10 +6,11 @@ int foo() {
     return x;
 }
 
-void bar() {
-    int x;
-    x = 2;
+void bar(int x, int y, bool z) {
+    int x = 5;
+    int y;
+    y = 26;
     while (x < 5) {
-        x = x + 1;
+        x = x + y;
     }
 }

@@ -475,8 +475,6 @@ extern node *PRTvardef (node * arg_node, info * arg_info) {
     }
     //printf(";\n"); newline(arg_info);
 
-    VARDEF_NEXT(arg_node) = TRAVopt(VARDEF_NEXT(arg_node), arg_info);
-
     DBUG_RETURN(arg_node);
 }
 

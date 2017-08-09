@@ -77,6 +77,8 @@ ty: BOOL    { $$ = TY_bool; }
 program: {
             DBUG_ASSERT(cur_scope == NULL, "program is not reentrant");
             cur_scope = TBmakeScope(NULL, NULL);
+            SCOPE_VARSTAIL(cur_scope) = &SCOPE_VARS(cur_scope);
+            SCOPE_FUNSTAIL(cur_scope) = &SCOPE_FUNS(cur_scope);
          }
          program_
          {
@@ -97,8 +99,7 @@ global_prefix: EXTERN   { $$ = global_prefix_extern; }
 
 vardef: ty ID vardef_init SEMICOLON
         {
-            node *x = TBmakeVardef($1, $2, $3, NULL);
-            $$ = x;
+            $$ = TBmakeVardef($1, $2, $3);
         };
 vardef_init: LET expr   { $$ = $2; }
              |          { $$ = NULL; }
@@ -119,9 +120,8 @@ fun: ty ID BRACKET_L fun_params BRACKET_R
          node **tail = &SCOPE_VARS(scope);
          node *n = $4;
          while (n != NULL) {
-             node *x = TBmakeVardef(FUNPARAM_TY(n), FUNPARAM_ID(n), NULL, NULL);
+             node *x = TBmakeVardef(FUNPARAM_TY(n), FUNPARAM_ID(n), NULL);
              *tail = x;
-             tail = &VARDEF_NEXT(x);
              n = FUNPARAM_NEXT(n);
          }
      }
@@ -131,7 +131,8 @@ fun: ty ID BRACKET_L fun_params BRACKET_R
          cur_scope = SCOPE_PARENT(cur_scope);
 
          node *x = TBmakeFun($1, $2, $4, body, NULL);
-
+         *SCOPE_FUNSTAIL(cur_scope) = x;
+         SCOPE_FUNSTAIL(cur_scope) = &FUN_NEXT(x);
          $$ = x;
      };
 
@@ -177,7 +178,7 @@ stmt_do_while: DO ANBRACKET_L stmts ANBRACKET_R WHILE BRACKET_L expr BRACKET_R S
                 { $$ = TBmakeDowhile($3, $7); };
 
 stmt_for: FOR BRACKET_L INT ID LET expr COMMA expr stmt_for_ BRACKET_R ANBRACKET_L stmts ANBRACKET_R
-                { $$ = TBmakeFor(TBmakeVardef(TY_int, $4, $6, NULL), $8, $9, $12); };
+                { $$ = TBmakeFor(TBmakeVardef(TY_int, $4, $6), $8, $9, $12); };
 stmt_for_: COMMA expr   { $$ = $2; }
          |              { $$ = NULL; }
 

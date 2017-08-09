@@ -50,8 +50,6 @@ node *CAVscope(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVscope");
 
-    SCOPE_FUNS(arg_node) = TRAVopt(SCOPE_FUNS(arg_node), arg_info);
-
     node *function;
     function = SCOPE_FUNS(arg_node);
     
@@ -59,20 +57,35 @@ node *CAVscope(node *arg_node, info *arg_info)
         function = TRAVdo(function, arg_info);
     }    
 
+    node *var;
+    var = SCOPE_VARS(arg_node);
+
+    if (var != NULL) {
+        var = TRAVdo(var, arg_info);
+    }
+
     DBUG_RETURN(arg_node);
 }
 
 node *CAVfun(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVfun");
+
+    DBUG_PRINT("CAV", ("Processing function '%s'", FUN_ID(arg_node)));
+
+    FUN_BODY(arg_node) = TRAVopt(FUN_BODY(arg_node), arg_info);
+    FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);
+
+    printf("Funny ID = %s", FUN_ID(arg_node));
+
     DBUG_RETURN(arg_node);
 }
 
-node *CAVvar(node *arg_node, info *arg_info)
+node *CAVvardef(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVvar");
 
-    
+    printf("Zo fijn om een var te vinden, zeker als het %s is", VARDEF_ID(arg_node));   
 
     DBUG_RETURN(arg_node);
 }

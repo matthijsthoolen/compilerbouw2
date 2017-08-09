@@ -32,7 +32,7 @@
         <travuser>
             <node name="Scope" />
             <node name="Fun" />
-            <node name="Var" />
+            <node name="VarDef" />
         </travuser>
       </traversal>
     </general>
@@ -119,6 +119,30 @@
             </targets>
           </type>
         </attribute>
+        <attribute name="VarsTail">
+          <description>the tail of Vars (warning! must be initialized after TBmakeScope)</description>
+          <type name="Link2">
+            <targets>
+              <target mandatory="no">
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+        <attribute name="FunsTail">
+          <description>the tail of Funs (warning! must be initialized after TBmakeScope)</description>
+          <type name="Link2">
+            <targets>
+              <target mandatory="no">
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
       </attributes> 
     </node>
 
@@ -130,17 +154,6 @@
           <targets>
             <target mandatory="no">
               <set name="Expr" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-        <son name="Next">
-          <description>the remaining definitions</description>
-          <targets>
-            <target mandatory="no">
-              <node name="VarDef" />
               <phases>
                 <all />
               </phases>
