@@ -1,0 +1,15 @@
+int foo() {
+    int x = 0;
+    for (int i = 0, 20, 2) {
+        x = x + 2;
+    }
+    return x;
+}
+
+void bar() {
+    int x;
+    x = 2;
+    while (x < 5) {
+        x = x + 1;
+    }
+}

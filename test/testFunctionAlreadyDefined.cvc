@@ -14,3 +14,6 @@ void bar() {
         } while (x < foo());
     }
 }
+
+void bar() {
+}

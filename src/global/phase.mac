@@ -45,6 +45,12 @@ SUBPHASE( ca,
           ALWAYS,
           con)
 
+SUBPHASE( cav,
+          "AnalysisVar",
+          CAVdoContextAnalysisVar,
+          ALWAYS,
+          con)
+
 ENDPHASE( con)
 
 PHASE( pet,

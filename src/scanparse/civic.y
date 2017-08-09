@@ -77,8 +77,6 @@ ty: BOOL    { $$ = TY_bool; }
 program: {
             DBUG_ASSERT(cur_scope == NULL, "program is not reentrant");
             cur_scope = TBmakeScope(NULL, NULL);
-            SCOPE_VARSTAIL(cur_scope) = &SCOPE_VARS(cur_scope);
-            SCOPE_FUNSTAIL(cur_scope) = &SCOPE_FUNS(cur_scope);
          }
          program_
          {
@@ -100,8 +98,6 @@ global_prefix: EXTERN   { $$ = global_prefix_extern; }
 vardef: ty ID vardef_init SEMICOLON
         {
             node *x = TBmakeVardef($1, $2, $3, NULL);
-            *SCOPE_VARSTAIL(cur_scope) = x;
-            SCOPE_VARSTAIL(cur_scope) = &VARDEF_NEXT(x);
             $$ = x;
         };
 vardef_init: LET expr   { $$ = $2; }
@@ -118,8 +114,6 @@ fun: ty ID BRACKET_L fun_params BRACKET_R
      {
          node *scope = TBmakeScope(NULL, NULL);
          SCOPE_PARENT(scope) = cur_scope;
-         SCOPE_VARSTAIL(scope) = &SCOPE_VARS(scope);
-         SCOPE_FUNSTAIL(scope) = &SCOPE_FUNS(scope);
          cur_scope = scope;
 
          node **tail = &SCOPE_VARS(scope);
@@ -137,8 +131,6 @@ fun: ty ID BRACKET_L fun_params BRACKET_R
          cur_scope = SCOPE_PARENT(cur_scope);
 
          node *x = TBmakeFun($1, $2, $4, body, NULL);
-         *SCOPE_FUNSTAIL(cur_scope) = x;
-         SCOPE_FUNSTAIL(cur_scope) = &FUN_NEXT(x);
 
          $$ = x;
      };

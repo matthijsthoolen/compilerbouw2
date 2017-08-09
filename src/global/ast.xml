@@ -27,8 +27,17 @@
           <node name="Call" />
         </travuser>
       </traversal>
+
+      <traversal id="CAV" name="Context Analysis Variables" default="sons" include="context_vars.h">
+        <travuser>
+            <node name="Scope" />
+            <node name="Fun" />
+            <node name="Var" />
+        </travuser>
+      </traversal>
     </general>
   </phases>
+
   <nodesets>
     <nodeset name="Expr">
       <target>
@@ -57,7 +66,7 @@
     <node name="Program">
       <description>represents the entire compilation unit</description>
       <sons>
-        <son name="Global">
+        <son name="Scope">
           <description>the global scope</description>
           <targets>
             <target mandatory="yes">
@@ -96,7 +105,7 @@
             </target>
           </targets>
         </son>
-      </sons>
+      </sons> 
       <attributes>
         <attribute name="Parent">
           <description>the parent scope</description>
@@ -110,31 +119,7 @@
             </targets>
           </type>
         </attribute>
-        <attribute name="VarsTail">
-          <description>the tail of Vars (warning! must be initialized after TBmakeScope)</description>
-          <type name="Link2">
-            <targets>
-              <target mandatory="no">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-        <attribute name="FunsTail">
-          <description>the tail of Funs (warning! must be initialized after TBmakeScope)</description>
-          <type name="Link2">
-            <targets>
-              <target mandatory="no">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-      </attributes>
+      </attributes> 
     </node>
 
     <node name="VarDef">

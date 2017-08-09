@@ -80,4 +80,4 @@ print       = print.o
 
 codegen     = gen_byte_code.o
 
-context     = context_functions.o
+context     = context_functions.o context_vars.o

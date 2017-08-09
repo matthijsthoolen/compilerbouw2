@@ -446,7 +446,7 @@ static void print_global_prefix(enum global_prefix pfx) {
 extern node *PRTprogram (node * arg_node, info * arg_info) {
     DBUG_ENTER("PRTprogram");
 
-    PROGRAM_GLOBAL(arg_node) = TRAVdo(PROGRAM_GLOBAL(arg_node), arg_info);
+    PROGRAM_SCOPE(arg_node) = TRAVdo(PROGRAM_SCOPE(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }
