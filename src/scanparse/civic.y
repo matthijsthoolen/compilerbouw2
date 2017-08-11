@@ -68,7 +68,7 @@ static bool cur_scope_is_global() {
 %%
 
 ty: BOOL    { $$ = TY_bool; }
-  | INT     { $$ = TY_int; }
+  | INT     { $$ = TY_int; printf("int"); }
   | FLOAT   { $$ = TY_float; }
   | VOID    { $$ = TY_void; }
   ;
@@ -99,6 +99,7 @@ global_prefix: EXTERN   { $$ = global_prefix_extern; }
 
 vardef: ty ID vardef_init SEMICOLON
         {
+            printf("%s", (char *)$2);
             $$ = TBmakeVardef($1, $2, $3);
         };
 vardef_init: LET expr   { $$ = $2; }
