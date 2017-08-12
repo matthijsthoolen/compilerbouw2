@@ -1,0 +1,11 @@
+int funParams(int g, int b, bool t) {
+    
+    int z;
+    int d = 56000;
+
+    if (t) {
+        return b + g;
+    } else {
+        return g + z + d;
+    }
+}

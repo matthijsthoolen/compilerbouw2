@@ -1,0 +1,14 @@
+int foo() {
+    int x = 0;
+    return x;
+}
+
+void bar() {
+    int x;
+    int y = 5643;
+    int yachter;
+    y = 6775;
+    g = 6547;
+
+    return x + y;
+}

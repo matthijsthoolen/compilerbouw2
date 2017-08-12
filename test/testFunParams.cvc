@@ -1,0 +1,7 @@
+int funParams(int g, int b, bool t) {
+    if (t) {
+        return b + g;
+    } else {
+        return g;
+    }
+}

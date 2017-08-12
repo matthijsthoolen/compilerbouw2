@@ -68,7 +68,7 @@ static bool cur_scope_is_global() {
 %%
 
 ty: BOOL    { $$ = TY_bool; }
-  | INT     { $$ = TY_int; printf("int"); }
+  | INT     { $$ = TY_int; }
   | FLOAT   { $$ = TY_float; }
   | VOID    { $$ = TY_void; }
   ;
@@ -99,8 +99,10 @@ global_prefix: EXTERN   { $$ = global_prefix_extern; }
 
 vardef: ty ID vardef_init SEMICOLON
         {
-            printf("%s", (char *)$2);
-            $$ = TBmakeVardef($1, $2, $3);
+            node *x = TBmakeVardef($1, $2, $3, NULL);
+            *SCOPE_VARSTAIL(cur_scope) = x;
+            SCOPE_VARSTAIL(cur_scope) = &VARDEF_NEXT(x);
+            $$ = x;
         };
 vardef_init: LET expr   { $$ = $2; }
              |          { $$ = NULL; }
@@ -116,13 +118,16 @@ fun: ty ID BRACKET_L fun_params BRACKET_R
      {
          node *scope = TBmakeScope(NULL, NULL);
          SCOPE_PARENT(scope) = cur_scope;
+         SCOPE_VARSTAIL(scope) = &SCOPE_VARS(scope);
+         SCOPE_FUNSTAIL(scope) = &SCOPE_FUNS(scope);
          cur_scope = scope;
 
          node **tail = &SCOPE_VARS(scope);
          node *n = $4;
          while (n != NULL) {
-             node *x = TBmakeVardef(FUNPARAM_TY(n), FUNPARAM_ID(n), NULL);
+             node *x = TBmakeVardef(FUNPARAM_TY(n), FUNPARAM_ID(n), NULL, NULL);
              *tail = x;
+             tail = &VARDEF_NEXT(x);
              n = FUNPARAM_NEXT(n);
          }
      }
@@ -179,7 +184,7 @@ stmt_do_while: DO ANBRACKET_L stmts ANBRACKET_R WHILE BRACKET_L expr BRACKET_R S
                 { $$ = TBmakeDowhile($3, $7); };
 
 stmt_for: FOR BRACKET_L INT ID LET expr COMMA expr stmt_for_ BRACKET_R ANBRACKET_L stmts ANBRACKET_R
-                { $$ = TBmakeFor(TBmakeVardef(TY_int, $4, $6), $8, $9, $12); };
+                { $$ = TBmakeFor(TBmakeVardef(TY_int, $4, $6, NULL), $8, $9, $12); };
 stmt_for_: COMMA expr   { $$ = $2; }
          |              { $$ = NULL; }
 

@@ -32,7 +32,9 @@
         <travuser>
             <node name="Scope" />
             <node name="Fun" />
+            <node name="FunParam" />
             <node name="VarDef" />
+            <node name="Var" />
         </travuser>
       </traversal>
     </general>
@@ -160,6 +162,17 @@
             </target>
           </targets>
         </son>
+        <son name="Next">
+          <description>the remaining definitions</description>
+          <targets>
+            <target mandatory="no">
+              <node name="VarDef" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son> 
       </sons>
       <attributes>
         <attribute name="Prefix">
