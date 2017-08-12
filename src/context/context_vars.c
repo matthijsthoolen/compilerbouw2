@@ -46,26 +46,23 @@ static info *FreeInfo(info *info)
     DBUG_RETURN(info);
 }
 
-node *CAVscope(node *arg_node, info *arg_info)
+node *CAVblock(node *arg_node, info *arg_info)
 {
-    DBUG_ENTER("CAVscope");
-
-    printf("Scope == Amazing");
-
-    node *function;
-    function = SCOPE_FUNS(arg_node);
-
-    
-    if (function != NULL) {
-        function = TRAVdo(function, arg_info);
-    }    
-
+    DBUG_ENTER("CAVblock");
+ 
     node *var;
-    var = SCOPE_VARS(arg_node);
+    var = BLOCK_VARS(arg_node);
 
     if (var != NULL) {
         var = TRAVdo(var, arg_info);
     }
+
+    node *function;
+    function = BLOCK_FUNS(arg_node);
+    
+    if (function != NULL) {
+        function = TRAVdo(function, arg_info);
+    }    
 
     DBUG_RETURN(arg_node);
 }

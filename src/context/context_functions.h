@@ -3,7 +3,7 @@
 
 void registerFunction(node *function, info *arg_info);
 void registerFunctions(node *functions, info *arg_info);
-node *CAscope(node *arg_node, info *arg_info);
+node *CAblock(node *arg_node, info *arg_info);
 node *CAfun(node *arg_node, info *arg_info);
 node *CAcall(node *arg_node, info *arg_info);
 node *CAdoContextAnalysisFun(node *syntaxtree);

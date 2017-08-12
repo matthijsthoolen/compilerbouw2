@@ -32,26 +32,35 @@ struct INFO {
   bool ate_newline;
 };
 
-#define INFO_FIRSTERROR(n) ((n)->firsterror)
+#define INFO_FIRSTERROR(n)  ((n)->firsterror)
+#define INFO_INDENT(n)      ((n)->indent)
+#define INFO_IS_NEW_LINE(n) ((n)->ate_newline)
 
-static info *MakeInfo()
-{
-  info *result;
+#define INDENT_NEWLINE(n) INFO_IS_NEW_LINE(n) = TRUE;
+#define INDENT_INCREASE(n) INFO_INDENT(n) += 4; INDENT_NEWLINE(n)
+#define INDENT_DECREASE(n) INFO_INDENT(n) -= 4; INDENT_NEWLINE(n)
 
-  result = MEMmalloc(sizeof(info));
+static info *MakeInfo() {
+    DBUG_ENTER("MakeInfo");
 
-  INFO_FIRSTERROR(result) = FALSE;
-  result->indent = 0;
+    info *result;
 
-  return result;
+    result = MEMmalloc(sizeof(info));
+
+    INFO_FIRSTERROR(result) = FALSE;
+    INFO_INDENT(result) = 0;
+    INFO_IS_NEW_LINE(result) = FALSE;
+
+    DBUG_RETURN(result);
 }
 
 
-static info *FreeInfo( info *info)
-{
-  info = MEMfree( info);
+static info *FreeInfo( info *info) {
+    DBUG_ENTER("FreeInfo");
 
-  return info;
+    info = MEMfree( info);
+
+    DBUG_RETURN(info);
 }
 
 static void indent(info *info) {
@@ -69,6 +78,19 @@ static void newline(info *info) {
     info->ate_newline = 1;
 }
 
+
+static void print_blocklike(node **stmts, info *arg_info) {
+    indent(arg_info);
+    printf("{");
+    if (*stmts != NULL) {
+        printf("\n"); newline(arg_info);
+        INDENT_INCREASE(arg_info);
+        *stmts = TRAVdo(*stmts, arg_info);
+        INDENT_DECREASE(arg_info);
+    }
+    indent(arg_info);
+    printf("}");
+}
 
 /** <!--******************************************************************-->
  *
@@ -446,29 +468,36 @@ static void print_global_prefix(enum global_prefix pfx) {
 extern node *PRTprogram (node * arg_node, info * arg_info) {
     DBUG_ENTER("PRTprogram");
 
-    PROGRAM_SCOPE(arg_node) = TRAVdo(PROGRAM_SCOPE(arg_node), arg_info);
+    PROGRAM_BLOCK(arg_node) = TRAVdo(PROGRAM_BLOCK(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }
 
-extern node *PRTscope (node * arg_node, info * arg_info) {
-    DBUG_ENTER("PRTscope");
-
-    printf("Not reaching scope...");
+extern node *PRTblock (node * arg_node, info * arg_info) {
+    DBUG_ENTER("PRTblock");
 
     node *function;
-    function = SCOPE_FUNS(arg_node);
+    node *var;
+    var = BLOCK_VARS(arg_node);
+
+    if (var != NULL) {
+        var = TRAVdo(var, arg_info);
+    }
+
+    function = BLOCK_FUNS(arg_node);
  
     if (function != NULL) {
         function = TRAVdo(function, arg_info);
     }    
 
-    node *var;
-    var = SCOPE_VARS(arg_node);
+    node *stmts;
+    stmts = BLOCK_STMTS(arg_node); 
 
-    if (var != NULL) {
-        var = TRAVdo(var, arg_info);
+    if (stmts != NULL) {
+        stmts = TRAVdo(stmts, arg_info);
     }
+
+    //print_blocklike(&BLOCK_STMTS(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }
@@ -476,19 +505,20 @@ extern node *PRTscope (node * arg_node, info * arg_info) {
 extern node *PRTvardef (node * arg_node, info * arg_info) {
     DBUG_ENTER("PRTvardef");
 
-    printf("Dafuq?");
-
     indent(arg_info);
 
     print_global_prefix(VARDEF_PREFIX(arg_node));
     print_type(VARDEF_TY(arg_node));
+
     printf(" %s", VARDEF_ID(arg_node));
     node *init = VARDEF_INIT(arg_node);
     if (init != NULL) {
         printf(" = ");
         VARDEF_INIT(arg_node) = TRAVdo(init, arg_info);
     }
-    //printf(";\n"); newline(arg_info);
+
+    printf(";\n");
+    newline(arg_info);
 
     VARDEF_NEXT(arg_node) = TRAVopt(VARDEF_NEXT(arg_node), arg_info);
 
@@ -496,6 +526,8 @@ extern node *PRTvardef (node * arg_node, info * arg_info) {
 }
 
 extern node *PRTfun (node * arg_node, info * arg_info) {
+    node *body;
+
     DBUG_ENTER("PRTfun");
 
     indent(arg_info);
@@ -506,9 +538,19 @@ extern node *PRTfun (node * arg_node, info * arg_info) {
 
     FUN_PARAMS(arg_node) = TRAVopt(FUN_PARAMS(arg_node), arg_info);
 
-    printf(") ");
-
-    FUN_BODY(arg_node) = TRAVdo(FUN_BODY(arg_node), arg_info);
+    printf(")");
+    
+    body = FUN_BODY(arg_node);
+    
+    if (body != NULL) {
+        printf(" {\n");
+        INDENT_INCREASE(arg_info);
+        body = TRAVdo(body, arg_info);
+        INDENT_DECREASE(arg_info);
+        printf("\n}\n");
+    } else {
+        printf(";\n");
+    }
 
     FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);
 
@@ -525,27 +567,6 @@ extern node *PRTfunparam (node * arg_node, info * arg_info) {
         FUNPARAM_NEXT(arg_node) = TRAVdo(FUNPARAM_NEXT(arg_node), arg_info);
     }
 
-    DBUG_RETURN(arg_node);
-}
-
-static void print_blocklike(node **stmts, info *arg_info) {
-    indent(arg_info);
-    printf("{");
-    if (*stmts != NULL) {
-        printf("\n"); newline(arg_info);
-        arg_info->indent += 4;
-        *stmts = TRAVdo(*stmts, arg_info);
-        arg_info->indent -= 4;
-    }
-    indent(arg_info);
-    printf("}");
-}
-
-extern node *PRTblock (node * arg_node, info * arg_info) {
-    DBUG_ENTER("PRTblock");
-
-    print_blocklike(&BLOCK_STMTS(arg_node), arg_info);
-    printf("\n"); newline(arg_info);
     DBUG_RETURN(arg_node);
 }
 

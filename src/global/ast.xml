@@ -31,7 +31,7 @@
       
       <traversal id="CA" name="Context Analysis Functions" default="sons" include="context_functions.h">
         <travuser>
-          <node name="Scope" />
+          <node name="Block" />
           <node name="Fun" />
           <node name="Call" />
         </travuser>
@@ -39,7 +39,7 @@
 
       <traversal id="CAV" name="Context Analysis Variables" default="sons" include="context_vars.h">
         <travuser>
-            <node name="Scope" />
+            <node name="Block" />
             <node name="Fun" />
             <node name="FunParam" />
             <node name="VarDef" />
@@ -73,15 +73,16 @@
       </target>
     </nodeset>
   </nodesets>
+
   <syntaxtree>
     <node name="Program">
       <description>represents the entire compilation unit</description>
       <sons>
-        <son name="Scope">
-          <description>the global scope</description>
+        <son name="Block">
+          <description>Program blocks</description>
           <targets>
             <target mandatory="yes">
-              <node name="Scope" />
+              <node name="Block" />
               <phases>
                 <all />
               </phases>
@@ -91,7 +92,7 @@
       </sons>
     </node>
 
-    <node name="Scope">
+    <node name="Block">
       <description>a (global) scope</description>
       <sons>
         <son name="Vars">
@@ -115,6 +116,18 @@
               </phases>
             </target>
           </targets>
+        </son>
+        <son name="Stmts">
+            <description>The stmts defined in this block</description>
+            <targets>
+                <target mandatory="no">
+                    <node name="Stmts">
+                        <phases>
+                            <all />
+                        </phases>
+                    </node>
+                </target>
+            </targets>
         </son>
       </sons> 
       <attributes>
@@ -144,6 +157,18 @@
         </attribute>
         <attribute name="FunsTail">
           <description>the tail of Funs (warning! must be initialized after TBmakeScope)</description>
+          <type name="Link2">
+            <targets>
+              <target mandatory="no">
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute> 
+        <attribute name="StmtsTail">
+          <description>the tail of Stmts (warning! must be initialized after TBmakeScope)</description>
           <type name="Link2">
             <targets>
               <target mandatory="no">
@@ -341,34 +366,6 @@
           </type>
         </attribute>
       </attributes>
-    </node>
-
-    <node name="Block">
-      <description>a function block</description>
-      <sons>
-        <son name="Scope">
-          <description>the scope of the block</description>
-          <targets>
-            <target mandatory="no">
-              <node name="Scope" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-        <son name="Stmts">
-          <description>the statements</description>
-          <targets>
-            <target mandatory="no">
-              <node name="Stmts" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-      </sons>
     </node>
 
     <node name="Stmts">

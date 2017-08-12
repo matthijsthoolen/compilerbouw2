@@ -47,19 +47,19 @@ static info *FreeInfo(info *info)
     DBUG_RETURN(info);
 }
 
-node *CAscope(node *arg_node, info *arg_info)
+node *CAblock(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAscope");
 
     // Check the function definitions
     node *function;
-    function = SCOPE_FUNS(arg_node);
+    function = BLOCK_FUNS(arg_node);
 
     if (function != NULL) { 
         function = TRAVdo(function, arg_info);
     }
 
-    //SCOPE_VARS(arg_node) = TRAVdo(SCOPE_VARS(arg_node), arg_info);
+    //BLOCK_VARS(arg_node) = TRAVdo(SCOPE_VARS(arg_node), arg_info);
 
     DBUG_RETURN( arg_node); 
 }

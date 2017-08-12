@@ -9,6 +9,10 @@
 
 #include "initial_desugar.h"
 
+struct INFO {
+    
+};
+
 node *DSEwhile(node *arg_node, info *arg_info) {
     DBUG_ENTER("DSEwhile");
 
