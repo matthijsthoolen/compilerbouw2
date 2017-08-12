@@ -454,14 +454,29 @@ extern node *PRTprogram (node * arg_node, info * arg_info) {
 extern node *PRTscope (node * arg_node, info * arg_info) {
     DBUG_ENTER("PRTscope");
 
-    SCOPE_VARS(arg_node) = TRAVopt(SCOPE_VARS(arg_node), arg_info);
-    SCOPE_FUNS(arg_node) = TRAVopt(SCOPE_FUNS(arg_node), arg_info);
+    printf("Not reaching scope...");
+
+    node *function;
+    function = SCOPE_FUNS(arg_node);
+ 
+    if (function != NULL) {
+        function = TRAVdo(function, arg_info);
+    }    
+
+    node *var;
+    var = SCOPE_VARS(arg_node);
+
+    if (var != NULL) {
+        var = TRAVdo(var, arg_info);
+    }
 
     DBUG_RETURN(arg_node);
 }
 
 extern node *PRTvardef (node * arg_node, info * arg_info) {
     DBUG_ENTER("PRTvardef");
+
+    printf("Dafuq?");
 
     indent(arg_info);
 
@@ -475,6 +490,8 @@ extern node *PRTvardef (node * arg_node, info * arg_info) {
     }
     //printf(";\n"); newline(arg_info);
 
+    VARDEF_NEXT(arg_node) = TRAVopt(VARDEF_NEXT(arg_node), arg_info);
+
     DBUG_RETURN(arg_node);
 }
 
@@ -486,8 +503,11 @@ extern node *PRTfun (node * arg_node, info * arg_info) {
     print_global_prefix(FUN_PREFIX(arg_node));
     print_type(FUN_RETTY(arg_node));
     printf(" %s(", FUN_ID(arg_node));
+
     FUN_PARAMS(arg_node) = TRAVopt(FUN_PARAMS(arg_node), arg_info);
+
     printf(") ");
+
     FUN_BODY(arg_node) = TRAVdo(FUN_BODY(arg_node), arg_info);
 
     FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);

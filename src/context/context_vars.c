@@ -50,6 +50,8 @@ node *CAVscope(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVscope");
 
+    printf("Scope == Amazing");
+
     node *function;
     function = SCOPE_FUNS(arg_node);
 
@@ -77,9 +79,11 @@ node *CAVfun(node *arg_node, info *arg_info)
     FUN_PARAMS(arg_node) = TRAVopt(FUN_PARAMS(arg_node), arg_info);
 
     FUN_BODY(arg_node) = TRAVopt(FUN_BODY(arg_node), arg_info);
+
     // Clear Local Info
     map_free(INFO_LOCAL(arg_info));
     INFO_LOCAL(arg_info) = new_map();
+
     FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
@@ -110,7 +114,7 @@ node *CAVfunparam(node *arg_node, info *arg_info)
 
 node *CAVvardef(node *arg_node, info *arg_info)
 {
-    DBUG_ENTER("CAVvar");
+    DBUG_ENTER("CAVvardef");
 
     DBUG_PRINT("CAV", ("Processing variable definition '%s'", VARDEF_ID(arg_node)));
 

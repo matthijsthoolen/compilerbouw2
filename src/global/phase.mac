@@ -26,6 +26,17 @@ SUBPHASE( scp,
 
 ENDPHASE( ld)
 
+PHASE(  ds,
+        "Desugar code",
+        ALWAYS)
+
+SUBPHASE(dse,
+        "Do early desugar",
+        DSEdoEarlyDesugar,
+        ALWAYS,
+        ds)
+
+ENDPHASE( ds)
 
 /******************************************************************************/
 
@@ -33,11 +44,11 @@ PHASE(  con,
         "Do context analysis",
         ALWAYS)
 
-/*SUBPHASE( prt,
+SUBPHASE( prt,
           "Print ast",
           PRTdoPrint,
           ALWAYS,
-          con)*/
+          con)
 
 SUBPHASE( ca,
           "AnalysisFun",

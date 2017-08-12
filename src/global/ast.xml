@@ -19,6 +19,15 @@
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />
       <traversal id="FREE" name="Free Syntax Tree" default="user" include="free_node.h" />
       <traversal id="CHK" name="Check Syntax Tree" default="user" include="check.h" />
+
+    <traversal id="DSE" name="Desugar Early" default="sons" include="initial_desugar.h">
+        <travuser>
+            <node name="While" />
+            <node name="For" />
+            <node name="DoWhile" />
+            <node name="Stmts" />
+        </travuser>
+    </traversal>
       
       <traversal id="CA" name="Context Analysis Functions" default="sons" include="context_functions.h">
         <travuser>
