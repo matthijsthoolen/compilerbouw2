@@ -490,8 +490,24 @@ extern node *PRTblock (node * arg_node, info * arg_info) {
         function = TRAVdo(function, arg_info);
     }    
 
+    //print_blocklike(&BLOCK_STMTS(arg_node), arg_info);
+
+    DBUG_RETURN(arg_node);
+}
+
+extern node *PRTinnerblock (node * arg_node, info * arg_info) {
+    node *var;
     node *stmts;
-    stmts = BLOCK_STMTS(arg_node); 
+    
+    DBUG_ENTER("PRTinnerblock");
+    
+    var = INNERBLOCK_VARS(arg_node);
+
+    if (var != NULL) {
+        var = TRAVdo(var, arg_info);
+    }
+
+    stmts = INNERBLOCK_STMTS(arg_node); 
 
     if (stmts != NULL) {
         stmts = TRAVdo(stmts, arg_info);
@@ -501,6 +517,7 @@ extern node *PRTblock (node * arg_node, info * arg_info) {
 
     DBUG_RETURN(arg_node);
 }
+
 
 extern node *PRTvardef (node * arg_node, info * arg_info) {
     DBUG_ENTER("PRTvardef");

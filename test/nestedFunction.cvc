@@ -1,0 +1,7 @@
+void nestedFirst() {
+    int z = 5;
+    
+    void willFail() {
+        int shouldHaveFailedAlready = 1;
+    }
+}

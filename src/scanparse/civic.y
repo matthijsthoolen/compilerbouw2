@@ -19,6 +19,7 @@ extern int yylex();
 static int yyerror( char *errname);
 
 static node *parseresult = NULL;
+static node *global_scope = NULL;
 static node *cur_scope = NULL;
 
 static bool cur_scope_is_global() {
@@ -76,15 +77,15 @@ ty: BOOL    { $$ = TY_bool; }
 
 program: {
             DBUG_ASSERT(cur_scope == NULL, "program is not reentrant");
-            cur_scope = TBmakeBlock(NULL, NULL, NULL);
-            BLOCK_VARSTAIL(cur_scope) = &BLOCK_VARS(cur_scope);
-            BLOCK_FUNSTAIL(cur_scope) = &BLOCK_FUNS(cur_scope);
-            BLOCK_STMTSTAIL(cur_scope)= &BLOCK_STMTS(cur_scope);
+            global_scope = TBmakeBlock(NULL, NULL);
+            cur_scope = global_scope;
+            BLOCK_VARSTAIL(global_scope) = &BLOCK_VARS(global_scope);
+            BLOCK_FUNSTAIL(global_scope) = &BLOCK_FUNS(global_scope);
          }
          program_
          {
             DBUG_ASSERT(cur_scope_is_global(), "current scope is not global");
-            parseresult = TBmakeProgram(cur_scope);
+            parseresult = TBmakeProgram(global_scope);
             cur_scope = NULL;
          }
        ;
@@ -101,8 +102,8 @@ global_prefix: EXTERN   { $$ = global_prefix_extern; }
 vardef: ty ID vardef_init SEMICOLON
         {
             node *x = TBmakeVardef($1, $2, $3, NULL);
-            *BLOCK_VARSTAIL(cur_scope) = x;
-            BLOCK_VARSTAIL(cur_scope) = &VARDEF_NEXT(x);
+            *INNERBLOCK_VARSTAIL(cur_scope) = x;
+            INNERBLOCK_VARSTAIL(cur_scope) = &VARDEF_NEXT(x);
             $$ = x;
         };
 vardef_init: LET expr   { $$ = $2; }
@@ -117,14 +118,13 @@ fun_params: ty ID COMMA fun_params  { $$ = TBmakeFunparam($1, $2, $4); }
 
 fun: ty ID BRACKET_L fun_params BRACKET_R
      {
-         node *scope = TBmakeBlock(NULL, NULL, NULL);
-         BLOCK_PARENT(scope) = cur_scope;
-         BLOCK_VARSTAIL(scope) = &BLOCK_VARS(scope);
-         BLOCK_FUNSTAIL(scope) = &BLOCK_FUNS(scope);
-         BLOCK_STMTSTAIL(scope)= &BLOCK_STMTS(scope);
+         node *scope = TBmakeInnerblock(NULL, NULL);
+         INNERBLOCK_PARENT(scope) = cur_scope;
+         INNERBLOCK_VARSTAIL(scope) = &INNERBLOCK_VARS(scope);
+         BLOCK_FUNSTAIL(global_scope) = &BLOCK_FUNS(global_scope);
          cur_scope = scope;
 
-         node **tail = &BLOCK_VARS(scope);
+         node **tail = &INNERBLOCK_VARS(scope);
          node *n = $4;
          while (n != NULL) {
              node *x = TBmakeVardef(FUNPARAM_TY(n), FUNPARAM_ID(n), NULL, NULL);
@@ -135,12 +135,12 @@ fun: ty ID BRACKET_L fun_params BRACKET_R
      }
      ANBRACKET_L fun_body_defs stmts ANBRACKET_R
      {
-         node *body = TBmakeBlock(cur_scope, $9, NULL);
-         cur_scope = BLOCK_PARENT(cur_scope);
+         node *body = TBmakeInnerblock(cur_scope, $9);
+         cur_scope = INNERBLOCK_PARENT(cur_scope);
 
          node *x = TBmakeFun($1, $2, $4, body, NULL);
-         *BLOCK_FUNSTAIL(cur_scope) = x;
-         BLOCK_FUNSTAIL(cur_scope) = &FUN_NEXT(x);
+         *BLOCK_FUNSTAIL(global_scope) = x;
+         BLOCK_FUNSTAIL(global_scope) = &FUN_NEXT(x);
          $$ = x;
      };
 

@@ -22,6 +22,9 @@
 
     <traversal id="DSE" name="Desugar Early" default="sons" include="initial_desugar.h">
         <travuser>
+            <node name="Block" />
+            <node name="InnerBlock" />
+            <node name="Fun" />
             <node name="While" />
             <node name="For" />
             <node name="DoWhile" />
@@ -117,18 +120,6 @@
             </target>
           </targets>
         </son>
-        <son name="Stmts">
-            <description>The stmts defined in this block</description>
-            <targets>
-                <target mandatory="no">
-                    <node name="Stmts">
-                        <phases>
-                            <all />
-                        </phases>
-                    </node>
-                </target>
-            </targets>
-        </son>
       </sons> 
       <attributes>
         <attribute name="Parent">
@@ -167,6 +158,61 @@
             </targets>
           </type>
         </attribute> 
+      </attributes> 
+    </node>
+    
+    <node name="InnerBlock">
+      <description>a block inside a scope</description>
+      <sons>
+        <son name="Vars">
+          <description>the variables defined in this block</description>
+          <targets>
+            <target mandatory="no">
+              <node name="VarDef" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+        <son name="Stmts">
+            <description>The stmts defined in this block</description>
+            <targets>
+                <target mandatory="no">
+                    <node name="Stmts">
+                        <phases>
+                            <all />
+                        </phases>
+                    </node>
+                </target>
+            </targets>
+        </son>
+      </sons> 
+      <attributes>
+        <attribute name="Parent">
+          <description>the parent scope</description>
+          <type name="Link">
+            <targets>
+              <target mandatory="no">
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+        <attribute name="VarsTail">
+          <description>the tail of Vars (warning! must be initialized after TBmakeScope)</description>
+          <type name="Link2">
+            <targets>
+              <target mandatory="no">
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
         <attribute name="StmtsTail">
           <description>the tail of Stmts (warning! must be initialized after TBmakeScope)</description>
           <type name="Link2">
@@ -181,6 +227,7 @@
         </attribute>
       </attributes> 
     </node>
+
 
     <node name="VarDef">
       <description>a variable definition and the remaining definitions in the scope</description>
@@ -266,7 +313,7 @@
           <description>the function body</description>
           <targets>
             <target mandatory="no">
-              <node name="Block" />
+              <node name="InnerBlock" />
               <phases>
                 <all />
               </phases>

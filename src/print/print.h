@@ -27,6 +27,7 @@ extern node *PRTvardef (node * arg_node, info * arg_info);
 extern node *PRTfun (node * arg_node, info * arg_info);
 extern node *PRTfunparam (node * arg_node, info * arg_info);
 extern node *PRTblock (node * arg_node, info * arg_info);
+extern node *PRTinnerblock (node * arg_node, info * arg_info);
 extern node *PRTif (node * arg_node, info * arg_info);
 extern node *PRTwhile (node * arg_node, info * arg_info);
 extern node *PRTdowhile (node * arg_node, info * arg_info);
