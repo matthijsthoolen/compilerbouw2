@@ -12,7 +12,8 @@ bool list_free(list *head);
 bool list_reset(list *head);
 list* list_new();
 
-list* list_push(list *head, void *value);
+bool list_reversepush(list *head, void *value);
+bool list_push(list *head, void *value);
 int list_length(list *head);
 
 #endif

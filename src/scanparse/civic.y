@@ -122,6 +122,10 @@ fun_params: fun_param COMMA fun_params  {
             | fun_param
             { 
                 $$ = TBmakeFunparamlist($1, NULL);
+            }
+            |
+            {
+                $$ = NULL;
             };
 
 fun_param: ty ID
@@ -151,9 +155,10 @@ fundef: funheader ANBRACKET_L fun_body_defs stmts ANBRACKET_R
          $$ = x;
     };
 
-fun_body_defs: fun_body_vardefs           { $$ = $1; };
-fun_body_vardefs: vardeflist fun_body_vardefs { $$ = $1; }
-                |                         { $$ = NULL; }
+fun_body_defs: fun_body_vardefs                 { $$ = $1; };
+fun_body_vardefs: vardeflist fun_body_vardefs   { $$ = $1; }
+                | vardeflist                    { $$ = $1; }
+                |                               { $$ = NULL; }
 
 stmts: stmt stmts       { $$ = TBmakeStmts($1, $2); }
      |                  { $$ = NULL; }

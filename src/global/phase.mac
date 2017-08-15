@@ -36,6 +36,12 @@ PHASE(  ds,
         "Desugar code",
         ALWAYS)
 
+SUBPHASE(dsvs,
+         "Desugar vardef split",
+         DSVSdoVardefSplit,
+         ALWAYS,
+         ds)
+
 SUBPHASE(dse,
         "Do early desugar",
         DSEdoEarlyDesugar,

@@ -27,7 +27,6 @@ bool list_free(list *head)
     printf("2");
 
     while (curr) {
-        printf("loop %s", curr->value);
         tmp = curr;
         curr = curr->next;
         tmp->next = NULL;
@@ -75,7 +74,7 @@ list* list_new()
 /**
  * Push value to the end of the list
  */
-list* list_push(list *head, void *value)
+bool list_reversepush(list *head, void *value)
 {
     list *add;
     list *current;
@@ -98,7 +97,29 @@ list* list_push(list *head, void *value)
     // Add the new item to the (previous) tail
     current->next = add;
 
-    DBUG_RETURN(current);
+    DBUG_RETURN(TRUE);
+}
+
+/**
+ * Push the value to the front of the list
+ */
+bool list_push(list *head, void *value)
+{
+    list *new;
+
+    DBUG_ENTER("list_push");
+
+    if (head == NULL) {
+        DBUG_RETURN(FALSE);
+    }
+
+    new = list_new();
+    new->value = value;
+    new->next = head->next;
+    
+    head->next = new;
+
+    DBUG_RETURN(TRUE);
 }
 
 void list_print_str(list *head)

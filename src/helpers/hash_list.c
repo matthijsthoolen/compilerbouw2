@@ -149,7 +149,6 @@ void* map_get(hashmap *map, void *key) {
     DBUG_PRINT("HELP", ("Return map value with key %s if exists", key));
 
     while((map = map->next)) {
-        printf("First");
         if(STReq(map->key, key)) {
             DBUG_RETURN(map->value);
         }

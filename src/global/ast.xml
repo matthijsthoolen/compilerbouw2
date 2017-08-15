@@ -20,35 +20,45 @@
       <traversal id="FREE" name="Free Syntax Tree" default="user" include="free_node.h" />
       <traversal id="CHK" name="Check Syntax Tree" default="user" include="check.h" />
 
-    <traversal id="DSE" name="Desugar Early" default="sons" include="initial_desugar.h">
-        <travuser>
-            <node name="Block" />
-            <node name="InnerBlock" />
-            <node name="Fun" />
-            <node name="For" />
-            <node name="Var" />
-            <node name="Stmts" />
-        </travuser>
-    </traversal>
-      
-      <traversal id="CA" name="Context Analysis Functions" default="sons" include="context_functions.h">
-        <travuser>
-          <node name="Block" />
-          <node name="Fun" />
-          <node name="Call" />
-        </travuser>
-      </traversal>
+        <traversal id="DSVS" name="Desugar vardef split" default="sons" include="vardef_split.h">
+            <travuser>
+                <node name="Block" />
+                <node name="Fun" />
+                <node name="InnerBlock" />
+                <node name="VarDefList" />
+                <node name="VarDef" />
+            </travuser>
+        </traversal>
 
-      <traversal id="CAV" name="Context Analysis Variables" default="sons" include="context_vars.h">
-        <travuser>
-            <node name="Block" />
-            <node name="Fun" />
-            <node name="FunParam" />
-            <node name="VarDefList" />
-            <node name="VarDef" />
-            <node name="Var" />
-        </travuser>
-      </traversal>
+        <traversal id="DSE" name="Desugar Early" default="sons" include="initial_desugar.h">
+            <travuser>
+                <node name="Block" />
+                <node name="InnerBlock" />
+                <node name="Fun" />
+                <node name="For" />
+                <node name="Var" />
+                <node name="Stmts" />
+            </travuser>
+        </traversal>
+      
+        <traversal id="CA" name="Context Analysis Functions" default="sons" include="context_functions.h">
+            <travuser>
+                <node name="Block" />
+                <node name="Fun" />
+                <node name="Call" />
+            </travuser>
+        </traversal>
+
+        <traversal id="CAV" name="Context Analysis Variables" default="sons" include="context_vars.h">
+            <travuser>
+                <node name="Block" />
+                <node name="Fun" />
+                <node name="FunParam" />
+                <node name="VarDefList" />
+                <node name="VarDef" />
+                <node name="Var" />
+            </travuser>
+        </traversal>
     </general>
   </phases>
 
@@ -180,18 +190,6 @@
         <attribute name="Parent">
           <description>the parent scope</description>
           <type name="Link">
-            <targets>
-              <target mandatory="no">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-        <attribute name="StmtsTail">
-          <description>the tail of Stmts (warning! must be initialized after TBmakeScope)</description>
-          <type name="Link2">
             <targets>
               <target mandatory="no">
                 <phases>

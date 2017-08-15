@@ -94,9 +94,6 @@ node *DSEblock(node *arg_node, info *arg_info) {
         var = TRAVdo(var, arg_info);
     }
 
-    /**
-     * Check functions, but do it only once
-     */
     function = BLOCK_FUNS(arg_node);
 
     if (function != NULL) {
@@ -154,7 +151,7 @@ node *DSEinnerblock(node *arg_node, info *arg_info) {
     }
 
     // Clear the list for the next round
-    INFO_VARDEFS(arg_info) = list_reset(NULL);    
+    INFO_VARDEFS(arg_info) = list_new();    
 
     DBUG_RETURN(arg_node);
 }
@@ -192,7 +189,7 @@ node *DSEfor(node *arg_node, info *arg_info) {
     
     FOR_BLOCK(arg_node) = TRAVopt(FOR_BLOCK(arg_node), arg_info);
 
-    list_push(arg_info->vardefs, new_vardef);
+    list_reversepush(arg_info->vardefs, new_vardef);
   
     //if (FOR_STEP(arg_node) != NULL) { 
     //}

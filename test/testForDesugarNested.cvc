@@ -1,0 +1,26 @@
+int funParams(int g, int b, bool t) {
+    int z = 25;
+    int d = 56000;
+    int ii1 = 5600;
+
+    for (int i = 0, 20, 50) {
+
+        for (int j = 2, 30, 80) {
+            j = j + 1;
+        }
+    
+        i = i + 1;
+    }
+
+    for (int j = 2, 30, 80) {
+        j = j + 1;
+    }
+
+    b = i;
+
+    if (t) {
+        return i;
+    } else {
+        return g + z + d;
+    }
+}
