@@ -45,6 +45,7 @@
             <node name="Block" />
             <node name="Fun" />
             <node name="FunParam" />
+            <node name="VarDefList" />
             <node name="VarDef" />
             <node name="Var" />
         </travuser>
@@ -99,10 +100,10 @@
       <description>a (global) scope</description>
       <sons>
         <son name="Vars">
-          <description>the variables defined in this scope</description>
+          <description>a list of the variables defined in this block</description>
           <targets>
             <target mandatory="no">
-              <node name="VarDef" />
+              <node name="VarDefList" />
               <phases>
                 <all />
               </phases>
@@ -134,18 +135,6 @@
             </targets>
           </type>
         </attribute>
-        <attribute name="VarsTail">
-          <description>the tail of Vars (warning! must be initialized after TBmakeScope)</description>
-          <type name="Link2">
-            <targets>
-              <target mandatory="no">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
         <attribute name="FunsTail">
           <description>the tail of Funs (warning! must be initialized after TBmakeScope)</description>
           <type name="Link2">
@@ -168,7 +157,7 @@
           <description>the variables defined in this block</description>
           <targets>
             <target mandatory="no">
-              <node name="VarDef" />
+              <node name="VarDefList" />
               <phases>
                 <all />
               </phases>
@@ -201,18 +190,6 @@
             </targets>
           </type>
         </attribute>
-        <attribute name="VarsTail">
-          <description>the tail of Vars (warning! must be initialized after TBmakeScope)</description>
-          <type name="Link2">
-            <targets>
-              <target mandatory="no">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
         <attribute name="StmtsTail">
           <description>the tail of Stmts (warning! must be initialized after TBmakeScope)</description>
           <type name="Link2">
@@ -228,9 +205,39 @@
       </attributes> 
     </node>
 
+    <node name="VarDefList">
+        <description>A list with vardefs</description>
+        <sons>
+            <son name="Head">
+                <targets>
+                    <target mandatory="yes">
+                        <node name="VarDef">
+                            <phases>
+                                <all />
+                            </phases>
+                        </node>
+                    </target>
+                </targets>
+            </son>
+            <son name="Next">
+                <targets>
+                    <target mandatory="yes">
+                        <node name="VarDefList">
+                            <phases>
+                                <all />
+                            </phases>
+                        </node>
+                    </target>
+                </targets>
+            </son>
+        </sons>
+        <attributes>
+        </attributes>
+    </node>
+
 
     <node name="VarDef">
-      <description>a variable definition and the remaining definitions in the scope</description>
+      <description>a variable definition</description>
       <sons>
         <son name="Init">
           <description>the initial value</description>
@@ -243,17 +250,6 @@
             </target>
           </targets>
         </son>
-        <son name="Next">
-          <description>the remaining definitions</description>
-          <targets>
-            <target mandatory="no">
-              <node name="VarDef" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son> 
       </sons>
       <attributes>
         <attribute name="Prefix">
@@ -302,7 +298,7 @@
           <description>the function parameters</description>
           <targets>
             <target mandatory="no">
-              <node name="FunParam" />
+              <node name="FunParamList" />
               <phases>
                 <all />
               </phases>
@@ -372,20 +368,36 @@
       </attributes>
     </node>
 
+    <node name="FunParamList">
+        <sons>
+            <son name="Param">
+                <targets>
+                    <target mandatory="yes">
+                        <node name="FunParam" />
+                        <phases>
+                            <all />
+                        </phases>
+                    </target>
+                </targets>
+            </son>
+            <son name="Next">
+                <targets>
+                    <target mandatory="no">
+                        <node name="FunParamList" />
+                        <phases>
+                            <all />
+                        </phases>
+                    </target>
+                </targets>
+            </son>
+        </sons>
+        <attributes>
+        </attributes>
+    </node>
+
     <node name="FunParam">
-      <description>a function parameter (must be copied to the body's scope if it exists)</description>
+      <description>A function parameter</description>
       <sons>
-        <son name="Next">
-          <description>the remaining parameters</description>
-          <targets>
-            <target mandatory="no">
-              <node name="FunParam" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
       </sons>
       <attributes>
         <attribute name="Ty">
@@ -448,7 +460,7 @@
       <description>represents assignment statement</description>
       <sons>
         <son name="Left">
-          <description>left hand side variable; can be missing to represent procedure calls</description>
+          <description>left hand side variable</description>
           <targets>
             <target mandatory="no">
               <node name="Var" />
@@ -570,11 +582,11 @@
     <node name="For">
       <description>a for statement</description>
       <sons>
-        <son name="VarDef">
+        <son name="Assign">
           <description>the name and value for the counter var</description>
           <targets>
             <target mandatory="yes">
-              <node name="VarDef" />
+              <node name="Assign" />
               <phases>
                 <all />
               </phases>

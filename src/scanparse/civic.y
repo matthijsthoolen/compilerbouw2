@@ -51,18 +51,17 @@ static bool cur_scope_is_global() {
 %token <cflt> FLOATVAL
 %token <id> ID
 
-%type <node> program vardef fun fun_params fun_body_defs fun_body_vardefs
+%type <node> program vardef fundef funheader fun_params fun_param fun_body_defs fun_body_vardefs
 %type <node> stmts stmt var assign stmt_return
-%type <node> stmt_if stmt_if_else stmt_while stmt_do_while stmt_for stmt_for_
+%type <node> stmt_if stmt_if_else stmt_while stmt_do_while stmt_for
 %type <node> call_args call
-
+%type <node> vardeflist
 %type <node> expr expr0 expr2 expr3 expr4 expr6 expr7 expr11 expr12
 %type <cbinop> binop3 binop4 binop6 binop7 binop11 binop12
 
 %type <cmonop> monop2
 %type <ctype> ty
 %type <cglobal_prefix> global_prefix
-%type <node> vardef_init
 
 %start program
 
@@ -79,7 +78,6 @@ program: {
             DBUG_ASSERT(cur_scope == NULL, "program is not reentrant");
             global_scope = TBmakeBlock(NULL, NULL);
             cur_scope = global_scope;
-            BLOCK_VARSTAIL(global_scope) = &BLOCK_VARS(global_scope);
             BLOCK_FUNSTAIL(global_scope) = &BLOCK_FUNS(global_scope);
          }
          program_
@@ -89,7 +87,7 @@ program: {
             cur_scope = NULL;
          }
        ;
-program_: global_prefix    fun {    FUN_PREFIX($2) = $1; } program_ {}
+program_: global_prefix fundef {    FUN_PREFIX($2) = $1; } program_ {}
         | global_prefix vardef { VARDEF_PREFIX($2) = $1; } program_ {}
         |                                                           {}
         ;
@@ -99,53 +97,62 @@ global_prefix: EXTERN   { $$ = global_prefix_extern; }
              |          { $$ = global_prefix_none; }
              ;
 
-vardef: ty ID vardef_init SEMICOLON
+vardeflist: vardef vardeflist
+    {
+        $$ = TBmakeVardeflist($1, $2);
+    }
+    | vardef
+    {
+        $$ = TBmakeVardeflist($1, NULL);
+    };
+
+vardef: ty ID LET expr SEMICOLON
         {
-            node *x = TBmakeVardef($1, $2, $3, NULL);
-            *INNERBLOCK_VARSTAIL(cur_scope) = x;
-            INNERBLOCK_VARSTAIL(cur_scope) = &VARDEF_NEXT(x);
-            $$ = x;
+            $$ = TBmakeVardef($1, $2, $4);
+        }
+      | ty ID SEMICOLON
+        {
+            $$ = TBmakeVardef($1, $2, NULL);
         };
-vardef_init: LET expr   { $$ = $2; }
-             |          { $$ = NULL; }
-             ;
 
 
-fun_params: ty ID COMMA fun_params  { $$ = TBmakeFunparam($1, $2, $4); }
-          | ty ID                   { $$ = TBmakeFunparam($1, $2, NULL); }
-          |                         { $$ = NULL; }
-          ;
+fun_params: fun_param COMMA fun_params  { 
+                $$ = TBmakeFunparamlist($1, $3); 
+            }
+            | fun_param
+            { 
+                $$ = TBmakeFunparamlist($1, NULL);
+            };
 
-fun: ty ID BRACKET_L fun_params BRACKET_R
-     {
+fun_param: ty ID
+    {
+        $$ = TBmakeFunparam($1, $2);
+    };
+
+funheader: ty ID BRACKET_L fun_params BRACKET_R
+    {  
          node *scope = TBmakeInnerblock(NULL, NULL);
          INNERBLOCK_PARENT(scope) = cur_scope;
-         INNERBLOCK_VARSTAIL(scope) = &INNERBLOCK_VARS(scope);
          BLOCK_FUNSTAIL(global_scope) = &BLOCK_FUNS(global_scope);
          cur_scope = scope;
 
-         node **tail = &INNERBLOCK_VARS(scope);
-         node *n = $4;
-         while (n != NULL) {
-             node *x = TBmakeVardef(FUNPARAM_TY(n), FUNPARAM_ID(n), NULL, NULL);
-             *tail = x;
-             tail = &VARDEF_NEXT(x);
-             n = FUNPARAM_NEXT(n);
-         }
-     }
-     ANBRACKET_L fun_body_defs stmts ANBRACKET_R
-     {
-         node *body = TBmakeInnerblock(cur_scope, $9);
+         $$ = TBmakeFun($1, $2, $4, NULL, NULL);
+    };
+
+fundef: funheader ANBRACKET_L fun_body_defs stmts ANBRACKET_R
+    {
+         node *body = TBmakeInnerblock(NULL, $4);
          cur_scope = INNERBLOCK_PARENT(cur_scope);
 
-         node *x = TBmakeFun($1, $2, $4, body, NULL);
+         node *x = $1;
+         FUN_BODY(x) = body;
          *BLOCK_FUNSTAIL(global_scope) = x;
          BLOCK_FUNSTAIL(global_scope) = &FUN_NEXT(x);
          $$ = x;
-     };
+    };
 
 fun_body_defs: fun_body_vardefs           { $$ = $1; };
-fun_body_vardefs: vardef fun_body_vardefs { $$ = $1; }
+fun_body_vardefs: vardeflist fun_body_vardefs { $$ = $1; }
                 |                         { $$ = NULL; }
 
 stmts: stmt stmts       { $$ = TBmakeStmts($1, $2); }
@@ -162,7 +169,8 @@ stmt: assign            { $$ = $1; }
 
 var: ID { $$ = TBmakeVar($1); };
 
-assign: var LET expr SEMICOLON { $$ = TBmakeAssign($1, $3); };
+assign: var LET expr SEMICOLON  { $$ = TBmakeAssign($1, $3); }
+      | var LET expr            { $$ = TBmakeAssign($1, $3); }
 
 call: var BRACKET_L call_args BRACKET_R  { $$ = TBmakeCall($1, $3); };
 call_args: expr COMMA call_args         { $$ = TBmakeExprlist($1, $3); }
@@ -185,10 +193,14 @@ stmt_while: WHILE BRACKET_L expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R
 stmt_do_while: DO ANBRACKET_L stmts ANBRACKET_R WHILE BRACKET_L expr BRACKET_R SEMICOLON
                 { $$ = TBmakeDowhile($3, $7); };
 
-stmt_for: FOR BRACKET_L INT ID LET expr COMMA expr stmt_for_ BRACKET_R ANBRACKET_L stmts ANBRACKET_R
-                { $$ = TBmakeFor(TBmakeVardef(TY_int, $4, $6, NULL), $8, $9, $12); };
-stmt_for_: COMMA expr   { $$ = $2; }
-         |              { $$ = NULL; }
+stmt_for: FOR BRACKET_L INT var LET expr COMMA expr COMMA expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R
+                { 
+                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, $10, $13); 
+                }
+                | FOR BRACKET_L INT var LET expr COMMA expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R
+                {
+                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, NULL, $11); 
+                };
 
 expr: expr12 { $$ = $1; };
 expr12: expr12 binop12 expr11           { $$ = TBmakeBinop($2, $1, $3); }

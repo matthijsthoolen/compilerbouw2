@@ -86,6 +86,17 @@ node *CAVfun(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
+node *CAVfunparamlist(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CAVfunparamlist");
+
+    FUNPARAMLIST_PARAM(arg_node) = TRAVdo(FUNPARAMLIST_PARAM(arg_node), arg_info);
+
+    FUNPARAMLIST_NEXT(arg_node) = TRAVopt(FUNPARAMLIST_NEXT(arg_node), arg_info);
+
+    DBUG_RETURN(arg_node);
+}
+
 node *CAVfunparam(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVfunparam");
@@ -104,7 +115,16 @@ node *CAVfunparam(node *arg_node, info *arg_info)
 
     map_push(INFO_LOCAL(arg_info), FUNPARAM_ID(arg_node), arg_node);
 
-    FUNPARAM_NEXT(arg_node) = TRAVopt(FUNPARAM_NEXT(arg_node), arg_info);
+    DBUG_RETURN(arg_node);
+}
+
+node *CAVvardeflist(node *arg_node, info *arg_info) 
+{
+    DBUG_ENTER("CAVvardeflist");
+
+    VARDEFLIST_HEAD(arg_node) = TRAVdo(VARDEFLIST_HEAD(arg_node), arg_info);
+
+    VARDEFLIST_NEXT(arg_node) = TRAVopt(VARDEFLIST_NEXT(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }
@@ -125,8 +145,6 @@ node *CAVvardef(node *arg_node, info *arg_info)
     }
 
     map_push(INFO_LOCAL(arg_info), VARDEF_ID(arg_node), arg_node);
-
-    VARDEF_NEXT(arg_node) = TRAVopt(VARDEF_NEXT(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }

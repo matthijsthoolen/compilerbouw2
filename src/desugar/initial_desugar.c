@@ -6,16 +6,21 @@
 #include "globals.h"
 #include "str.h"
 #include "ctinfo.h"
+#include "list.h"
 
 #include "initial_desugar.h"
 
 struct INFO {
     bool checkedFunctions;
+    node *curFun;
     int nestLevel;
+    list *vardefs;
 };
 
-#define INFO_CHECKEDFUNCTIONS(n) ((n)->checkedFunctions)
-#define INFO_NESTLVL(n) ((n)->nestLevel)
+#define INFO_CHECKEDFUNCTIONS(n)    ((n)->checkedFunctions)
+#define INFO_NESTLVL(n)             ((n)->nestLevel)
+#define INFO_CURFUN(n)              ((n)->curFun)
+#define INFO_VARDEFS(n)             ((n)->vardefs)
 
 static info *MakeInfo()
 {
@@ -27,6 +32,8 @@ static info *MakeInfo()
 
     INFO_CHECKEDFUNCTIONS(result) = FALSE;
     INFO_NESTLVL(result) = 0;
+    INFO_CURFUN(result) = NULL;
+    INFO_VARDEFS(result) = list_new();
     
     DBUG_RETURN(result);
 }
@@ -76,16 +83,7 @@ node *DSEinnerblock(node *arg_node, info *arg_info) {
 
     DBUG_ENTER("DSEblock");
 
-    /**
-     * Check vars
-     */
-
-    var = INNERBLOCK_VARS(arg_node);
-
-    if (var != NULL) {
-        var = TRAVdo(var, arg_info);
-    }
-
+    INFO_CURFUN(arg_info) = arg_node;
 
     /**
      * Check stmts
@@ -97,6 +95,17 @@ node *DSEinnerblock(node *arg_node, info *arg_info) {
         stmts = TRAVdo(stmts, arg_info);
     }
 
+    INFO_CURFUN(arg_info) = NULL;
+
+    DBUG_RETURN(arg_node);
+}
+
+node *DSEstmts(node *arg_node, info *arg_info) {
+    DBUG_ENTER("DSEstmts");
+
+    STMTS_STMT(arg_node) = TRAVopt(STMTS_STMT(arg_node), arg_info);
+    STMTS_NEXT(arg_node) = TRAVopt(STMTS_NEXT(arg_node), arg_info);
+
     DBUG_RETURN(arg_node);
 }
 
@@ -104,7 +113,7 @@ node *DSEfun(node *arg_node, info *arg_info) {
     node *body;
 
     DBUG_ENTER("DSEfun");
-   
+ 
     body = FUN_BODY(arg_node);
     
     if (body != NULL) {
@@ -127,27 +136,35 @@ node *DSEwhile(node *arg_node, info *arg_info) {
 node *DSEfor(node *arg_node, info *arg_info) {
     node *new_block;
     node *for_step;
+    node *for_upper;
+    node *for_assign;
 
     DBUG_ENTER("DSEfor");
 
-    
+    INFO_NESTLVL(arg_info)++;     
 
-    new_block = TBmakeInnerblock(NULL, NULL);
-    
+    for_assign  = FOR_ASSIGN(arg_node);
+    for_upper   = FOR_UPPER(arg_node);
+    for_step    = FOR_STEP(arg_node);
+
+    node *x = TBmakeVardef(
+                    TY_int,
+                    VAR_NAME(ASSIGN_LEFT(for_assign)), 
+                    NULL
+              );
+ 
+    /*FOR_BLOCK(arg_node) = TRAVopt(FOR_BLOCK(arg_node), arg_info);
+ 
     if (FOR_STEP(arg_node) != NULL) { 
-    }
+    }*/
+
+    INFO_NESTLVL(arg_info)--;
 
     DBUG_RETURN(arg_node);
 }
 
 node *DSEdowhile(node *arg_node, info *arg_info) {
     DBUG_ENTER("DSEdowhile");
-
-    DBUG_RETURN(arg_node);
-}
-
-node *DSEstmts(node *arg_node, info *arg_info) {
-    DBUG_ENTER("DSEstmts");
 
     DBUG_RETURN(arg_node);
 }
