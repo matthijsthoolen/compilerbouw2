@@ -24,6 +24,12 @@ SUBPHASE( scp,
           ALWAYS,
           ld)
 
+SUBPHASE( prt,
+          "Print ast",
+          PRTdoPrint,
+          ALWAYS,
+          ld)
+
 ENDPHASE( ld)
 
 PHASE(  ds,

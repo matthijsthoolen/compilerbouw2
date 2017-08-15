@@ -122,7 +122,7 @@ node *CAVvardeflist(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVvardeflist");
 
-    VARDEFLIST_HEAD(arg_node) = TRAVdo(VARDEFLIST_HEAD(arg_node), arg_info);
+    VARDEFLIST_HEAD(arg_node) = TRAVopt(VARDEFLIST_HEAD(arg_node), arg_info);
 
     VARDEFLIST_NEXT(arg_node) = TRAVopt(VARDEFLIST_NEXT(arg_node), arg_info);
 

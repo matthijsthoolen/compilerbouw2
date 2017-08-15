@@ -27,14 +27,16 @@
  * INFO structure
  */
 struct INFO {
-  bool firsterror;
-  int indent;
-  bool ate_newline;
+    bool firsterror;
+    int indent;
+    bool ate_newline;
+    bool no_semicolon;
 };
 
-#define INFO_FIRSTERROR(n)  ((n)->firsterror)
-#define INFO_INDENT(n)      ((n)->indent)
-#define INFO_IS_NEW_LINE(n) ((n)->ate_newline)
+#define INFO_FIRSTERROR(n)      ((n)->firsterror)
+#define INFO_INDENT(n)          ((n)->indent)
+#define INFO_IS_NEW_LINE(n)     ((n)->ate_newline)
+#define INFO_NO_SEMICOLON(n)    ((n)->no_semicolon)
 
 #define INDENT_NEWLINE(n) INFO_IS_NEW_LINE(n) = TRUE;
 #define INDENT_INCREASE(n) INFO_INDENT(n) += 4; INDENT_NEWLINE(n)
@@ -47,9 +49,10 @@ static info *MakeInfo() {
 
     result = MEMmalloc(sizeof(info));
 
-    INFO_FIRSTERROR(result) = FALSE;
-    INFO_INDENT(result) = 0;
-    INFO_IS_NEW_LINE(result) = FALSE;
+    INFO_FIRSTERROR(result)     = FALSE;
+    INFO_INDENT(result)         = 0;
+    INFO_IS_NEW_LINE(result)    = FALSE;
+    INFO_NO_SEMICOLON(result)   = FALSE;
 
     DBUG_RETURN(result);
 }
@@ -134,19 +137,23 @@ PRTstmts (node * arg_node, info * arg_info)
 node *
 PRTassign (node * arg_node, info * arg_info)
 {
-  DBUG_ENTER ("PRTassign");
+    DBUG_ENTER ("PRTassign");
 
-  indent(arg_info);
-  if (ASSIGN_LEFT( arg_node) != NULL) {
-    ASSIGN_LEFT( arg_node) = TRAVdo( ASSIGN_LEFT( arg_node), arg_info);
-    printf( " = ");
-  }
+    indent(arg_info);
 
-  ASSIGN_RIGHT( arg_node) = TRAVdo( ASSIGN_RIGHT( arg_node), arg_info);
+    if (ASSIGN_LEFT( arg_node) != NULL) {
+        ASSIGN_LEFT( arg_node) = TRAVdo( ASSIGN_LEFT( arg_node), arg_info);
+        printf( " = ");
+    }
 
-  printf( ";\n"); newline(arg_info);
+    ASSIGN_RIGHT( arg_node) = TRAVdo( ASSIGN_RIGHT( arg_node), arg_info);
 
-  DBUG_RETURN (arg_node);
+    if (INFO_NO_SEMICOLON(arg_info) == FALSE) {
+        printf(";\n");
+        newline(arg_info);
+    }
+
+    DBUG_RETURN (arg_node);
 }
 
 
@@ -653,16 +660,21 @@ extern node *PRTfor (node * arg_node, info * arg_info) {
 
     indent(arg_info);
     printf("for (");
+    INFO_NO_SEMICOLON(arg_info) = TRUE;
     FOR_ASSIGN(arg_node) = TRAVdo(FOR_ASSIGN(arg_node), arg_info);
+    INFO_NO_SEMICOLON(arg_info) = FALSE;
     printf(", ");
     FOR_UPPER(arg_node) = TRAVdo(FOR_UPPER(arg_node), arg_info);
+    
     if (FOR_STEP(arg_node) != NULL) {
         printf(", ");
         FOR_STEP(arg_node) = TRAVdo(FOR_STEP(arg_node), arg_info);
     }
+    
     printf(") ");
     print_blocklike(&FOR_BLOCK(arg_node), arg_info);
-    printf("\n"); newline(arg_info);
+    printf("\n");
+    newline(arg_info);
 
     DBUG_RETURN(arg_node);
 }

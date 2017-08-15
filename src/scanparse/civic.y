@@ -141,7 +141,7 @@ funheader: ty ID BRACKET_L fun_params BRACKET_R
 
 fundef: funheader ANBRACKET_L fun_body_defs stmts ANBRACKET_R
     {
-         node *body = TBmakeInnerblock(NULL, $4);
+         node *body = TBmakeInnerblock($3, $4);
          cur_scope = INNERBLOCK_PARENT(cur_scope);
 
          node *x = $1;

@@ -12,14 +12,12 @@
 
 struct INFO {
     bool checkedFunctions;
-    node *curFun;
     int nestLevel;
     list *vardefs;
 };
 
 #define INFO_CHECKEDFUNCTIONS(n)    ((n)->checkedFunctions)
 #define INFO_NESTLVL(n)             ((n)->nestLevel)
-#define INFO_CURFUN(n)              ((n)->curFun)
 #define INFO_VARDEFS(n)             ((n)->vardefs)
 
 static info *MakeInfo()
@@ -32,7 +30,6 @@ static info *MakeInfo()
 
     INFO_CHECKEDFUNCTIONS(result) = FALSE;
     INFO_NESTLVL(result) = 0;
-    INFO_CURFUN(result) = NULL;
     INFO_VARDEFS(result) = list_new();
     
     DBUG_RETURN(result);
@@ -45,6 +42,35 @@ static info *FreeInfo(info *info)
     info = MEMfree(info);
 
     DBUG_RETURN(info);
+}
+
+/**
+ * Append the vars in a (inner)block with the given vardefs list
+ */
+node *append_vars(node *vars, list *vardefs)
+{
+    node *vardef_list;
+    node *tail;
+
+    DBUG_ENTER("append_vars");
+
+    vardef_list = NULL;
+
+    //Create a vardeflist (nodes) from the tmp vardefs list
+    while((vardefs = vardefs->next)) {
+        vardef_list = TBmakeVardeflist(vardefs->value, vardef_list);
+    }
+
+    tail = vardef_list;
+
+    while(VARDEFLIST_NEXT(tail)) {
+        tail = VARDEFLIST_NEXT(tail);
+    }
+
+    // Append the new list with the 'original'
+    VARDEFLIST_NEXT(tail) = vars;
+
+    DBUG_RETURN(vardef_list);
 }
 
 node *DSEblock(node *arg_node, info *arg_info) {
@@ -83,19 +109,18 @@ node *DSEinnerblock(node *arg_node, info *arg_info) {
 
     DBUG_ENTER("DSEblock");
 
-    INFO_CURFUN(arg_info) = arg_node;
-
     /**
      * Check stmts
      */
-
     stmts = INNERBLOCK_STMTS(arg_node);
     
     if (stmts != NULL) {
         stmts = TRAVdo(stmts, arg_info);
     }
 
-    INFO_CURFUN(arg_info) = NULL;
+    if (list_length(INFO_VARDEFS(arg_info)) > 0) {
+        INNERBLOCK_VARS(arg_node) = append_vars(INNERBLOCK_VARS(arg_node), arg_info->vardefs);
+    }
 
     DBUG_RETURN(arg_node);
 }
@@ -118,7 +143,7 @@ node *DSEfun(node *arg_node, info *arg_info) {
     
     if (body != NULL) {
         body = TRAVdo(body, arg_info);
-    }    
+    }
 
     FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);
 
@@ -134,7 +159,7 @@ node *DSEwhile(node *arg_node, info *arg_info) {
 }
 
 node *DSEfor(node *arg_node, info *arg_info) {
-    node *new_block;
+    node *new_vardef;
     node *for_step;
     node *for_upper;
     node *for_assign;
@@ -147,16 +172,32 @@ node *DSEfor(node *arg_node, info *arg_info) {
     for_upper   = FOR_UPPER(arg_node);
     for_step    = FOR_STEP(arg_node);
 
-    node *x = TBmakeVardef(
+    // Change the name. Based on the nesting LvL. 'int i' in first nesting become 'int i--1' 
+    VAR_NAME(ASSIGN_LEFT(for_assign)) = STRcat(
+                                            VAR_NAME(ASSIGN_LEFT(for_assign)),
+                                            STRcat("--", STRitoa(INFO_NESTLVL(arg_info)))
+                                        );
+
+    new_vardef = TBmakeVardef(
                     TY_int,
                     VAR_NAME(ASSIGN_LEFT(for_assign)), 
                     NULL
               );
+
+    printf("%s\n", VARDEF_ID(new_vardef));
+
+
+    list_push(arg_info->vardefs, new_vardef);
+
+    //Note to self: not saved correctly (list push not working??)
+
+    list_print_str(arg_info->vardefs);
+    
  
-    /*FOR_BLOCK(arg_node) = TRAVopt(FOR_BLOCK(arg_node), arg_info);
+    //FOR_BLOCK(arg_node) = TRAVopt(FOR_BLOCK(arg_node), arg_info);
  
-    if (FOR_STEP(arg_node) != NULL) { 
-    }*/
+    //if (FOR_STEP(arg_node) != NULL) { 
+    //}
 
     INFO_NESTLVL(arg_info)--;
 

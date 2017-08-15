@@ -58,7 +58,7 @@ list* list_new() {
 /**
  * Push value to the end of the list
  */
-bool list_push(list *head, void *value) {
+list* list_push(list *head, void *value) {
     list *add;
     list *current;
 
@@ -80,5 +80,27 @@ bool list_push(list *head, void *value) {
     // Add the new item to the (previous) tail
     current->next = add;
 
-    DBUG_RETURN(FALSE);
+    DBUG_RETURN(current);
+}
+
+void list_print_str(list *head){
+    printf("[ ");
+    while((head = head->next))
+        printf("%s, ", (char*) head->value);
+    printf("]\n");
+}
+
+int list_length(list *head) {
+    int length;
+    DBUG_ENTER("list_length");
+
+    if (head == NULL) {
+        return 0;
+    }
+
+    length = 0;
+
+    while ((head = head->next) && ++length);
+
+    DBUG_RETURN(length);
 }
