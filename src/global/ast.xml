@@ -25,9 +25,8 @@
             <node name="Block" />
             <node name="InnerBlock" />
             <node name="Fun" />
-            <node name="While" />
             <node name="For" />
-            <node name="DoWhile" />
+            <node name="Var" />
             <node name="Stmts" />
         </travuser>
     </traversal>

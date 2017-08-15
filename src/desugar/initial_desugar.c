@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "str.h"
 #include "ctinfo.h"
+#include "hash_list.h"
 #include "list.h"
 
 #include "initial_desugar.h"
@@ -14,11 +15,13 @@ struct INFO {
     bool checkedFunctions;
     int nestLevel;
     list *vardefs;
+    hashmap *changeQueue;
 };
 
 #define INFO_CHECKEDFUNCTIONS(n)    ((n)->checkedFunctions)
 #define INFO_NESTLVL(n)             ((n)->nestLevel)
 #define INFO_VARDEFS(n)             ((n)->vardefs)
+#define INFO_QUEUE(n)               ((n)->changeQueue)
 
 static info *MakeInfo()
 {
@@ -28,9 +31,10 @@ static info *MakeInfo()
 
     result = MEMmalloc(sizeof(info));
 
-    INFO_CHECKEDFUNCTIONS(result) = FALSE;
-    INFO_NESTLVL(result) = 0;
-    INFO_VARDEFS(result) = list_new();
+    INFO_CHECKEDFUNCTIONS(result)   = FALSE;
+    INFO_NESTLVL(result)            = 0;
+    INFO_VARDEFS(result)            = list_new();
+    INFO_QUEUE(result)              = new_map();
     
     DBUG_RETURN(result);
 }
@@ -102,29 +106,6 @@ node *DSEblock(node *arg_node, info *arg_info) {
     DBUG_RETURN(arg_node);
 }
 
-node *DSEinnerblock(node *arg_node, info *arg_info) {
-
-    node *var;
-    node *stmts;
-
-    DBUG_ENTER("DSEblock");
-
-    /**
-     * Check stmts
-     */
-    stmts = INNERBLOCK_STMTS(arg_node);
-    
-    if (stmts != NULL) {
-        stmts = TRAVdo(stmts, arg_info);
-    }
-
-    if (list_length(INFO_VARDEFS(arg_info)) > 0) {
-        INNERBLOCK_VARS(arg_node) = append_vars(INNERBLOCK_VARS(arg_node), arg_info->vardefs);
-    }
-
-    DBUG_RETURN(arg_node);
-}
-
 node *DSEstmts(node *arg_node, info *arg_info) {
     DBUG_ENTER("DSEstmts");
 
@@ -152,8 +133,28 @@ node *DSEfun(node *arg_node, info *arg_info) {
     DBUG_RETURN(arg_node);
 }
 
-node *DSEwhile(node *arg_node, info *arg_info) {
-    DBUG_ENTER("DSEwhile");
+node *DSEinnerblock(node *arg_node, info *arg_info) {
+
+    node *var;
+    node *stmts;
+
+    DBUG_ENTER("DSEblock");
+
+    /**
+     * Check stmts
+     */
+    stmts = INNERBLOCK_STMTS(arg_node);
+    
+    if (stmts != NULL) {
+        stmts = TRAVdo(stmts, arg_info);
+    }
+
+    if (list_length(INFO_VARDEFS(arg_info)) > 0) {
+        INNERBLOCK_VARS(arg_node) = append_vars(INNERBLOCK_VARS(arg_node), arg_info->vardefs);
+    }
+
+    // Clear the list for the next round
+    INFO_VARDEFS(arg_info) = list_reset(NULL);    
 
     DBUG_RETURN(arg_node);
 }
@@ -172,6 +173,8 @@ node *DSEfor(node *arg_node, info *arg_info) {
     for_upper   = FOR_UPPER(arg_node);
     for_step    = FOR_STEP(arg_node);
 
+    char *old_name = STRcpy(VAR_NAME(ASSIGN_LEFT(for_assign)));
+
     // Change the name. Based on the nesting LvL. 'int i' in first nesting become 'int i--1' 
     VAR_NAME(ASSIGN_LEFT(for_assign)) = STRcat(
                                             VAR_NAME(ASSIGN_LEFT(for_assign)),
@@ -184,18 +187,13 @@ node *DSEfor(node *arg_node, info *arg_info) {
                     NULL
               );
 
-    printf("%s\n", VARDEF_ID(new_vardef));
-
+    // Add the new name and old name to the queue for changing the names in a later stage
+    map_push(INFO_QUEUE(arg_info), old_name, STRcpy(VAR_NAME(ASSIGN_LEFT(for_assign))));
+    
+    FOR_BLOCK(arg_node) = TRAVopt(FOR_BLOCK(arg_node), arg_info);
 
     list_push(arg_info->vardefs, new_vardef);
-
-    //Note to self: not saved correctly (list push not working??)
-
-    list_print_str(arg_info->vardefs);
-    
- 
-    //FOR_BLOCK(arg_node) = TRAVopt(FOR_BLOCK(arg_node), arg_info);
- 
+  
     //if (FOR_STEP(arg_node) != NULL) { 
     //}
 
@@ -204,8 +202,20 @@ node *DSEfor(node *arg_node, info *arg_info) {
     DBUG_RETURN(arg_node);
 }
 
-node *DSEdowhile(node *arg_node, info *arg_info) {
-    DBUG_ENTER("DSEdowhile");
+node *DSEvar(node *arg_node, info *arg_info) {
+    char *name;
+    char *new_name;
+    
+    DBUG_ENTER("DSEvar");
+
+    // Only check nested vars
+    if (INFO_NESTLVL(arg_info) > 0) {
+        char *name = VAR_NAME(arg_node);
+
+        if ((new_name = map_get(INFO_QUEUE(arg_info), name)) != NULL) {
+            VAR_NAME(arg_node) = new_name;
+        }
+    }
 
     DBUG_RETURN(arg_node);
 }

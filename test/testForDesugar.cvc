@@ -4,6 +4,7 @@ int funParams(int g, int b, bool t) {
     int ii1 = 5600;
 
     for (int i = 0, 20, 50) {
+
         i = i + 1;
     }
 

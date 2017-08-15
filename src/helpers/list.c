@@ -9,24 +9,32 @@
 /**
  * Destory and empty the list
  */
-bool list_free(list *head) {
-    DBUG_ENTER("list_free");
-
+bool list_free(list *head)
+{
     list *tmp;
-    list *tmp2;
+    list *curr;
+
+    DBUG_ENTER("list_free");
 
     if (head == NULL) {
         DBUG_RETURN(FALSE);
     }
 
-    tmp = head;
+    printf("1");
 
-    while (tmp2) {
-        tmp2 = tmp;
-        tmp = tmp->next;
+    curr = head;
+
+    printf("2");
+
+    while (curr) {
+        printf("loop %s", curr->value);
+        tmp = curr;
+        curr = curr->next;
         tmp->next = NULL;
         MEMfree(tmp);
     }
+    
+    printf("3");
 
     DBUG_RETURN(TRUE);
 }
@@ -34,15 +42,24 @@ bool list_free(list *head) {
 /**
  * Refresh the list
  */
-bool list_reset(list *head) {
+bool list_reset(list *head)
+{
     DBUG_ENTER("list_reset");
-    DBUG_RETURN(TRUE);
+    
+    if (head == NULL) {
+        DBUG_RETURN(TRUE);
+    }
+
+    head->next = NULL;
+    
+    DBUG_RETURN(list_free(head->next));
 }
 
 /**
  * Create a new list
  */
-list* list_new() {
+list* list_new()
+{
     list *new;
     
     DBUG_ENTER("list_new");
@@ -58,7 +75,8 @@ list* list_new() {
 /**
  * Push value to the end of the list
  */
-list* list_push(list *head, void *value) {
+list* list_push(list *head, void *value)
+{
     list *add;
     list *current;
 
@@ -83,14 +101,16 @@ list* list_push(list *head, void *value) {
     DBUG_RETURN(current);
 }
 
-void list_print_str(list *head){
+void list_print_str(list *head)
+{
     printf("[ ");
     while((head = head->next))
         printf("%s, ", (char*) head->value);
     printf("]\n");
 }
 
-int list_length(list *head) {
+int list_length(list *head)
+{
     int length;
     DBUG_ENTER("list_length");
 

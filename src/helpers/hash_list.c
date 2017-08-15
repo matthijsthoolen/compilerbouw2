@@ -78,7 +78,7 @@ bool map_push(hashmap *map, void *key, void *value)
     if (!map) {
         DBUG_RETURN(FALSE);
     }
-    
+ 
     hashmap *new;
     new = new_map();
 
@@ -124,7 +124,6 @@ bool map_has(hashmap *map, void *key) {
     }
 
     while((map = map->next)) {
-        printf(".");
         if(STReq(map->key, key)) {
             DBUG_RETURN(TRUE);
         }
@@ -141,14 +140,16 @@ bool map_has(hashmap *map, void *key) {
  * @returns {hashmap}
  */
 void* map_get(hashmap *map, void *key) {
-    DBUG_ENTER("map_has");
+    DBUG_ENTER("map_get");
 
     if (!map) {
         DBUG_RETURN(NULL);
     }
 
+    DBUG_PRINT("HELP", ("Return map value with key %s if exists", key));
+
     while((map = map->next)) {
-        printf(".");
+        printf("First");
         if(STReq(map->key, key)) {
             DBUG_RETURN(map->value);
         }
