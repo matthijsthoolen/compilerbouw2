@@ -9,6 +9,9 @@ extern node *CATCvardef(node *arg_node, info *arg_info);
 extern node *CATCinnerblock(node *arg_node, info *arg_info);
 extern node *CATCassign(node *arg_node, info *arg_info);
 extern node *CATCstmts(node *arg_node, info *arg_info);
+extern node *CATCwhile(node *arg_node, info *arg_info);
+extern node *CATCdowhile(node *arg_node, info *arg_info);
+extern node *CATCif(node *arg_node, info *arg_info);
 
 extern node *CATCvar(node *arg_node, info *arg_info);
 extern node *CATCmonop(node *arg_node, info *arg_info);

@@ -66,6 +66,7 @@
                 <node name="Assign" />
                 <node name="InnerBlock" />
                 <node name="Stmts" />
+                <node name="If" />
                 <node name="Var" />
                 <node name="MonOp" />
                 <node name="BinOp" />

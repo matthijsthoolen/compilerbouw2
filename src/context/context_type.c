@@ -165,6 +165,90 @@ node *CATCassign(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
+node *CATCwhile(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CATCwhile");
+
+    WHILE_COND(arg_node) = TRAVdo(WHILE_COND(arg_node), arg_info);
+
+    if (INFO_TYPE(arg_info) != TY_bool) {        
+        CTIerror(
+            "Row %d: the while condition must return a boolean to succeed",
+            NODE_LINE(WHILE_COND(arg_node))
+        );
+    }
+    
+    // Check if the while block is empty and warn the user if so
+    if (WHILE_BLOCK(arg_node) == NULL) {
+        CTIwarn(
+            "Row %d: While block is empty. Are you sure this is correct?",
+            NODE_LINE(arg_node)
+        );
+    }
+
+    WHILE_BLOCK(arg_node) = TRAVopt(WHILE_BLOCK(arg_node), arg_info);
+
+    // reset
+    INFO_TYPE(arg_info) = TY_unknown;
+
+    DBUG_RETURN(arg_node);
+}
+
+node *CATCdowhile(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CATCdowhile");
+
+    DOWHILE_COND(arg_node) = TRAVdo(DOWHILE_COND(arg_node), arg_info);
+
+    if (INFO_TYPE(arg_info) != TY_bool) {        
+        CTIerror(
+            "Row %d: theDoWhile condition must return a boolean to succeed",
+            NODE_LINE(DOWHILE_COND(arg_node))
+        );
+    }
+    
+    // Check if the while block is empty and warn the user if so
+    if (DOWHILE_BLOCK(arg_node) == NULL) {
+        CTIwarn(
+            "Row %d: DoWhile block is empty. Are you sure this is correct?",
+            NODE_LINE(arg_node)
+        );
+    }
+
+    DOWHILE_BLOCK(arg_node) = TRAVopt(DOWHILE_BLOCK(arg_node), arg_info);
+
+    // reset
+    INFO_TYPE(arg_info) = TY_unknown;
+    DBUG_RETURN(arg_node);
+}
+
+node *CATCif(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CATCif");
+    
+    TRAVdo(IF_COND(arg_node), arg_info);
+
+    if (INFO_TYPE(arg_info) != TY_bool) {
+        CTIerror(
+            "Row %d: the condition in the if statement must return a boolean to succeed",
+            NODE_LINE(IF_COND(arg_node))
+        );
+    }
+
+    // Check the if blocks for type check errors
+    if (IF_BLOCKT(arg_node) == NULL) {
+        CTIwarn(
+            "Row %d: if block is empty. Are you sure this is correct?",
+            NODE_LINE(IF_COND(arg_node))
+        );
+    }
+
+    IF_BLOCKT(arg_node) = TRAVopt(IF_BLOCKT(arg_node), arg_info);
+    IF_BLOCKF(arg_node) = TRAVopt(IF_BLOCKF(arg_node), arg_info);
+
+    DBUG_RETURN(arg_node);
+}
+
 node *CATCvar(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCvar");
