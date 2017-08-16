@@ -1,6 +1,5 @@
 %{
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -19,12 +18,6 @@ extern int yylex();
 static int yyerror( char *errname);
 
 static node *parseresult = NULL;
-static node *global_scope = NULL;
-static node *cur_scope = NULL;
-
-static bool cur_scope_is_global() {
-    return BLOCK_PARENT(cur_scope) == NULL;
-}
 
 %}
 
@@ -51,11 +44,13 @@ static bool cur_scope_is_global() {
 %token <cflt> FLOATVAL
 %token <id> ID
 
-%type <node> program vardef fundef funheader fun_params fun_param fun_body_defs fun_body_vardefs
-%type <node> stmts stmt var assign stmt_return
+%type <node> decl
+%type <node> program
+%type <node> vardef fundef funheader fun_params fun_param fun_body_defs fun_body_vardefs
+%type <node> stmts vardeflist
+%type <node> stmt var assign stmt_return
 %type <node> stmt_if stmt_if_else stmt_while stmt_do_while stmt_for
 %type <node> call_args call
-%type <node> vardeflist
 %type <node> expr expr0 expr2 expr3 expr4 expr6 expr7 expr11 expr12
 %type <cbinop> binop3 binop4 binop6 binop7 binop11 binop12
 
@@ -63,7 +58,7 @@ static bool cur_scope_is_global() {
 %type <ctype> ty
 %type <cglobal_prefix> global_prefix
 
-%start program
+%start result
 
 %%
 
@@ -73,24 +68,28 @@ ty: BOOL    { $$ = TY_bool; }
   | VOID    { $$ = TY_void; }
   ;
 
+result: program
+    {
+        parseresult = $1;
+    };
 
-program: {
-            DBUG_ASSERT(cur_scope == NULL, "program is not reentrant");
-            global_scope = TBmakeBlock(NULL, NULL);
-            cur_scope = global_scope;
-            BLOCK_FUNSTAIL(global_scope) = &BLOCK_FUNS(global_scope);
-         }
-         program_
-         {
-            DBUG_ASSERT(cur_scope_is_global(), "current scope is not global");
-            parseresult = TBmakeProgram(global_scope);
-            cur_scope = NULL;
-         }
-       ;
-program_: global_prefix fundef {    FUN_PREFIX($2) = $1; } program_ {}
-        | global_prefix vardef { VARDEF_PREFIX($2) = $1; } program_ {}
-        |                                                           {}
-        ;
+program: decl program
+    {
+        $$ = TBmakeProgram($1, $2);
+    }
+    | decl
+    {
+        $$ = TBmakeProgram($1, NULL);
+    };
+
+decl: fundef
+    {
+        $$ = $1;
+    }
+    | vardef
+    {
+        $$ = $1;
+    };
 
 global_prefix: EXTERN   { $$ = global_prefix_extern; }
              | EXPORT   { $$ = global_prefix_export; }
@@ -106,15 +105,14 @@ vardeflist: vardef vardeflist
         $$ = TBmakeVardeflist($1, NULL);
     };
 
-vardef: ty ID LET expr SEMICOLON
-        {
-            $$ = TBmakeVardef($1, $2, $4);
-        }
-      | ty ID SEMICOLON
-        {
-            $$ = TBmakeVardef($1, $2, NULL);
-        };
-
+vardef: global_prefix ty ID LET expr SEMICOLON
+    {
+        $$ = TBmakeVardef($1, $2, $3, $5);
+    }
+    | global_prefix ty ID SEMICOLON
+    {
+        $$ = TBmakeVardef($1, $2, $3, NULL);
+    };
 
 fun_params: fun_param COMMA fun_params  { 
                 $$ = TBmakeFunparamlist($1, $3); 
@@ -133,25 +131,17 @@ fun_param: ty ID
         $$ = TBmakeFunparam($1, $2);
     };
 
-funheader: ty ID BRACKET_L fun_params BRACKET_R
-    {  
-         node *scope = TBmakeInnerblock(NULL, NULL);
-         INNERBLOCK_PARENT(scope) = cur_scope;
-         BLOCK_FUNSTAIL(global_scope) = &BLOCK_FUNS(global_scope);
-         cur_scope = scope;
-
-         $$ = TBmakeFun($1, $2, $4, NULL, NULL);
+funheader: global_prefix ty ID BRACKET_L fun_params BRACKET_R
+    {
+         $$ = TBmakeFun($1, $2, $3, $5, NULL);
     };
 
 fundef: funheader ANBRACKET_L fun_body_defs stmts ANBRACKET_R
     {
          node *body = TBmakeInnerblock($3, $4);
-         cur_scope = INNERBLOCK_PARENT(cur_scope);
 
          node *x = $1;
          FUN_BODY(x) = body;
-         *BLOCK_FUNSTAIL(global_scope) = x;
-         BLOCK_FUNSTAIL(global_scope) = &FUN_NEXT(x);
          $$ = x;
     };
 

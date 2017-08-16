@@ -1,0 +1,17 @@
+int x = 6;
+int y = 7;
+
+int foo() {
+    int ghost = 50;
+    return ghost;
+}
+
+float gear(int x) {
+    float water = 67;
+
+    return water + x;
+}
+
+export void trade() {
+    int g = x + y;
+}

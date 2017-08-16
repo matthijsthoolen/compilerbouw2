@@ -22,13 +22,11 @@ extern node *PRTsymboltableentry (node * arg_node, info * arg_info);
 extern node *PRTerror (node * arg_node, info * arg_info);
 
 extern node *PRTprogram (node * arg_node, info * arg_info);
-extern node *PRTscope (node * arg_node, info * arg_info);
 extern node *PRTvardef (node * arg_node, info * arg_info);
 extern node *PRTvardeflist (node * arg_node, info * arg_info);
 extern node *PRTfun (node * arg_node, info * arg_info);
 extern node *PRTfunparamlist (node * arg_node, info * arg_info);
 extern node *PRTfunparam (node * arg_node, info * arg_info);
-extern node *PRTblock (node * arg_node, info * arg_info);
 extern node *PRTinnerblock (node * arg_node, info * arg_info);
 extern node *PRTif (node * arg_node, info * arg_info);
 extern node *PRTwhile (node * arg_node, info * arg_info);

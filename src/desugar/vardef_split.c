@@ -65,35 +65,12 @@ node *append_stmts(node *stmts, list *assigns)
     DBUG_RETURN(stmts_list);
 }
 
-node *DSVSblock(node *arg_node, info *arg_info)
-{
-    DBUG_ENTER("DSVSblock");
-
-    node *function;
-    node *var;
-    var = BLOCK_VARS(arg_node);
-
-    if (var != NULL) {
-        var = TRAVdo(var, arg_info);
-    }
-
-    function = BLOCK_FUNS(arg_node);
- 
-    if (function != NULL) {
-        function = TRAVdo(function, arg_info);
-    }    
-
-    DBUG_RETURN(arg_node);
-}
-
 node *DSVSfun(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("DSVSfun");
 
     // We only need to traverse the body
     FUN_BODY(arg_node) = TRAVopt(FUN_BODY(arg_node), arg_info);
-
-    FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }

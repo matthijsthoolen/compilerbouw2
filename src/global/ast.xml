@@ -85,78 +85,41 @@
         <node name="Return" />
       </target>
     </nodeset>
+    <nodeset name="Declaration">
+        <target>
+            <node name="Fun" />
+            <node name="VarDef" />
+        </target>
+    </nodeset>
   </nodesets>
 
   <syntaxtree>
     <node name="Program">
       <description>represents the entire compilation unit</description>
       <sons>
-        <son name="Block">
+        <son name="Head">
           <description>Program blocks</description>
           <targets>
             <target mandatory="yes">
-              <node name="Block" />
+              <set name="Declaration" />
               <phases>
                 <all />
               </phases>
             </target>
           </targets>
+        </son>
+        <son name="Next">
+            <description>next declaration (if available)</description>
+            <targets>
+                <target mandatory="no">
+                    <node name="Program" />
+                    <phases>
+                        <all />
+                    </phases>
+                </target>
+            </targets>
         </son>
       </sons>
-    </node>
-
-    <node name="Block">
-      <description>a (global) scope</description>
-      <sons>
-        <son name="Vars">
-          <description>a list of the variables defined in this block</description>
-          <targets>
-            <target mandatory="no">
-              <node name="VarDefList" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-        <son name="Funs">
-          <description>the functions defined in this scope</description>
-          <targets>
-            <target mandatory="no">
-              <node name="Fun" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-      </sons> 
-      <attributes>
-        <attribute name="Parent">
-          <description>the parent scope</description>
-          <type name="Link">
-            <targets>
-              <target mandatory="no">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-        <attribute name="FunsTail">
-          <description>the tail of Funs (warning! must be initialized after TBmakeScope)</description>
-          <type name="Link2">
-            <targets>
-              <target mandatory="no">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute> 
-      </attributes> 
     </node>
     
     <node name="InnerBlock">
@@ -232,7 +195,6 @@
         </attributes>
     </node>
 
-
     <node name="VarDef">
       <description>a variable definition</description>
       <sons>
@@ -253,7 +215,7 @@
           <description>the prefix of the definition</description>
           <type name="GlobalPrefix">
             <targets>
-              <target mandatory="no">
+              <target mandatory="yes">
                 <phases>
                   <all />
                 </phases>
@@ -313,24 +275,13 @@
             </target>
           </targets>
         </son>
-        <son name="Next">
-          <description>the remaining functions</description>
-          <targets>
-            <target mandatory="no">
-              <node name="Fun" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
       </sons>
       <attributes>
         <attribute name="Prefix">
           <description>the prefix of the definition</description>
           <type name="GlobalPrefix">
             <targets>
-              <target mandatory="no">
+              <target mandatory="yes">
                 <phases>
                   <all />
                 </phases>

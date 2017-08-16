@@ -77,32 +77,6 @@ node *append_vars(node *vars, list *vardefs)
     DBUG_RETURN(vardef_list);
 }
 
-node *DSEblock(node *arg_node, info *arg_info) {
-
-    node *function;
-    node *var;
-
-    DBUG_ENTER("DSEblock");
-
-    /**
-     * Check vars
-     */
-
-    var = BLOCK_VARS(arg_node);
-
-    if (var != NULL) {
-        var = TRAVdo(var, arg_info);
-    }
-
-    function = BLOCK_FUNS(arg_node);
-
-    if (function != NULL) {
-        function = TRAVdo(function, arg_info);
-    }
-
-    DBUG_RETURN(arg_node);
-}
-
 node *DSEstmts(node *arg_node, info *arg_info) {
     DBUG_ENTER("DSEstmts");
 
@@ -122,8 +96,6 @@ node *DSEfun(node *arg_node, info *arg_info) {
     if (body != NULL) {
         body = TRAVdo(body, arg_info);
     }
-
-    FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);
 
     INFO_CHECKEDFUNCTIONS(arg_info) = TRUE;
  
@@ -179,6 +151,7 @@ node *DSEfor(node *arg_node, info *arg_info) {
                                         );
 
     new_vardef = TBmakeVardef(
+                    0,
                     TY_int,
                     VAR_NAME(ASSIGN_LEFT(for_assign)), 
                     NULL

@@ -47,23 +47,6 @@ static info *FreeInfo(info *info)
     DBUG_RETURN(info);
 }
 
-node *CAblock(node *arg_node, info *arg_info)
-{
-    DBUG_ENTER("CAscope");
-
-    // Check the function definitions
-    node *function;
-    function = BLOCK_FUNS(arg_node);
-
-    if (function != NULL) { 
-        function = TRAVdo(function, arg_info);
-    }
-
-    //BLOCK_VARS(arg_node) = TRAVdo(SCOPE_VARS(arg_node), arg_info);
-
-    DBUG_RETURN( arg_node); 
-}
-
 node *CAfun(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAfun");
@@ -83,7 +66,6 @@ node *CAfun(node *arg_node, info *arg_info)
     map_push(INFO_FUNS(arg_info), FUN_ID(arg_node), arg_node); 
 
     FUN_BODY(arg_node) = TRAVopt(FUN_BODY(arg_node), arg_info);
-    FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);
 
     DBUG_RETURN( arg_node);
 }

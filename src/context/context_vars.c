@@ -46,27 +46,6 @@ static info *FreeInfo(info *info)
     DBUG_RETURN(info);
 }
 
-node *CAVblock(node *arg_node, info *arg_info)
-{
-    DBUG_ENTER("CAVblock");
- 
-    node *var;
-    var = BLOCK_VARS(arg_node);
-
-    if (var != NULL) {
-        var = TRAVdo(var, arg_info);
-    }
-
-    node *function;
-    function = BLOCK_FUNS(arg_node);
-    
-    if (function != NULL) {
-        function = TRAVdo(function, arg_info);
-    }    
-
-    DBUG_RETURN(arg_node);
-}
-
 node *CAVfun(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVfun");
@@ -80,8 +59,6 @@ node *CAVfun(node *arg_node, info *arg_info)
     // Clear Local Info
     map_free(INFO_LOCAL(arg_info));
     INFO_LOCAL(arg_info) = new_map();
-
-    FUN_NEXT(arg_node) = TRAVopt(FUN_NEXT(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }
