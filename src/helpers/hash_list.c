@@ -149,6 +149,7 @@ void* map_get(hashmap *map, void *key) {
     DBUG_PRINT("HELP", ("Return map value with key %s if exists", key));
 
     while((map = map->next)) {
+        
         if(STReq(map->key, key)) {
             DBUG_RETURN(map->value);
         }
@@ -207,23 +208,4 @@ void map_free(hashmap *map)
         tmp->next = NULL;
         MEMfree(tmp);
     }
-}
-
-/**
- * Print the hashmap to the console
- *
- * @param   {hashmap}   map
- */
-void map_print(hashmap *map)
-{
-    printf("Hashmap = {");
-
-    if (map != NULL) {
-        while (map->next) {
-            printf("%s: ", (char*)map->key);
-            printf("<%p>, ", map->value);            
-        }
-    }
-
-    printf("}");
 }

@@ -51,7 +51,7 @@ node *CAfun(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAfun");
 
-    DBUG_PRINT("CA", ("Processing function '%s'", FUN_ID(arg_node)));
+    DBUG_PRINT("CA", ("Processing function definition '%s'", FUN_ID(arg_node)));
 
     if (map_has(INFO_FUNS(arg_info), FUN_ID(arg_node))) {    
         CTIerror("Function \"%s\" already defined (first defined at %d:%d)", 
@@ -73,9 +73,7 @@ node *CAfun(node *arg_node, info *arg_info)
 node *CAcall(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAcall");
-
-    DBUG_PRINT("CA", ("Processing a function Call"));
-    
+ 
     char *name = VAR_NAME(CALL_ID(arg_node));
     
     DBUG_PRINT("CA", ("Check if function %s is declared.", name)); 
@@ -84,11 +82,12 @@ node *CAcall(node *arg_node, info *arg_info)
     CALL_ARGS(arg_node) = TRAVopt(CALL_ARGS(arg_node), arg_info);
 
     /* Check if function is already defined. If so, we dont need to add it to the queue */
-    node *fun = map_get(INFO_CALLS(arg_info), name);
+    node *fun = map_get(INFO_FUNS(arg_info), name);
 
     if (fun) {
         VAR_DECL(CALL_ID(arg_node)) = fun;
     } else {
+        DBUG_PRINT("CA", ("Function %s isnt declared yet. Add call to queue", name)); 
         map_push(INFO_CALLS(arg_info), name, arg_node);
     }
 
@@ -102,10 +101,18 @@ void check_fun_calls(info *arg_info)
 {
     hashmap *tmp;
 
+    DBUG_PRINT("CA", ("Check function call queue"));
+ 
     while(!map_is_empty(INFO_CALLS(arg_info))) {
         tmp = map_pop_reverse(INFO_CALLS(arg_info));
 
-        CTIerror("On line %d\nundefined function '%s'", NODE_LINE((node *)tmp->value), (char *)tmp->key);
+        node *fun = map_get(INFO_FUNS(arg_info), tmp->key);
+
+        if (fun) {
+            VAR_DECL(CALL_ID((node *)tmp->value)) = fun;
+        } else {
+            CTIerror("On line %d\nundefined function '%s'", NODE_LINE((node *)tmp->value), (char *)tmp->key);
+        }
     }
 }
 

@@ -112,16 +112,39 @@ node *CAVvardef(node *arg_node, info *arg_info)
 
     DBUG_PRINT("CAV", ("Processing variable definition '%s'", VARDEF_ID(arg_node)));
 
-    if (map_has(INFO_LOCAL(arg_info), VARDEF_ID(arg_node))) {
-        CTIerror("Double declaration of variable \"%s\" (first defined at %d:%d)",
-                  VARDEF_ID(arg_node),
-                  NODE_LINE(arg_node),
-                  NODE_LINE(arg_node));
+    //if global prefix is none (so just local) else add to global list
+    if (VARDEF_PREFIX(arg_node) == global_prefix_none) {
+ 
+        DBUG_PRINT("CAV", ("Variable %s is local", VARDEF_ID(arg_node)));
 
-        DBUG_RETURN(arg_node);
+        if (map_has(INFO_LOCAL(arg_info), VARDEF_ID(arg_node))) {
+            CTIerror("Double declaration of variable \"%s\" (first defined at %d:%d)",
+                      VARDEF_ID(arg_node),
+                      NODE_LINE(arg_node),
+                      NODE_LINE(arg_node));
+
+            DBUG_RETURN(arg_node);
+        }
+
+        map_push(INFO_LOCAL(arg_info), VARDEF_ID(arg_node), arg_node);
+
+    } else {
+  
+        DBUG_PRINT("CAV", ("Variable %s is global", VARDEF_ID(arg_node)));
+ 
+        if (map_has(INFO_GLOBAL(arg_info), VARDEF_ID(arg_node))) {
+            CTIerror("Double declaration of variable \"%s\" (first defined at %d:%d)",
+                      VARDEF_ID(arg_node),
+                      NODE_LINE(arg_node),
+                      NODE_LINE(arg_node));
+
+            DBUG_RETURN(arg_node);
+        }
+
+        map_push(INFO_GLOBAL(arg_info), VARDEF_ID(arg_node), arg_node);
+
     }
 
-    map_push(INFO_LOCAL(arg_info), VARDEF_ID(arg_node), arg_node);
 
     DBUG_RETURN(arg_node);
 }

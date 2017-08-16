@@ -467,6 +467,8 @@ static void print_global_prefix(enum global_prefix pfx) {
     case global_prefix_extern:
         tmp = "extern";
         break;
+    case global_prefix_var:
+        return;
     }
     printf("%s ", tmp);
 }
@@ -562,7 +564,7 @@ node *PRTfun (node * arg_node, info * arg_info)
         INDENT_INCREASE(arg_info);
         body = TRAVdo(body, arg_info);
         INDENT_DECREASE(arg_info);
-        printf("\n}\n");
+        printf("}\n");
     } else {
         printf(";\n");
     }

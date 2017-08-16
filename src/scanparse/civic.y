@@ -88,6 +88,7 @@ decl: fundef
     }
     | vardef
     {
+        VARDEF_PREFIX($1) = global_prefix_var;
         $$ = $1;
     };
 

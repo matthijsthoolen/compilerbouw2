@@ -29,6 +29,7 @@ enum global_prefix {
     global_prefix_none = 0,
     global_prefix_extern = 1,
     global_prefix_export = 2,
+    global_prefix_var = 3
 };
 
 typedef struct {
