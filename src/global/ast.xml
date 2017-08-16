@@ -81,6 +81,7 @@
         <traversal id="CARC" name="Context Analysis Return Check" default="sons" include="context_return.h">
             <travuser>
                 <node name="Fun" />
+                <node name="Return" />
             </travuser>
         </traversal>
  

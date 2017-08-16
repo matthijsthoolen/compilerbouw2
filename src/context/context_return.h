@@ -4,6 +4,7 @@
 #include "types.h"
 
 extern node *CARCfun(node *arg_node, info *arg_info);
+extern node *CARCreturn(node *arg_node, info *arg_info);
 
 extern node *CARCdoContextReturnCheck(node *syntaxtree);
 

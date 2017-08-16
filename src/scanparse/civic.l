@@ -83,6 +83,10 @@
                              FILTER( INTVAL);
                            }
 
+[0-9]+\.[0-9]+             { yylval.cflt=atof(yytext);
+                             FILTER( FLOATVAL);
+                           }
+
 \n.*                       { global.line += 1;
                              global.col = 0;
                              yyless(1);

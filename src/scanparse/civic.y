@@ -1,4 +1,5 @@
 %{
+#define YYDEBUG 1
 
 #include <stdio.h>
 #include <string.h>
@@ -272,6 +273,7 @@ node *YYparseTree( void)
 
     // Correct for global.line starting on line 0
     global.line = 1;
+    yydebug = 0;    
 
     yyparse();
 

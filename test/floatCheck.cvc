@@ -1,0 +1,9 @@
+int funParams(int g, float b, bool t) {
+    b = 7.6;
+
+    if (t) {
+        return b + g;
+    } else {
+        return g;
+    }
+}
