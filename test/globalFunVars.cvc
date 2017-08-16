@@ -4,14 +4,15 @@ int z;
 int ghost = 68;
 
 int foo() {
-    int ghost = z;
+    int ghost;
+
     return ghost;
 }
 
-float gear(int x) {
-    float water = 67;
+int gear(int x) {
+    int water = 67;
 
-    return water + x;
+    return x;
 }
 
 export void trade() {

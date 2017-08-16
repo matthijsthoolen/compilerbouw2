@@ -80,6 +80,12 @@ SUBPHASE( carc,
           ALWAYS,
           con)
 
+SUBPHASE( catc,
+          "AnalysisType",
+          CATCdoContextTypeCheck,
+          ALWAYS,
+          con)
+
 ENDPHASE( con)
 
 PHASE( lds,

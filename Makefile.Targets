@@ -83,4 +83,4 @@ codegen     = gen_byte_code.o
 
 desugar     = initial_desugar.o vardef_split.o global_init.o
 
-context     = context_functions.o context_vars.o context_return.o
+context     = context_functions.o context_vars.o context_type.o context_return.o

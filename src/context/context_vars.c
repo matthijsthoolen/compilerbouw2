@@ -149,6 +149,12 @@ node *CAVvardef(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
+node *CAVcall(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CAVcall");
+    DBUG_RETURN(arg_node);
+}
+
 node *CAVvar(node *arg_node, info *arg_info)
 {
     node *var_decl;

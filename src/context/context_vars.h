@@ -6,6 +6,7 @@ extern node *CAVfun(node *arg_node, info *arg_info);
 extern node *CAVfunparam(node *arg_node, info *arg_info);
 extern node *CAVvardef(node *arg_node, info *arg_info);
 extern node *CAVvardeflist(node *arg_node, info *arg_info); 
+extern node *CAVcall(node *arg_node, info *arg_info);
 extern node *CAVvar(node *arg_node, info *arg_info);
 
 extern node *CAVdoContextAnalysisVar(node *syntaxtree);

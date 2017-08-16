@@ -77,7 +77,8 @@ node *append_vars(node *vars, list *vardefs)
     DBUG_RETURN(vardef_list);
 }
 
-node *DSEstmts(node *arg_node, info *arg_info) {
+node *DSEstmts(node *arg_node, info *arg_info)
+{
     DBUG_ENTER("DSEstmts");
 
     STMTS_STMT(arg_node) = TRAVopt(STMTS_STMT(arg_node), arg_info);
@@ -86,7 +87,8 @@ node *DSEstmts(node *arg_node, info *arg_info) {
     DBUG_RETURN(arg_node);
 }
 
-node *DSEfun(node *arg_node, info *arg_info) {
+node *DSEfun(node *arg_node, info *arg_info)
+{
     node *body;
 
     DBUG_ENTER("DSEfun");
@@ -102,9 +104,8 @@ node *DSEfun(node *arg_node, info *arg_info) {
     DBUG_RETURN(arg_node);
 }
 
-node *DSEinnerblock(node *arg_node, info *arg_info) {
-
-    node *var;
+node *DSEinnerblock(node *arg_node, info *arg_info)
+{
     node *stmts;
 
     DBUG_ENTER("DSEblock");
@@ -128,10 +129,9 @@ node *DSEinnerblock(node *arg_node, info *arg_info) {
     DBUG_RETURN(arg_node);
 }
 
-node *DSEfor(node *arg_node, info *arg_info) {
+node *DSEfor(node *arg_node, info *arg_info)
+{
     node *new_vardef;
-    node *for_step;
-    node *for_upper;
     node *for_assign;
 
     DBUG_ENTER("DSEfor");
@@ -139,8 +139,6 @@ node *DSEfor(node *arg_node, info *arg_info) {
     INFO_NESTLVL(arg_info)++;     
 
     for_assign  = FOR_ASSIGN(arg_node);
-    for_upper   = FOR_UPPER(arg_node);
-    for_step    = FOR_STEP(arg_node);
 
     char *old_name = STRcpy(VAR_NAME(ASSIGN_LEFT(for_assign)));
 
@@ -164,15 +162,13 @@ node *DSEfor(node *arg_node, info *arg_info) {
 
     list_reversepush(arg_info->vardefs, new_vardef);
   
-    //if (FOR_STEP(arg_node) != NULL) { 
-    //}
-
     INFO_NESTLVL(arg_info)--;
 
     DBUG_RETURN(arg_node);
 }
 
-node *DSEvar(node *arg_node, info *arg_info) {
+node *DSEvar(node *arg_node, info *arg_info)
+{
     char *name;
     char *new_name;
     
@@ -180,7 +176,7 @@ node *DSEvar(node *arg_node, info *arg_info) {
 
     // Only check nested vars
     if (INFO_NESTLVL(arg_info) > 0) {
-        char *name = VAR_NAME(arg_node);
+        name = VAR_NAME(arg_node);
 
         if ((new_name = map_get(INFO_QUEUE(arg_info), name)) != NULL) {
             VAR_NAME(arg_node) = new_name;
@@ -190,7 +186,8 @@ node *DSEvar(node *arg_node, info *arg_info) {
     DBUG_RETURN(arg_node);
 }
 
-node *DSEdoEarlyDesugar(node *syntaxtree) {
+node *DSEdoEarlyDesugar(node *syntaxtree)
+{
     info *info;
 
     DBUG_ENTER("DSdoEarlyDesugar");
