@@ -144,6 +144,10 @@ fundef: funheader ANBRACKET_L fun_body_defs stmts ANBRACKET_R
          node *x = $1;
          FUN_BODY(x) = body;
          $$ = x;
+    }
+    | funheader SEMICOLON
+    {
+        $$ = $1;
     };
 
 fun_body_defs: fun_body_vardefs                 { $$ = $1; };

@@ -74,6 +74,12 @@ SUBPHASE( cav,
           ALWAYS,
           con)
 
+SUBPHASE( carc,
+          "AnalysisReturn",
+          CARCdoContextReturnCheck,
+          ALWAYS,
+          con)
+
 ENDPHASE( con)
 
 PHASE( pet,

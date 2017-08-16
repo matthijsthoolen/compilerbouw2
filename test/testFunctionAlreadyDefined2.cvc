@@ -1,3 +1,6 @@
+extern void f();
+extern void foo();
+
 void bar() {
     int x;
     while (baz()) {
@@ -13,7 +16,4 @@ int foo() {
         x = x + f();
     }
     return x;
-}
-
-void bar() {
 }
