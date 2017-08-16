@@ -82,29 +82,17 @@ SUBPHASE( carc,
 
 ENDPHASE( con)
 
-PHASE( pet,
-       "Perform example transformations",
+PHASE( lds,
+       "Late desugar",
        ALWAYS)
 
-// SUBPHASE( ri, 
-//           "Rename identifiers",
-//           RIdoRenameIdentifiers,
-//           ALWAYS,
-//           pet)
-//
-// SUBPHASE( si,
-//           "Sum Integers",
-//           SIdoSumInts,
-//           ALWAYS,
-//           pet)
-//
-// SUBPHASE( os,
-//           "Optimise subtraction",
-//           OSdoOptSub,
-//           ALWAYS,
-//           pet)
+SUBPHASE( DSGI, 
+          "Make global __init function",
+          DSGIdoGlobalInit,
+          ALWAYS,
+          lds)
 
-ENDPHASE( pet)
+ENDPHASE( lds)
 
 
 /******************************************************************************/

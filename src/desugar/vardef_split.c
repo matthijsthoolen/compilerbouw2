@@ -109,6 +109,10 @@ node *DSVSvardef(node *arg_node, info *arg_info)
 
     DBUG_ENTER("DSVSvardef");
 
+    if (VARDEF_PREFIX(arg_node) == global_prefix_var) {
+        DBUG_RETURN(arg_node);
+    }
+
     // If the vardef already has a empty init value we dont need to change it
     if (VARDEF_INIT(arg_node) == NULL) {
         DBUG_RETURN(arg_node);

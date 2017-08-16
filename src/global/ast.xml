@@ -61,6 +61,13 @@
                 <node name="Fun" />
             </travuser>
         </traversal>
+
+        <traversal id="DSGI" name="Desugar Global Init" default="sons" include="global_init.h">
+            <travuser>
+                <node name="Program" />
+                <node name="VarDef" />
+            </travuser>
+        </traversal>
     </general>
   </phases>
 

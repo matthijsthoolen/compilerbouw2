@@ -1,8 +1,10 @@
 int x = 6;
 int y = 7;
+int z;
+int ghost = 68;
 
 int foo() {
-    int ghost = 50;
+    int ghost = z;
     return ghost;
 }
 

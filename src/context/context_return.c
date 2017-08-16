@@ -8,35 +8,11 @@
 #include "traverse.h"
 #include "tree_basic.h"
 #include "dbug.h"
-#include "memory.h"
 #include "globals.h"
 #include "str.h"
 #include "ctinfo.h"
 
 #include "context_return.h"
-
-struct INFO {
-};
-
-static info *MakeInfo()
-{
-    DBUG_ENTER("MakeInfo");
-
-    info *result;
-
-    result = MEMmalloc(sizeof(info));
-
-    DBUG_RETURN(result);
-}
-
-static info *FreeInfo(info *info)
-{
-    DBUG_ENTER("FreeInfo");
-
-    info = MEMfree(info);
-
-    DBUG_RETURN(info);
-}
 
 node *CARCfun(node *arg_node, info *arg_info)
 {
@@ -80,16 +56,11 @@ node *CARCdoContextReturnCheck(node *syntaxtree)
 {
     DBUG_ENTER("CARCdoContextReturnCheck");
 
-    info *info;
-    info = MakeInfo();
-
     TRAVpush(TR_carc);
 
-    syntaxtree = TRAVdo( syntaxtree, info);
+    syntaxtree = TRAVdo( syntaxtree, NULL);
 
     TRAVpop();
-
-    info = FreeInfo(info);
 
     DBUG_RETURN( syntaxtree);
 }
