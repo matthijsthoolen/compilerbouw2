@@ -1,0 +1,8 @@
+export int main() {
+    int[5] a;
+    a[2] = 3;
+
+    printInt(a[2]);
+
+    return 0;
+}
