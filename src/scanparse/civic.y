@@ -52,7 +52,7 @@ static node *parseresult = NULL;
 %type <node> stmt var assign stmt_return
 %type <node> stmt_if stmt_if_else stmt_while stmt_do_while stmt_for
 %type <node> call_args call
-%type <node> expr expr0 expr2 expr3 expr4 expr6 expr7 expr11 expr12
+%type <node> expr expr0 expr2 expr3 expr4 expr6 expr7 expr11 expr12 expr_array array_vars array_var
 %type <cbinop> binop3 binop4 binop6 binop7 binop11 binop12
 
 %type <cmonop> monop2
@@ -111,16 +111,20 @@ vardef: global_prefix ty ID LET expr SEMICOLON
     {
         $$ = TBmakeVardef($1, $2, $3, $5);
     }
+    | global_prefix ty LET array_expr SEMICOLON
+    {
+        $$ = TBmakeVardef($1, $2, $3, $5);
+    }
     | global_prefix ty ID SEMICOLON
     {
         $$ = TBmakeVardef($1, $2, $3, NULL);
     };
 
-fun_params: fun_param COMMA fun_params  { 
-                $$ = TBmakeFunparamlist($1, $3); 
+fun_params: fun_param COMMA fun_params  {
+                $$ = TBmakeFunparamlist($1, $3);
             }
             | fun_param
-            { 
+            {
                 $$ = TBmakeFunparamlist($1, NULL);
             }
             |
@@ -195,12 +199,12 @@ stmt_do_while: DO ANBRACKET_L stmts ANBRACKET_R WHILE BRACKET_L expr BRACKET_R S
                 { $$ = TBmakeDowhile($3, $7); };
 
 stmt_for: FOR BRACKET_L INT var LET expr COMMA expr COMMA expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R
-                { 
-                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, $10, $13); 
+                {
+                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, $10, $13);
                 }
                 | FOR BRACKET_L INT var LET expr COMMA expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R
                 {
-                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, NULL, $11); 
+                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, NULL, $11);
                 };
 
 expr: expr12 { $$ = $1; };
@@ -234,6 +238,14 @@ expr0: call                             { $$ = $1; }
      | FALSEVAL                         { $$ = TBmakeBool(FALSE); }
      | BRACKET_L expr BRACKET_R         { $$ = $2; }
      ;
+
+ expr_array: SQBRACKET_L array_vars SQBRACKET_R { $$ = TBmakeArray($2); };
+ array_vars: array_var COMMA array_vars         { $$ = TBmakeExprlist($1, $3); }
+           | array_var                          { $$ = TBmakeExprlist($1, NULL); }
+           ;
+ array_var: expr_array                          { $$ = $1}
+          | expr                                { $$ = $1}
+          ;
 
 binop12:         OR { $$ = BO_or; };
 binop11:        AND { $$ = BO_and; };
@@ -273,7 +285,7 @@ node *YYparseTree( void)
 
     // Correct for global.line starting on line 0
     global.line = 1;
-    yydebug = 0;    
+    yydebug = 0;
 
     yyparse();
 

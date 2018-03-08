@@ -48,6 +48,12 @@ SUBPHASE(dse,
         ALWAYS,
         ds)
 
+SUBPHASE(arr,
+        "Desugar array inits",
+        DSEdoArrayInit,
+        "ALWAYS",
+        ds)
+
 ENDPHASE( ds)
 
 /******************************************************************************/
@@ -92,7 +98,7 @@ PHASE( lds,
        "Late desugar",
        ALWAYS)
 
-SUBPHASE( DSGI, 
+SUBPHASE( DSGI,
           "Make global __init function",
           DSGIdoGlobalInit,
           ALWAYS,

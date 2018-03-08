@@ -21,6 +21,7 @@ extern node *CATCfloat(node *arg_node, info *arg_info);
 extern node *CATCbool(node *arg_node, info *arg_info);
 extern node *CATCcall(node *arg_node, info *arg_info);
 extern node *CATCcast(node *arg_node, info *arg_info);
+extern node *CATCarray(node *arg_node, info *arg_info);
 
 extern char *pretty_print_type(type prt);
 

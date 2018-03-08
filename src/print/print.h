@@ -38,6 +38,9 @@ extern node *PRTcall (node * arg_node, info * arg_info);
 extern node *PRTcast (node * arg_node, info * arg_info);
 extern node *PRTmonop (node * arg_node, info * arg_info);
 
+extern node *PRTarray (node * arg_node, info * arg_info);
+extern node *PRTnewarray (node * arg_node, info * arg_info);
+
 extern node *PRTdoPrint( node *syntaxtree);
 
 #endif /* _SAC_PRT_NODE_H_ */

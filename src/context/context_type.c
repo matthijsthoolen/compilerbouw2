@@ -28,7 +28,7 @@ static info *MakeInfo()
     info *result;
 
     result = MEMmalloc(sizeof(info));
- 
+
     DBUG_RETURN(result);
 }
 
@@ -74,12 +74,12 @@ node *CATCfun(node *arg_node, info *arg_info)
                 if (INFO_TYPE(arg_info) != TY_unknown) {
                     // Save the return type for later
                     RETURN_TY(returnStmt) = INFO_TYPE(arg_info);
-                   
-                    /*printf("--------------\n"); 
+
+                    /*printf("--------------\n");
                     print_type_debug(INFO_TYPE(arg_info));
                     print_type_debug(FUN_RETTY(arg_node));
                     printf("--------------\n");*/
- 
+
                     if (INFO_TYPE(arg_info) != FUN_RETTY(arg_node)) {
                         CTIerror("Function '%s' has a incorrect return type", FUN_ID(arg_node));
                     }
@@ -93,7 +93,7 @@ node *CATCfun(node *arg_node, info *arg_info)
         }
     }
 
-    FUN_BODY(arg_node) = TRAVopt(FUN_BODY(arg_node), arg_info); 
+    FUN_BODY(arg_node) = TRAVopt(FUN_BODY(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }
@@ -101,11 +101,11 @@ node *CATCfun(node *arg_node, info *arg_info)
 node *CATCvardeflist(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCvardeflist");
-   
+
     VARDEFLIST_HEAD(arg_node) = TRAVdo(VARDEFLIST_HEAD(arg_node), arg_info);
-    
+
     VARDEFLIST_NEXT(arg_node) = TRAVopt(VARDEFLIST_NEXT(arg_node), arg_info);
- 
+
     DBUG_RETURN(arg_node);
 }
 
@@ -128,7 +128,7 @@ node *CATCinnerblock(node *arg_node, info *arg_info)
 node *CATCstmts(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCstmts");
-    
+
     STMTS_STMT(arg_node) = TRAVdo(STMTS_STMT(arg_node), arg_info);
 
     STMTS_NEXT(arg_node) = TRAVopt(STMTS_NEXT(arg_node), arg_info);
@@ -140,7 +140,7 @@ node *CATCassign(node *arg_node, info *arg_info)
 {
     type leftType;
     DBUG_ENTER("CATCassign");
- 
+
     if (NODE_TYPE(VAR_DECL(ASSIGN_LEFT(arg_node))) == N_vardef) {
         leftType = VARDEF_TY(VAR_DECL(ASSIGN_LEFT(arg_node)));
     } else if (NODE_TYPE(VAR_DECL(ASSIGN_LEFT(arg_node))) == N_funparam) {
@@ -171,13 +171,13 @@ node *CATCwhile(node *arg_node, info *arg_info)
 
     WHILE_COND(arg_node) = TRAVdo(WHILE_COND(arg_node), arg_info);
 
-    if (INFO_TYPE(arg_info) != TY_bool) {        
+    if (INFO_TYPE(arg_info) != TY_bool) {
         CTIerror(
             "Row %d: the while condition must return a boolean to succeed",
             NODE_LINE(WHILE_COND(arg_node))
         );
     }
-    
+
     // Check if the while block is empty and warn the user if so
     if (WHILE_BLOCK(arg_node) == NULL) {
         CTIwarn(
@@ -200,13 +200,13 @@ node *CATCdowhile(node *arg_node, info *arg_info)
 
     DOWHILE_COND(arg_node) = TRAVdo(DOWHILE_COND(arg_node), arg_info);
 
-    if (INFO_TYPE(arg_info) != TY_bool) {        
+    if (INFO_TYPE(arg_info) != TY_bool) {
         CTIerror(
             "Row %d: theDoWhile condition must return a boolean to succeed",
             NODE_LINE(DOWHILE_COND(arg_node))
         );
     }
-    
+
     // Check if the while block is empty and warn the user if so
     if (DOWHILE_BLOCK(arg_node) == NULL) {
         CTIwarn(
@@ -225,7 +225,7 @@ node *CATCdowhile(node *arg_node, info *arg_info)
 node *CATCif(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCif");
-    
+
     TRAVdo(IF_COND(arg_node), arg_info);
 
     if (INFO_TYPE(arg_info) != TY_bool) {
@@ -266,31 +266,31 @@ node *CATCvar(node *arg_node, info *arg_info)
 node *CATCmonop(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCmonop");
-    
+
     TRAVdo(MONOP_EXPR(arg_node), arg_info);
 
     switch(MONOP_OP(arg_node))
     {
         case MO_neg:
             if (INFO_TYPE(arg_info) == TY_bool) {
-                CTIerror( 
+                CTIerror(
                     "Row '%d': unary minus operation is only possible for boolean types.",
                     NODE_LINE(arg_node)
-                ); 
+                );
                 INFO_TYPE(arg_info) = TY_unknown;
             }
             break;
         case MO_not:
-            if (INFO_TYPE(arg_info) != TY_bool) { 
+            if (INFO_TYPE(arg_info) != TY_bool) {
                 CTIerror(
                     "Row '%d': logical negation is only possible for arithmetic types.",
                     NODE_LINE(arg_node)
-                ); 
+                );
                 INFO_TYPE(arg_info) = TY_unknown;
             }
             break;
         case MO_unknown:
-            break; 
+            break;
     }
 
     DBUG_RETURN(arg_node);
@@ -307,7 +307,7 @@ node *CATCbinop(node *arg_node, info *arg_info)
     type right;
 
     DBUG_ENTER("CATCbinop");
-     
+
     TRAVdo(BINOP_LEFT(arg_node), arg_info);
     left = INFO_TYPE(arg_info);
 
@@ -359,7 +359,7 @@ node *CATCbinop(node *arg_node, info *arg_info)
             break;
         case BO_sub:
         case BO_div:
-            if (left != right || left == TY_bool || right == TY_bool) { 
+            if (left != right || left == TY_bool || right == TY_bool) {
                 CTIerror(
                     "Row %d: incorrect binary operator.",
                     NODE_LINE(arg_node)
@@ -397,8 +397,8 @@ node *CATCbinop(node *arg_node, info *arg_info)
             CTIerror(
                 "Unknown binop operator on line %d",
                 NODE_LINE(arg_node)
-            );        
-    }    
+            );
+    }
 
     DBUG_RETURN(arg_node);
 }
@@ -406,7 +406,7 @@ node *CATCbinop(node *arg_node, info *arg_info)
 node *CATCint(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCint");
-    
+
     INFO_TYPE(arg_info) = TY_int;
 
     DBUG_RETURN(arg_node);
@@ -415,7 +415,7 @@ node *CATCint(node *arg_node, info *arg_info)
 node *CATCfloat(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCfloat");
-    
+
     INFO_TYPE(arg_info) = TY_float;
 
     DBUG_RETURN(arg_node);
@@ -424,7 +424,7 @@ node *CATCfloat(node *arg_node, info *arg_info)
 node *CATCbool(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCbool");
-    
+
     INFO_TYPE(arg_info) = TY_bool;
 
     DBUG_RETURN(arg_node);
@@ -475,19 +475,19 @@ node *CATCcall(node *arg_node, info *arg_info)
     list = CALL_ARGS(arg_node);
     while (list) {
         list = EXPRLIST_NEXT(list);
-        countArgs++; 
+        countArgs++;
     }
 
     // Now count the function parameters
     list = FUN_PARAMS(VAR_DECL(CALL_ID(arg_node)));
     while(list) {
-        list = FUNPARAMLIST_NEXT(list); 
+        list = FUNPARAMLIST_NEXT(list);
         countParams++;
     }
-    
+
     if (countArgs != countParams) {
         INFO_TYPE(arg_info) = TY_unknown;
-    
+
         CTIerror(
             "Row '%d': %s is called with %d parameters but requires %d.",
             NODE_LINE(arg_node),
@@ -499,7 +499,7 @@ node *CATCcall(node *arg_node, info *arg_info)
 
     // Check if all given arguments are of the correct type
     i = 1;
-    
+
     list  = CALL_ARGS(arg_node);
     list2 = FUN_PARAMS(VAR_DECL(CALL_ID(arg_node)));
     while (list) {
@@ -512,7 +512,7 @@ node *CATCcall(node *arg_node, info *arg_info)
                 "Row: '%d': incorrect function argument given. Expected %s but got %s for argument nr '%d;",
                 NODE_LINE(EXPRLIST_EXPR(list)),
                 pretty_print_type(exprType),
-                pretty_print_type(paramType),               
+                pretty_print_type(paramType),
                 i
             );
         }
@@ -522,7 +522,13 @@ node *CATCcall(node *arg_node, info *arg_info)
         i++;
     }
 
-    INFO_TYPE(arg_info) = FUN_RETTY(VAR_DECL(CALL_ID(arg_node))); 
+    INFO_TYPE(arg_info) = FUN_RETTY(VAR_DECL(CALL_ID(arg_node)));
+
+    DBUG_RETURN(arg_node);
+}
+
+node *CATCarray(node *arg_node, info *arg_info) {
+    DBUG_ENTER("CATCarray");
 
     DBUG_RETURN(arg_node);
 }
@@ -581,8 +587,8 @@ node *CATCdoContextTypeCheck( node *syntaxtree)
     syntaxtree = TRAVdo(syntaxtree, info);
 
     TRAVpop();
-    
-    info = FreeInfo(info);    
+
+    info = FreeInfo(info);
 
     DBUG_RETURN( syntaxtree);
 }

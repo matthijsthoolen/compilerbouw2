@@ -38,7 +38,7 @@
                 <node name="Stmts" />
             </travuser>
         </traversal>
-      
+
         <traversal id="CA" name="Context Analysis Functions" default="sons" include="context_functions.h">
             <travuser>
                 <node name="Fun" />
@@ -56,7 +56,7 @@
                 <node name="Var" />
             </travuser>
         </traversal>
-        
+
         <traversal id="CATC" name="Context Analysis Type Check" default="sons" include="context_type.h">
             <travuser>
                 <node name="Program" />
@@ -68,6 +68,7 @@
                 <node name="Stmts" />
                 <node name="If" />
                 <node name="Var" />
+                <node name="Array" />
                 <node name="MonOp" />
                 <node name="BinOp" />
                 <node name="Int" />
@@ -84,7 +85,13 @@
                 <node name="Return" />
             </travuser>
         </traversal>
- 
+
+        <traversal id="ARR" name="Initialize arrays" default="sons" include="array_init.h">
+            <travuser>
+                <node name="Assign" />
+            </travuser>
+        </traversal>
+
         <traversal id="DSGI" name="Desugar Global Init" default="sons" include="global_init.h">
             <travuser>
                 <node name="Program" />
@@ -115,6 +122,7 @@
         <node name="Bool" />
         <node name="Call" />
         <node name="Cast" />
+        <node name="Array" />
       </target>
     </nodeset>
     <nodeset name="Stmt">
@@ -163,7 +171,7 @@
         </son>
       </sons>
     </node>
-    
+
     <node name="InnerBlock">
       <description>a block inside a scope</description>
       <sons>
@@ -190,7 +198,7 @@
                 </target>
             </targets>
         </son>
-      </sons> 
+      </sons>
       <attributes>
         <attribute name="Parent">
           <description>the parent scope</description>
@@ -204,7 +212,7 @@
             </targets>
           </type>
         </attribute>
-      </attributes> 
+      </attributes>
     </node>
 
     <node name="VarDefList">
@@ -633,7 +641,7 @@
           </targets>
         </son>
       </sons>
-      <attributes> 
+      <attributes>
         <attribute name="Ty">
           <description>The return type (set in AnalysisType phase)</description>
           <type name="Type">
@@ -895,17 +903,23 @@
       </attributes>
     </node>
 
-        <attribute name="message">
-          <type name="String">
-            <targets>
-              <target mandatory="yes">
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
+    
+
+    <node name="Array">
+        <description>Represents an array</description>
+        <sons>
+            <son name="Items">
+                <description></description>
+                <targets>
+                    <target mandatory="no">
+                        <node name="ExprList" />
+                        <phases><all /></phases>
+                    </target>
+                </targets>
+            </son>
+        </sons>
+    </node>
+
     <node name="Error">
       <description>represents internal Error representation constructor</description>
       <sons>
