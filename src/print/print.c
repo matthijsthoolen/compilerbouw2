@@ -358,7 +358,19 @@ PRTvar (node * arg_node, info * arg_info)
 {
   DBUG_ENTER ("PRTvar");
 
+  node *dimensions;
+
   printf( "%s", VAR_NAME( arg_node));
+
+  dimensions = VAR_DIMENSIONS(arg_node);
+
+  if (dimensions != NULL) {
+    printf("[");
+
+    dimensions = TRAVdo(dimensions, arg_info);
+
+    printf("]");
+  }
 
   DBUG_RETURN (arg_node);
 }
@@ -527,6 +539,10 @@ node *PRTvardef (node * arg_node, info * arg_info)
 
     print_global_prefix(VARDEF_PREFIX(arg_node));
     print_type(VARDEF_TY(arg_node));
+
+    if (VARDEF_DIMENSIONCOUNT(arg_node) != 0) {
+      printf("[%d]", VARDEF_DIMENSIONCOUNT(arg_node));
+    }
 
     printf(" %s", VARDEF_ID(arg_node));
     node *init = VARDEF_INIT(arg_node);
@@ -721,6 +737,12 @@ node *PRTcast (node * arg_node, info * arg_info)
 node *PRTarray (node * arg_node, info * arg_info)
 {
     DBUG_ENTER("PRTarray");
+
+    printf("[");
+
+    TRAVopt(ARRAY_ITEMS(arg_node), arg_info);
+
+    printf("]");
 
     DBUG_RETURN(arg_node);
 }

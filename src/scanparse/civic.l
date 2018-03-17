@@ -26,6 +26,7 @@
 
 %p 6000 /* set positions to 6000 */
 %e 2000 /* set nodes to 1100 */
+%option debug
 %option noyywrap
 %option nounput
 
@@ -60,16 +61,16 @@
 "!"                        { FILTER( NOT);  }
 
 "bool"                     { FILTER( BOOL); }
-"do"					   { FILTER( DO); }
-"else"					   { FILTER( ELSE); }
+"do"					             { FILTER( DO); }
+"else"					           { FILTER( ELSE); }
 "extern"                   { FILTER( EXTERN); }
 "export"                   { FILTER( EXPORT); }
 "false"                    { FILTER( FALSEVAL); }
 "float"                    { FILTER( FLOAT); }
-"for"					   { FILTER( FOR); }
-"if"					   { FILTER( IF); }
+"for"					             { FILTER( FOR); }
+"if"					             { FILTER( IF); }
 "int"                      { FILTER( INT); }
-"return"				   { FILTER( RETURN); }
+"return"				           { FILTER( RETURN); }
 "true"                     { FILTER( TRUEVAL); }
 "void"                     { FILTER( VOID); }
 "while"                    { FILTER( WHILE); }

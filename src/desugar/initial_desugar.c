@@ -35,7 +35,7 @@ static info *MakeInfo()
     INFO_NESTLVL(result)            = 0;
     INFO_VARDEFS(result)            = list_new();
     INFO_QUEUE(result)              = new_map();
-    
+
     DBUG_RETURN(result);
 }
 
@@ -92,15 +92,15 @@ node *DSEfun(node *arg_node, info *arg_info)
     node *body;
 
     DBUG_ENTER("DSEfun");
- 
+
     body = FUN_BODY(arg_node);
-    
+
     if (body != NULL) {
         body = TRAVdo(body, arg_info);
     }
 
     INFO_CHECKEDFUNCTIONS(arg_info) = TRUE;
- 
+
     DBUG_RETURN(arg_node);
 }
 
@@ -114,7 +114,7 @@ node *DSEinnerblock(node *arg_node, info *arg_info)
      * Check stmts
      */
     stmts = INNERBLOCK_STMTS(arg_node);
-    
+
     if (stmts != NULL) {
         stmts = TRAVdo(stmts, arg_info);
     }
@@ -124,7 +124,7 @@ node *DSEinnerblock(node *arg_node, info *arg_info)
     }
 
     // Clear the list for the next round
-    INFO_VARDEFS(arg_info) = list_new();    
+    INFO_VARDEFS(arg_info) = list_new();
 
     DBUG_RETURN(arg_node);
 }
@@ -136,13 +136,13 @@ node *DSEfor(node *arg_node, info *arg_info)
 
     DBUG_ENTER("DSEfor");
 
-    INFO_NESTLVL(arg_info)++;     
+    INFO_NESTLVL(arg_info)++;
 
     for_assign  = FOR_ASSIGN(arg_node);
 
     char *old_name = STRcpy(VAR_NAME(ASSIGN_LEFT(for_assign)));
 
-    // Change the name. Based on the nesting LvL. 'int i' in first nesting become 'int i--1' 
+    // Change the name. Based on the nesting LvL. 'int i' in first nesting become 'int i--1'
     VAR_NAME(ASSIGN_LEFT(for_assign)) = STRcat(
                                             VAR_NAME(ASSIGN_LEFT(for_assign)),
                                             STRcat("--", STRitoa(INFO_NESTLVL(arg_info)))
@@ -151,17 +151,19 @@ node *DSEfor(node *arg_node, info *arg_info)
     new_vardef = TBmakeVardef(
                     0,
                     TY_int,
-                    VAR_NAME(ASSIGN_LEFT(for_assign)), 
+                    0,
+                    VAR_NAME(ASSIGN_LEFT(for_assign)),
+                    NULL,
                     NULL
               );
 
     // Add the new name and old name to the queue for changing the names in a later stage
     map_push(INFO_QUEUE(arg_info), old_name, STRcpy(VAR_NAME(ASSIGN_LEFT(for_assign))));
-    
+
     FOR_BLOCK(arg_node) = TRAVopt(FOR_BLOCK(arg_node), arg_info);
 
     list_reversepush(arg_info->vardefs, new_vardef);
-  
+
     INFO_NESTLVL(arg_info)--;
 
     DBUG_RETURN(arg_node);
@@ -171,7 +173,7 @@ node *DSEvar(node *arg_node, info *arg_info)
 {
     char *name;
     char *new_name;
-    
+
     DBUG_ENTER("DSEvar");
 
     // Only check nested vars

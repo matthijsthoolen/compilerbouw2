@@ -49,7 +49,7 @@ node *DSGIprogram(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("DSGIprogram");
 
-    PROGRAM_HEAD(arg_node) = TRAVdo(PROGRAM_HEAD(arg_node), arg_info);    
+    PROGRAM_HEAD(arg_node) = TRAVdo(PROGRAM_HEAD(arg_node), arg_info);
 
     PROGRAM_NEXT(arg_node) = TRAVopt(PROGRAM_NEXT(arg_node), arg_info);
 
@@ -58,16 +58,16 @@ node *DSGIprogram(node *arg_node, info *arg_info)
 
 node *DSGIvardef(node *arg_node, info *arg_info)
 {
-    node *assign;    
+    node *assign;
 
     DBUG_ENTER("DSGIvardef");
-    
+
     if (VARDEF_PREFIX(arg_node) == global_prefix_var) {
-        
+
         if (VARDEF_INIT(arg_node) != NULL) {
             assign = TBmakeAssign(
-                        TBmakeVar(STRcpy(VARDEF_ID(arg_node))),
-                        VARDEF_INIT(arg_node)                        
+                        TBmakeVar(STRcpy(VARDEF_ID(arg_node)), NULL),
+                        VARDEF_INIT(arg_node)
                      );
 
             list_push(INFO_ASSIGNS(arg_info), assign);
@@ -89,7 +89,7 @@ void construct_init(node *syntaxtree, info *info)
     node *initFun;
 
     current = syntaxtree;
-    
+
     // Get to the end of the declarations
     while (PROGRAM_NEXT(current) != NULL) {
         current = PROGRAM_NEXT(current);
@@ -101,7 +101,7 @@ void construct_init(node *syntaxtree, info *info)
     PROGRAM_NEXT(current) = TBmakeProgram(initFun, NULL);
 }
 
-node *generate_init(info *info) 
+node *generate_init(info *info)
 {
     node *initFun;
     node *body;
@@ -132,7 +132,7 @@ node *generate_init(info *info)
                 STRcpy("__init"),
                 NULL,
                 body
-            ); 
+            );
 
     DBUG_RETURN(initFun);
 }

@@ -248,6 +248,15 @@
     <node name="VarDef">
       <description>a variable definition</description>
       <sons>
+        <son name="Dimensions">
+          <description>Support for arrays</description>
+          <targets>
+            <target mandatory="no">
+              <node name="ExprList" />
+              <phases><all /></phases>
+            </target>
+          </targets>
+        </son>
         <son name="Init">
           <description>the initial value</description>
           <targets>
@@ -276,6 +285,18 @@
         <attribute name="Ty">
           <description>the variable type</description>
           <type name="Type">
+            <targets>
+              <target mandatory="yes">
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+        <attribute name="dimensionCount">
+          <description>Array count</description>
+          <type name="Int">
             <targets>
               <target mandatory="yes">
                 <phases>
@@ -876,7 +897,17 @@
 
     <node name="Var">
       <description>represents an variable</description>
-      <sons></sons>
+      <sons>
+        <son name="Dimensions">
+          <description>Array dimensions</description>
+          <targets>
+            <target mandatory="no">
+              <node name="ExprList" />
+              <phases><all /></phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
       <attributes>
         <attribute name="Name">
           <type name="String">
@@ -885,6 +916,16 @@
                 <phases>
                   <all />
                 </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+        <attribute name="DimensionCount">
+          <description></description>
+          <type name="Int">
+            <targets>
+              <target mandatory="no">
+                <phases><all /></phases>
               </target>
             </targets>
           </type>
@@ -903,7 +944,7 @@
       </attributes>
     </node>
 
-    
+
 
     <node name="Array">
         <description>Represents an array</description>
