@@ -252,7 +252,7 @@
           <description>Support for arrays</description>
           <targets>
             <target mandatory="no">
-              <node name="ExprList" />
+              <node name="Array" />
               <phases><all /></phases>
             </target>
           </targets>
@@ -417,6 +417,15 @@
     <node name="FunParam">
       <description>A function parameter</description>
       <sons>
+          <son name="Dimensions">
+            <description>Array dimensions</description>
+            <targets>
+              <target mandatory="no">
+                <node name="Array" />
+                <phases><all /></phases>
+              </target>
+            </targets>
+          </son>
       </sons>
       <attributes>
         <attribute name="Ty">
@@ -902,7 +911,7 @@
           <description>Array dimensions</description>
           <targets>
             <target mandatory="no">
-              <node name="ExprList" />
+              <node name="Array" />
               <phases><all /></phases>
             </target>
           </targets>

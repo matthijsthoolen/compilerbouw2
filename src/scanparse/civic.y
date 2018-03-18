@@ -144,8 +144,11 @@ fun_params: fun_param COMMA fun_params  {
                 $$ = NULL;
             };
 
-fun_param: ty ID {
-            $$ = TBmakeFunparam($1, $2);
+fun_param: ty expr_array ID {
+            $$ = TBmakeFunparam($1, $3, $2);
+         }
+         | ty ID {
+            $$ = TBmakeFunparam($1, $2, NULL);
          };
 
 funheader: global_prefix ty ID BRACKET_L fun_params BRACKET_R

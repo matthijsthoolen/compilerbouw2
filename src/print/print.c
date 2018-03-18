@@ -606,7 +606,16 @@ node *PRTfunparam (node * arg_node, info * arg_info)
 {
     DBUG_ENTER("PRTfunparam");
 
+    node *dimensions;
+
     print_type(FUNPARAM_TY(arg_node));
+
+    dimensions = FUNPARAM_DIMENSIONS(arg_node);
+
+    if (dimensions != NULL) {
+        dimensions = TRAVdo(dimensions, arg_info);
+    }
+
     printf(" %s", FUNPARAM_ID(arg_node));
 
     DBUG_RETURN(arg_node);
