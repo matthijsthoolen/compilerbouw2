@@ -51,7 +51,7 @@ SUBPHASE(dse,
 SUBPHASE(arr,
         "Desugar array inits",
         DSEdoArrayInit,
-        "ALWAYS",
+        ALWAYS,
         ds)
 
 ENDPHASE( ds)
@@ -69,25 +69,25 @@ SUBPHASE( prt,
           con)
 
 SUBPHASE( ca,
-          "AnalysisFun",
+          "ContextAnalysisFun",
           CAdoContextAnalysisFun,
           ALWAYS,
           con)
 
 SUBPHASE( cav,
-          "AnalysisVar",
+          "ContextAnalysisVar",
           CAVdoContextAnalysisVar,
           ALWAYS,
           con)
 
 SUBPHASE( carc,
-          "AnalysisReturn",
+          "ContextAnalysisReturn",
           CARCdoContextReturnCheck,
           ALWAYS,
           con)
 
 SUBPHASE( catc,
-          "AnalysisType",
+          "ContextAnalysisType",
           CATCdoContextTypeCheck,
           ALWAYS,
           con)

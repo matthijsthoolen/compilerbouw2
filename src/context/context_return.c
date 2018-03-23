@@ -29,7 +29,7 @@ static info *MakeInfo()
 
     result = MEMmalloc(sizeof(info));
     INFO_RETURNFOUND(result) = FALSE;
- 
+
     DBUG_RETURN(result);
 }
 
@@ -48,10 +48,10 @@ node *CARCfun(node *arg_node, info *arg_info)
     node *stmt;
 
     DBUG_ENTER("CARCfun");
-    
+
     // Dont check externs or void type functions
     if (FUN_PREFIX(arg_node) != global_prefix_extern && FUN_RETTY(arg_node) != TY_void) {
- 
+
         returnStmt = NULL;
         stmt = INNERBLOCK_STMTS(FUN_BODY(arg_node));
 
@@ -61,19 +61,12 @@ node *CARCfun(node *arg_node, info *arg_info)
                 returnStmt = stmt;
             }
 
-            /*if (NODE_TYPE(STMTS_STMT(stmt)) == N_if) {
-                if (IF_BLOCKF(stmt) != NULL) {
-                    TRAVdo(
-                }
-                printf("If block found");
-            }*/
-
             stmt = STMTS_NEXT(stmt);
         }
 
         TRAVopt(INNERBLOCK_STMTS(FUN_BODY(arg_node)), arg_info);
 
-        if (INFO_RETURNFOUND(arg_info) == TRUE) {
+        if (INFO_RETURNFOUND(arg_info) == TRUE && stmt != NULL) {
             CTIwarn(
                 "For function '%s' A return statement has been found. But it might not be reachable.",
                 FUN_ID(arg_node)
@@ -83,7 +76,7 @@ node *CARCfun(node *arg_node, info *arg_info)
                 "No return statement found in a non-void function '%s'. Expected at least one return statement.",
                 FUN_ID(arg_node)
             );
-        } else if (stmt != NULL) { 
+        } else if (stmt != NULL) {
             CTIerror(
                 "It seems like there is unreachable code after the return statement in function '%s'.",
                 FUN_ID(arg_node)
@@ -105,7 +98,7 @@ node *CARCreturn(node *arg_node, info *arg_info)
 
 node *CARCdoContextReturnCheck(node *syntaxtree)
 {
-    info *info; 
+    info *info;
 
     DBUG_ENTER("CARCdoContextReturnCheck");
 

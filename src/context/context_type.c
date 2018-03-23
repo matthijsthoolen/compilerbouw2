@@ -113,6 +113,14 @@ node *CATCvardef(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCvardef");
 
+    if (VARDEF_TY(arg_node) == TY_void) {
+        CTIerrorLine(
+            NODE_LINE(arg_node),
+            "Type mismatch for %s. Vardef cant be of type void.",
+            VARDEF_ID(arg_node)
+        );
+    }
+
     DBUG_RETURN(arg_node);
 }
 
@@ -120,6 +128,7 @@ node *CATCinnerblock(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCinnerblock");
 
+    INNERBLOCK_VARS(arg_node)  = TRAVopt(INNERBLOCK_VARS(arg_node), arg_info);
     INNERBLOCK_STMTS(arg_node) = TRAVopt(INNERBLOCK_STMTS(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
@@ -576,9 +585,9 @@ node *CATCdoContextTypeCheck( node *syntaxtree)
 {
     info *info;
 
-    DBUG_ENTER("CATCdoGenByteCode");
+    DBUG_ENTER("CATCdoContextTypeCheck");
 
-    DBUG_ASSERT((syntaxtree != NULL), "CATCdoGenByteCode called with empty syntaxtree");
+    DBUG_ASSERT((syntaxtree != NULL), "CATCdoContextTypeCheck called with empty syntaxtree");
 
     info = MakeInfo();
 

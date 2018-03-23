@@ -17,9 +17,13 @@ node *ARRassign(node *arg_node, info *arg_info) {
 node *DSEdoArrayInit(node *syntaxtree) {
     DBUG_ENTER("ARRdoArrayInit");
 
-    syntaxtree = TRAVdo(syntaxtree, NULL);
+    DBUG_ASSERT((syntaxtree != NULL), "ARRdoArrayInit called with empty syntaxtree");
 
     PRTdoPrint(syntaxtree);
+
+    TRAVpush(TR_arr);
+
+    syntaxtree = TRAVdo(syntaxtree, NULL);
 
     TRAVpop();
 

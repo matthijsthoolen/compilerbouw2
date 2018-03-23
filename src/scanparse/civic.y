@@ -47,8 +47,8 @@ static node *parseresult = NULL;
 
 %type <node> decl
 %type <node> program
-%type <node> vardef fundef funheader fun_params fun_param fun_body_defs fun_body_vardefs
-%type <node> stmts vardeflist
+%type <node> vardef fundef funheader fun_params fun_param
+%type <node> stmts vardeflist funbody block
 %type <node> stmt var assign stmt_return
 %type <node> stmt_if stmt_if_else stmt_while stmt_do_while stmt_for
 %type <node> call_args call
@@ -99,13 +99,13 @@ global_prefix: EXTERN   { $$ = global_prefix_extern; }
              ;
 
 vardeflist: vardef vardeflist
-    {
-        $$ = TBmakeVardeflist($1, $2);
-    }
-    | vardef
-    {
-        $$ = TBmakeVardeflist($1, NULL);
-    };
+     {
+         $$ = TBmakeVardeflist($1, $2);
+     }
+     | vardef
+     {
+         $$ = TBmakeVardeflist($1, NULL);
+     };
 
 vardef: global_prefix ty ID LET expr SEMICOLON
     {
@@ -132,53 +132,70 @@ vardef: global_prefix ty ID LET expr SEMICOLON
         $$ = TBmakeVardef($1, $2, 0, $3, NULL, NULL);
     };
 
-fun_params: fun_param COMMA fun_params  {
-                $$ = TBmakeFunparamlist($1, $3);
-            }
-            | fun_param
-            {
-                $$ = TBmakeFunparamlist($1, NULL);
-            }
-            |
-            {
-                $$ = NULL;
-            };
-
-fun_param: ty expr_array ID {
-            $$ = TBmakeFunparam($1, $3, $2);
-         }
-         | ty ID {
-            $$ = TBmakeFunparam($1, $2, NULL);
-         };
-
 funheader: global_prefix ty ID BRACKET_L fun_params BRACKET_R
     {
          $$ = TBmakeFun($1, $2, $3, $5, NULL);
     };
 
-fundef: funheader ANBRACKET_L fun_body_defs stmts ANBRACKET_R
+fun_params: fun_param COMMA fun_params
     {
-         node *body = TBmakeInnerblock($3, $4);
+        $$ = TBmakeFunparamlist($1, $3);
+    }
+    | fun_param
+    {
+        $$ = TBmakeFunparamlist($1, NULL);
+    }
+    |
+    {
+        $$ = NULL;
+    };
 
+fun_param: ty expr_array ID
+    {
+        $$ = TBmakeFunparam($1, $3, $2);
+    }
+    | ty ID {
+        $$ = TBmakeFunparam($1, $2, NULL);
+    };
+
+block: ANBRACKET_L stmts ANBRACKET_R { $$ = $2; }
+     | ANBRACKET_L ANBRACKET_R       { $$ = NULL; }
+     | stmt                          { $$ = TBmakeStmts($1, NULL); }
+     ;
+
+funbody: ANBRACKET_L vardeflist stmts ANBRACKET_R
+    {
+         $$ = TBmakeInnerblock($2, $3);
+    }
+    | ANBRACKET_L vardeflist ANBRACKET_R
+    {
+         $$ = TBmakeInnerblock($2, NULL);
+    }
+    | block
+    {
+         $$ = TBmakeInnerblock(NULL, $1);
+    }
+    ;
+
+fundef: funheader funbody
+    {
          node *x = $1;
+         node *body = $2;
          FUN_BODY(x) = body;
          $$ = x;
     }
     | funheader SEMICOLON
     {
         $$ = $1;
-    };
-
-fun_body_defs: fun_body_vardefs                 { $$ = $1; };
-fun_body_vardefs: vardeflist fun_body_vardefs   { $$ = $1; }
-                | vardeflist                    { $$ = $1; }
-                |                               { $$ = NULL; }
+    }
+    ;
 
 stmts: stmt stmts       { $$ = TBmakeStmts($1, $2); }
      |                  { $$ = NULL; }
      ;
+
 stmt: assign            { $$ = $1; }
-    | call SEMICOLON    { $$ = TBmakeAssign(NULL, $1); }
+    | call SEMICOLON    { $$ = $1; }
     | stmt_if           { $$ = $1; }
     | stmt_while        { $$ = $1; }
     | stmt_do_while     { $$ = $1; }
@@ -186,12 +203,14 @@ stmt: assign            { $$ = $1; }
     | stmt_return       { $$ = $1; }
     ;
 
-var: ID SQBRACKET_L expr SQBRACKET_R { $$ = TBmakeVar($1, $3); }
-   | ID                              { $$ = TBmakeVar($1, 0); };
+var: ID expr_array { $$ = TBmakeVar($1, $2); }
+   | ID            { $$ = TBmakeVar($1, NULL); }
+   ;
 
 assign: var LET expr_array SEMICOLON { $$ = TBmakeAssign($1, $3); }
       | var LET expr SEMICOLON       { $$ = TBmakeAssign($1, $3); }
       | var LET expr                 { $$ = TBmakeAssign($1, $3); }
+      ;
 
 call: var BRACKET_L call_args BRACKET_R  { $$ = TBmakeCall($1, $3); };
 call_args: expr COMMA call_args          { $$ = TBmakeExprlist($1, $3); }
@@ -199,28 +218,33 @@ call_args: expr COMMA call_args          { $$ = TBmakeExprlist($1, $3); }
          |                               { $$ = NULL; }
          ;
 
-stmt_return: RETURN expr SEMICOLON      { $$ = TBmakeReturn($2); };
+stmt_return: RETURN expr SEMICOLON      { $$ = TBmakeReturn($2); }
+           | RETURN SEMICOLON           { $$ = TBmakeReturn(NULL); }
+           ;
 
-stmt_if: IF BRACKET_L expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R stmt_if_else
-            { $$ = TBmakeIf($3, $6, $8); }
+stmt_if: IF BRACKET_L expr BRACKET_R block stmt_if_else
+       {
+            $$ = TBmakeIf($3, $5, $6);
+       }
+       ;
+
+stmt_if_else: ELSE block   { $$ = $2; }
+            |              { $$ = NULL; }
             ;
-stmt_if_else: ELSE ANBRACKET_L stmts ANBRACKET_R    { $$ = $3; }
-            |                                       { $$ = NULL; }
-            ;
 
-stmt_while: WHILE BRACKET_L expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R
-                { $$ = TBmakeWhile($3, $6); };
+stmt_while: WHILE BRACKET_L expr BRACKET_R block
+                { $$ = TBmakeWhile($3, $5); };
 
-stmt_do_while: DO ANBRACKET_L stmts ANBRACKET_R WHILE BRACKET_L expr BRACKET_R SEMICOLON
-                { $$ = TBmakeDowhile($3, $7); };
+stmt_do_while: DO block WHILE BRACKET_L expr BRACKET_R SEMICOLON
+                { $$ = TBmakeDowhile($2, $5); };
 
-stmt_for: FOR BRACKET_L INT var LET expr COMMA expr COMMA expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R
+stmt_for: FOR BRACKET_L INT var LET expr COMMA expr COMMA expr BRACKET_R block
                 {
-                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, $10, $13);
+                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, $10, $12);
                 }
-                | FOR BRACKET_L INT var LET expr COMMA expr BRACKET_R ANBRACKET_L stmts ANBRACKET_R
+                | FOR BRACKET_L INT var LET expr COMMA expr BRACKET_R block
                 {
-                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, NULL, $11);
+                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, NULL, $10);
                 };
 
 expr: expr12 { $$ = $1; };
@@ -301,7 +325,7 @@ node *YYparseTree( void)
 
     // Correct for global.line starting on line 0
     global.line = 1;
-    yydebug = 1;
+    yydebug = 0;
 
     yyparse();
 

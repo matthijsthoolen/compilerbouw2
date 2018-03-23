@@ -16,12 +16,14 @@ struct INFO {
     int nestLevel;
     list *vardefs;
     hashmap *changeQueue;
+    int varCounter;
 };
 
 #define INFO_CHECKEDFUNCTIONS(n)    ((n)->checkedFunctions)
 #define INFO_NESTLVL(n)             ((n)->nestLevel)
 #define INFO_VARDEFS(n)             ((n)->vardefs)
 #define INFO_QUEUE(n)               ((n)->changeQueue)
+#define INFO_VARCOUNTER(n)          ((n)->varCounter)
 
 static info *MakeInfo()
 {
@@ -35,6 +37,7 @@ static info *MakeInfo()
     INFO_NESTLVL(result)            = 0;
     INFO_VARDEFS(result)            = list_new();
     INFO_QUEUE(result)              = new_map();
+    INFO_VARCOUNTER(result)         = 0;
 
     DBUG_RETURN(result);
 }
@@ -137,6 +140,7 @@ node *DSEfor(node *arg_node, info *arg_info)
     DBUG_ENTER("DSEfor");
 
     INFO_NESTLVL(arg_info)++;
+    INFO_VARCOUNTER(arg_info)++;
 
     for_assign  = FOR_ASSIGN(arg_node);
 
@@ -144,9 +148,11 @@ node *DSEfor(node *arg_node, info *arg_info)
 
     // Change the name. Based on the nesting LvL. 'int i' in first nesting become 'int i--1'
     VAR_NAME(ASSIGN_LEFT(for_assign)) = STRcat(
-                                            VAR_NAME(ASSIGN_LEFT(for_assign)),
-                                            STRcat("--", STRitoa(INFO_NESTLVL(arg_info)))
-                                        );
+        STRcat(VAR_NAME(ASSIGN_LEFT(for_assign)),
+            STRcat("--",STRitoa(INFO_VARCOUNTER(arg_info)))
+        ),
+        STRcat("--", STRitoa(INFO_NESTLVL(arg_info)))
+    );
 
     new_vardef = TBmakeVardef(
                     0,

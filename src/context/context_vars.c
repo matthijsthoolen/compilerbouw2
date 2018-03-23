@@ -29,7 +29,7 @@ static info *MakeInfo()
     result = MEMmalloc(sizeof(info));
     INFO_NESTLVL(result)    = 0;
     INFO_GLOBAL(result)     = new_map();
-    INFO_LOCAL(result)      = new_map();   
+    INFO_LOCAL(result)      = new_map();
 
     DBUG_RETURN(result);
 }
@@ -51,7 +51,7 @@ node *CAVfun(node *arg_node, info *arg_info)
     DBUG_ENTER("CAVfun");
 
     DBUG_PRINT("CAV", ("Processing function '%s'", FUN_ID(arg_node)));
-    
+
     FUN_PARAMS(arg_node) = TRAVopt(FUN_PARAMS(arg_node), arg_info);
 
     FUN_BODY(arg_node) = TRAVopt(FUN_BODY(arg_node), arg_info);
@@ -77,10 +77,9 @@ node *CAVfunparamlist(node *arg_node, info *arg_info)
 node *CAVfunparam(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVfunparam");
-    
+
     DBUG_PRINT("CAV", ("Processing function parameters, now checking: '%s'", FUNPARAM_ID(arg_node)));
 
-        
     if (map_has(INFO_LOCAL(arg_info), FUNPARAM_ID(arg_node))) {
         CTIerror("Double declaration of variable \"%s\" (first defined at %d:%d)",
                   FUNPARAM_ID(arg_node),
@@ -95,7 +94,7 @@ node *CAVfunparam(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
-node *CAVvardeflist(node *arg_node, info *arg_info) 
+node *CAVvardeflist(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVvardeflist");
 
@@ -114,7 +113,7 @@ node *CAVvardef(node *arg_node, info *arg_info)
 
     //if global prefix is none (so just local) else add to global list
     if (VARDEF_PREFIX(arg_node) == global_prefix_none) {
- 
+
         DBUG_PRINT("CAV", ("Variable %s is local", VARDEF_ID(arg_node)));
 
         if (map_has(INFO_LOCAL(arg_info), VARDEF_ID(arg_node))) {
@@ -129,9 +128,9 @@ node *CAVvardef(node *arg_node, info *arg_info)
         map_push(INFO_LOCAL(arg_info), VARDEF_ID(arg_node), arg_node);
 
     } else {
-  
+
         DBUG_PRINT("CAV", ("Variable %s is global", VARDEF_ID(arg_node)));
- 
+
         if (map_has(INFO_GLOBAL(arg_info), VARDEF_ID(arg_node))) {
             CTIerror("Double declaration of variable \"%s\" (first defined at %d:%d)",
                       VARDEF_ID(arg_node),
@@ -177,7 +176,7 @@ node *CAVvar(node *arg_node, info *arg_info)
     }
 
     VAR_DECL(arg_node) = var_decl;
-        
+
     DBUG_RETURN(arg_node);
 }
 
@@ -196,7 +195,7 @@ node *CAVdoContextAnalysisVar(node *syntaxtree)
 
     TRAVpop();
 
-    info = FreeInfo(info); 
+    info = FreeInfo(info);
 
     DBUG_RETURN(syntaxtree);
 }

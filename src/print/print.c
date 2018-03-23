@@ -114,6 +114,13 @@ PRTstmts (node * arg_node, info * arg_info)
 
   STMTS_STMT( arg_node) = TRAVdo( STMTS_STMT( arg_node), arg_info);
 
+  switch (NODE_TYPE(STMTS_STMT(arg_node))) {
+      case N_call:
+        printf(";\n");
+        INDENT_NEWLINE(arg_info);
+      default:;
+  }
+
   STMTS_NEXT( arg_node) = TRAVopt( STMTS_NEXT( arg_node), arg_info);
 
   DBUG_RETURN (arg_node);
@@ -176,7 +183,7 @@ PRTbinop (node * arg_node, info * arg_info)
 
   DBUG_ENTER ("PRTbinop");
 
-  printf( "( ");
+  printf("(");
 
   BINOP_LEFT( arg_node) = TRAVdo( BINOP_LEFT( arg_node), arg_info);
 
@@ -228,7 +235,7 @@ PRTbinop (node * arg_node, info * arg_info)
 
   BINOP_RIGHT( arg_node) = TRAVdo( BINOP_RIGHT( arg_node), arg_info);
 
-  printf( ")");
+  printf(")");
 
   DBUG_RETURN (arg_node);
 }
@@ -365,11 +372,7 @@ PRTvar (node * arg_node, info * arg_info)
   dimensions = VAR_DIMENSIONS(arg_node);
 
   if (dimensions != NULL) {
-    printf("[");
-
     dimensions = TRAVdo(dimensions, arg_info);
-
-    printf("]");
   }
 
   DBUG_RETURN (arg_node);
@@ -629,7 +632,7 @@ node *PRTif (node * arg_node, info * arg_info)
 
     printf("if (");
     IF_COND(arg_node) = TRAVdo(IF_COND(arg_node), arg_info);
-    printf(") ");
+    printf(")");
     print_blocklike(&IF_BLOCKT(arg_node), arg_info);
     if (IF_BLOCKF(arg_node) != 0) {
         printf(" else ");
@@ -700,7 +703,10 @@ node *PRTreturn (node * arg_node, info * arg_info)
 
     indent(arg_info);
     printf("return ");
-    RETURN_EXPR(arg_node) = TRAVdo(RETURN_EXPR(arg_node), arg_info);
+
+    if (RETURN_EXPR(arg_node) != NULL) {
+        RETURN_EXPR(arg_node) = TRAVdo(RETURN_EXPR(arg_node), arg_info);
+    }
     printf(";\n"); newline(arg_info);
 
     DBUG_RETURN(arg_node);
@@ -722,6 +728,8 @@ node *PRTexprlist (node * arg_node, info * arg_info)
 node *PRTcall (node * arg_node, info * arg_info)
 {
     DBUG_ENTER("PRTcall");
+
+    indent(arg_info);
 
     printf("%s(", VAR_NAME(CALL_ID(arg_node)));
     CALL_ARGS( arg_node) = TRAVopt( CALL_ARGS( arg_node), arg_info);
