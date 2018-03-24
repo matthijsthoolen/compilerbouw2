@@ -246,11 +246,6 @@ node *CATCvar(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCvar");
 
-    DBUG_PRINT(
-        "CATCvar",
-        ("%s", VAR_NAME(arg_node))
-    );
-
     if (NODE_TYPE(VAR_DECL(arg_node)) == N_vardef) {
         INFO_TYPE(arg_info) = VARDEF_TY(VAR_DECL(arg_node));
     } else if (NODE_TYPE(VAR_DECL(arg_node)) == N_funparam) {
@@ -456,6 +451,8 @@ node *CATCcast(node *arg_node, info *arg_info)
 
 node *CATCcall(node *arg_node, info *arg_info)
 {
+    DBUG_ENTER("CATCcall");
+
     int countArgs;
     int countParams;
     int i;
@@ -463,8 +460,6 @@ node *CATCcall(node *arg_node, info *arg_info)
     node *list2;
     type exprType;
     type paramType;
-
-    DBUG_ENTER("CATCcall");
 
     countArgs = 0;
     countParams = 0;
@@ -478,11 +473,10 @@ node *CATCcall(node *arg_node, info *arg_info)
 
     // Now count the function parameters
     list = FUN_PARAMS(CALL_DECL(arg_node));
-    while(list) {
+    while (list) {
         list = FUNPARAMLIST_NEXT(list);
         countParams++;
     }
-
     if (countArgs != countParams) {
         INFO_TYPE(arg_info) = TY_unknown;
 
@@ -500,6 +494,7 @@ node *CATCcall(node *arg_node, info *arg_info)
 
     list  = CALL_ARGS(arg_node);
     list2 = FUN_PARAMS(CALL_DECL(arg_node));
+
     while (list) {
         TRAVdo(EXPRLIST_EXPR(list), arg_info);
         exprType    = INFO_TYPE(arg_info);
@@ -507,7 +502,7 @@ node *CATCcall(node *arg_node, info *arg_info)
 
         if (exprType != paramType) {
             CTIerror(
-                "Row: '%d': incorrect function argument given. Expected %s but got %s for argument nr '%d;",
+                "Row: '%d': incorrect function argument given. Expected %s but got %s for argument nr '%d'",
                 NODE_LINE(EXPRLIST_EXPR(list)),
                 pretty_print_type(exprType),
                 pretty_print_type(paramType),
@@ -516,7 +511,7 @@ node *CATCcall(node *arg_node, info *arg_info)
         }
 
         list  = EXPRLIST_NEXT(list);
-        list2 = FUNPARAMLIST_NEXT(list);
+        list2 = FUNPARAMLIST_NEXT(list2);
         i++;
     }
 
