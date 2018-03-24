@@ -14,6 +14,7 @@
 #include "ctinfo.h"
 #include "free.h"
 #include "globals.h"
+#include "numbers.h"
 
 extern int yylex();
 static int yyerror( char *errname);
@@ -26,8 +27,8 @@ static node *parseresult = NULL;
     node               *node;
     nodetype            nodetype;
     char               *id;
-    int                 cint;
-    float               cflt;
+    char               *cint;
+    char               *cflt;
     binop               cbinop;
     monop               cmonop;
     type                ctype;
@@ -41,8 +42,8 @@ static node *parseresult = NULL;
 %token ANBRACKET_L ANBRACKET_R SQBRACKET_L SQBRACKET_R
 %token NOT EXTERN EXPORT VOID FLOAT INT
 
-%token <cint> INTVAL
-%token <cflt> FLOATVAL
+%token <cint> INTVALUE
+%token <cflt> FLOATVALUE
 %token <id> ID
 
 %type <node> decl
@@ -52,6 +53,7 @@ static node *parseresult = NULL;
 %type <node> stmt var assign stmt_return
 %type <node> stmt_if stmt_if_else stmt_while stmt_do_while stmt_for
 %type <node> call_args call
+%type <node> numberint numberfloat boolval constant
 %type <node> expr expr0 expr2 expr3 expr4 expr6 expr7 expr11 expr12 expr_array array_vars array_var
 %type <cbinop> binop3 binop4 binop6 binop7 binop11 binop12
 
@@ -115,11 +117,11 @@ vardef: global_prefix ty ID LET expr SEMICOLON
     {
         $$ = TBmakeVardef($1, $2, 0, $3, NULL, $5);
     }
-    | global_prefix ty SQBRACKET_L INTVAL SQBRACKET_R ID LET expr SEMICOLON
+    | global_prefix ty SQBRACKET_L INTVALUE SQBRACKET_R ID LET expr SEMICOLON
     {
         $$ = TBmakeVardef($1, $2, $4, $6, NULL, $8);
     }
-    | global_prefix ty SQBRACKET_L INTVAL SQBRACKET_R ID SEMICOLON
+    | global_prefix ty SQBRACKET_L INTVALUE SQBRACKET_R ID SEMICOLON
     {
         $$ = TBmakeVardef($1, $2, $4, $6, NULL, NULL);
     }
@@ -212,7 +214,7 @@ assign: var LET expr_array SEMICOLON { $$ = TBmakeAssign($1, $3); }
       | var LET expr                 { $$ = TBmakeAssign($1, $3); }
       ;
 
-call: var BRACKET_L call_args BRACKET_R  { $$ = TBmakeCall($1, $3); };
+call: ID BRACKET_L call_args BRACKET_R  { $$ = TBmakeCall($1, $3); };
 call_args: expr COMMA call_args          { $$ = TBmakeExprlist($1, $3); }
          | expr                          { $$ = TBmakeExprlist($1, NULL); }
          |                               { $$ = NULL; }
@@ -272,12 +274,42 @@ expr2: BRACKET_L ty BRACKET_R expr2     { $$ = TBmakeCast($2, $4); }
      ;
 expr0: call                             { $$ = $1; }
      | var                              { $$ = $1; }
-     | FLOATVAL                         { $$ = TBmakeFloat($1); }
-     | INTVAL                           { $$ = TBmakeInt($1); }
-     | TRUEVAL                          { $$ = TBmakeBool(TRUE); }
-     | FALSEVAL                         { $$ = TBmakeBool(FALSE); }
+     | constant                         { $$ = $1; }
      | BRACKET_L expr BRACKET_R         { $$ = $2; }
      ;
+
+constant: numberint   { $$ = $1; }
+        | numberfloat { $$ = $1; }
+        | boolval     { $$ = $1; }
+        ;
+
+boolval:  TRUEVAL  { $$ = TBmakeBool(TRUE); }
+       |  FALSEVAL { $$ = TBmakeBool(FALSE); }
+       ;
+
+numberint: INTVALUE {
+    int* value = convertToInt($1);
+    MEMfree($1);
+
+    if (value == NULL) {
+        yyerror("Integer value out of range (signed 32-bit)");
+    }
+
+    $$ = TBmakeInt(*value);
+    free(value);
+}
+
+numberfloat: FLOATVALUE {
+    float* value = convertToFloat($1);
+    MEMfree($1);
+
+    if (value == NULL) {
+        yyerror("Float value out of range (signed 32-bit)");
+    }
+
+    $$ = TBmakeFloat(*value);
+    free(value);
+}
 
  expr_array: SQBRACKET_L array_vars SQBRACKET_R { $$ = TBmakeArray($2); };
  array_vars: array_var COMMA array_vars         { $$ = TBmakeExprlist($1, $3); }

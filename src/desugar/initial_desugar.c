@@ -146,7 +146,7 @@ node *DSEfor(node *arg_node, info *arg_info)
 
     char *old_name = STRcpy(VAR_NAME(ASSIGN_LEFT(for_assign)));
 
-    // Change the name. Based on the nesting LvL. 'int i' in first nesting become 'int i--1'
+    // Change the name. Based on the nesting LvL and the occurence. 'int i' in first nesting become 'int i--1'
     VAR_NAME(ASSIGN_LEFT(for_assign)) = STRcat(
         STRcat(VAR_NAME(ASSIGN_LEFT(for_assign)),
             STRcat("--",STRitoa(INFO_VARCOUNTER(arg_info)))

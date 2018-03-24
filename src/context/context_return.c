@@ -17,9 +17,13 @@
 
 struct INFO {
     bool returnFound;
+    bool insideOptionalBlock;
+    char * funName;
 };
 
 #define INFO_RETURNFOUND(n) ((n)->returnFound)
+#define INFO_INSIDEOPTIONALBLOCK(n) ((n)->insideOptionalBlock)
+#define INFO_FUNNAME(n) ((n)->funName)
 
 static info *MakeInfo()
 {
@@ -29,6 +33,8 @@ static info *MakeInfo()
 
     result = MEMmalloc(sizeof(info));
     INFO_RETURNFOUND(result) = FALSE;
+    INFO_INSIDEOPTIONALBLOCK(result) = FALSE;
+    INFO_FUNNAME(result) = "";
 
     DBUG_RETURN(result);
 }
@@ -58,29 +64,23 @@ node *CARCfun(node *arg_node, info *arg_info)
         // Keep going until we find the return statement or no stmts left
         while (returnStmt == NULL && stmt != NULL) {
             if (NODE_TYPE(STMTS_STMT(stmt)) == N_return) {
-                returnStmt = stmt;
+                returnStmt = STMTS_STMT(stmt);
             }
 
             stmt = STMTS_NEXT(stmt);
         }
 
-        TRAVopt(INNERBLOCK_STMTS(FUN_BODY(arg_node)), arg_info);
-
-        if (INFO_RETURNFOUND(arg_info) == TRUE && stmt != NULL) {
-            CTIwarn(
-                "For function '%s' A return statement has been found. But it might not be reachable.",
-                FUN_ID(arg_node)
-            );
-        } else if (returnStmt == NULL) {
+        if (returnStmt == NULL) {
             CTIerror(
-                "No return statement found in a non-void function '%s'. Expected at least one return statement.",
-                FUN_ID(arg_node)
+                "function '%s' must end with a return of type %s",
+                FUN_ID(arg_node),
+                get_type_name(FUN_RETTY(arg_node))
             );
-        } else if (stmt != NULL) {
-            CTIerror(
-                "It seems like there is unreachable code after the return statement in function '%s'.",
-                FUN_ID(arg_node)
-            );
+        } else {
+            // Now that we are sure that this function has a return statement, let's search for other possible errors.
+            // related to the return statement. E.g. Unreachable code, return not at the very end of the function.
+            INFO_FUNNAME(arg_info) = FUN_ID(arg_node);
+            TRAVopt(INNERBLOCK_STMTS(FUN_BODY(arg_node)), arg_info);
         }
     }
 
@@ -92,6 +92,54 @@ node *CARCreturn(node *arg_node, info *arg_info)
     DBUG_ENTER("CARCreturn");
 
     INFO_RETURNFOUND(arg_info) = TRUE;
+
+    DBUG_RETURN(arg_node);
+}
+
+node *CARCif(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CARCif");
+
+    INFO_INSIDEOPTIONALBLOCK(arg_info) = TRUE;
+
+    TRAVopt(IF_BLOCKT(arg_node), arg_info);
+
+    TRAVopt(IF_BLOCKF(arg_node), arg_info);
+
+    INFO_INSIDEOPTIONALBLOCK(arg_info) = FALSE;
+
+    DBUG_RETURN(arg_node);
+}
+
+node *CARCstmts(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CARCstmts");
+
+    STMTS_STMT( arg_node) = TRAVdo( STMTS_STMT( arg_node), arg_info);
+
+    if (NODE_TYPE(STMTS_STMT(arg_node)) == N_return) {
+        if (INFO_INSIDEOPTIONALBLOCK(arg_info) == TRUE) {
+            // Check if there is more code after a return statement inside an optional block
+            if (STMTS_NEXT(arg_node) != NULL) {
+                CTIwarnLine(
+                    NODE_LINE(STMTS_STMT(arg_node)),
+                    "Unreachable code found after return statement in function '%s'",
+                    INFO_FUNNAME(arg_info)
+                );
+            }
+        } else if (INFO_INSIDEOPTIONALBLOCK(arg_info) == FALSE) {
+            // Check if there is more code after a return, if so. Give an error.
+            if (STMTS_NEXT(arg_node) != NULL) {
+                CTIerrorLine(
+                    NODE_LINE(STMTS_STMT(arg_node)),
+                    "function '%s' must end with a return statement",
+                    INFO_FUNNAME(arg_info)
+                );
+            }
+        }
+    }
+
+    STMTS_NEXT(arg_node) = TRAVopt(STMTS_NEXT(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }

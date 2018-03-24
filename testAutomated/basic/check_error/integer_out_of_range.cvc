@@ -7,4 +7,3 @@ export int main()
   printInt(i);
   return 0;
 }
-

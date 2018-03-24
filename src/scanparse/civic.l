@@ -79,7 +79,7 @@
                              FILTER( ID);
                            }
 
-#.*$                       {   
+#.*$                       {
                                char* lineNr = yytext + 2;
                                if (*lineNr != ' ') {
                                    char* space = lineNr + 1;
@@ -102,12 +102,12 @@
                                };
                              }
 
-[0-9]+                     { yylval.cint=atoi(yytext);
-                             FILTER( INTVAL);
+[0-9]+                     { yylval.cint=STRcpy(yytext);
+                             FILTER( INTVALUE);
                            }
 
-[0-9]+\.[0-9]+             { yylval.cflt=atof(yytext);
-                             FILTER( FLOATVAL);
+[0-9]+\.[0-9]+             { yylval.cflt=STRcpy(yytext);
+                             FILTER( FLOATVALUE);
                            }
 
 \n.*                       { global.line += 1;

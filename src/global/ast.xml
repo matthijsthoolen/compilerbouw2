@@ -52,7 +52,6 @@
                 <node name="FunParam" />
                 <node name="VarDefList" />
                 <node name="VarDef" />
-                <node name="Call" />
                 <node name="Var" />
             </travuser>
         </traversal>
@@ -63,8 +62,8 @@
                 <node name="Fun" />
                 <node name="VarDefList" />
                 <node name="VarDef" />
+                <node name="Return" />
                 <node name="Assign" />
-                <node name="InnerBlock" />
                 <node name="If" />
                 <node name="Var" />
                 <node name="Array" />
@@ -81,6 +80,8 @@
         <traversal id="CARC" name="Context Analysis Return Check" default="sons" include="context_return.h">
             <travuser>
                 <node name="Fun" />
+                <node name="Stmts" />
+                <node name="If" />
                 <node name="Return" />
             </travuser>
         </traversal>
@@ -719,16 +720,6 @@
     <node name="Call">
       <description>a function call expression</description>
       <sons>
-        <son name="Id">
-            <targets>
-                <target mandatory="yes">
-                    <node name="Var" />
-                    <phases>
-                        <all />
-                    </phases>
-                </target>
-            </targets>
-        </son>
         <son name="Args">
           <description>the function arguments</description>
           <targets>
@@ -741,7 +732,31 @@
           </targets>
         </son>
       </sons>
-      <attributes />
+      <attributes>
+          <attribute name="Id">
+              <description>The name of the function to call</description>
+              <type name="String">
+                  <targets>
+                      <target mandatory="yes">
+                          <phases>
+                              <all />
+                          </phases>
+                      </target>
+                  </targets>
+              </type>
+          </attribute>
+          <attribute name="DECL">
+              <description>Link to function declaration</description>
+              <type name="Link"/>
+              <targets>
+                  <target mandatory="yes">
+                    <phases>
+                        <phase from="Context Analysis"/>
+                    </phases>
+                  </target>
+              </targets>
+          </attribute>
+      </attributes>
     </node>
 
     <node name="Cast">

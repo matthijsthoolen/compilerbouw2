@@ -71,7 +71,7 @@ framework   = memory.o str.o ctinfo.o main_args.o dbug.o globals.o \
               traverse_tables.o traverse_helper.o check.o \
               check_node.o check_attribs.o lookup_table.o map.o
 
-helpers     = hash_list.o list.o
+helpers     = hash_list.o list.o numbers.o
 
 global      = options.o usage.o myglobals.o
 

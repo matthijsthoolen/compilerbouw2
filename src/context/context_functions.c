@@ -29,7 +29,7 @@ static info *MakeInfo()
     result = MEMmalloc(sizeof(info));
     INFO_CURSCOPE(result)   = NULL;
     INFO_FUNS(result)       = new_map();
-    INFO_CALLS(result)      = new_map();    
+    INFO_CALLS(result)      = new_map();
 
     DBUG_RETURN(result);
 }
@@ -53,8 +53,8 @@ node *CAfun(node *arg_node, info *arg_info)
 
     DBUG_PRINT("CA", ("Processing function definition '%s'", FUN_ID(arg_node)));
 
-    if (map_has(INFO_FUNS(arg_info), FUN_ID(arg_node))) {    
-        CTIerror("Function \"%s\" already defined (first defined at %d:%d)", 
+    if (map_has(INFO_FUNS(arg_info), FUN_ID(arg_node))) {
+        CTIerror("Function \"%s\" already defined (first defined at %d:%d)",
                 FUN_ID(arg_node),
                 NODE_LINE(arg_node),
                 NODE_COL(arg_node)
@@ -63,7 +63,7 @@ node *CAfun(node *arg_node, info *arg_info)
         DBUG_RETURN(arg_node);
     }
 
-    map_push(INFO_FUNS(arg_info), FUN_ID(arg_node), arg_node); 
+    map_push(INFO_FUNS(arg_info), FUN_ID(arg_node), arg_node);
 
     FUN_BODY(arg_node) = TRAVopt(FUN_BODY(arg_node), arg_info);
 
@@ -73,11 +73,11 @@ node *CAfun(node *arg_node, info *arg_info)
 node *CAcall(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAcall");
- 
-    char *name = VAR_NAME(CALL_ID(arg_node));
-    
-    DBUG_PRINT("CA", ("Check if function %s is declared.", name)); 
-    
+
+    char *name = CALL_ID(arg_node);
+
+    DBUG_PRINT("CA", ("Check if function %s is declared.", name));
+
     /* Save all the Function Call arguments given */
     CALL_ARGS(arg_node) = TRAVopt(CALL_ARGS(arg_node), arg_info);
 
@@ -85,9 +85,9 @@ node *CAcall(node *arg_node, info *arg_info)
     node *fun = map_get(INFO_FUNS(arg_info), name);
 
     if (fun) {
-        VAR_DECL(CALL_ID(arg_node)) = fun;
+        CALL_DECL(arg_node) = fun;
     } else {
-        DBUG_PRINT("CA", ("Function %s isnt declared yet. Add call to queue", name)); 
+        DBUG_PRINT("CA", ("Function %s isnt declared yet. Add call to queue", name));
         map_push(INFO_CALLS(arg_info), name, arg_node);
     }
 
@@ -97,19 +97,19 @@ node *CAcall(node *arg_node, info *arg_info)
 /**
  * Check if all function calls have a callable function in the same scope
  */
-void check_fun_calls(info *arg_info) 
+void check_fun_calls(info *arg_info)
 {
     hashmap *tmp;
 
     DBUG_PRINT("CA", ("Check function call queue"));
- 
+
     while(!map_is_empty(INFO_CALLS(arg_info))) {
         tmp = map_pop_reverse(INFO_CALLS(arg_info));
 
         node *fun = map_get(INFO_FUNS(arg_info), tmp->key);
 
         if (fun) {
-            VAR_DECL(CALL_ID((node *)tmp->value)) = fun;
+            CALL_DECL((node *)tmp->value) = fun;
         } else {
             CTIerror("On line %d\nundefined function '%s'", NODE_LINE((node *)tmp->value), (char *)tmp->key);
         }

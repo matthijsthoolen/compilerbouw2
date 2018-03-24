@@ -449,25 +449,30 @@ node * PRTerror (node * arg_node, info * arg_info)
 
 
 static void print_type(type ty) {
+    printf("%s", get_type_name(ty));
+}
+
+char * get_type_name(type ty) {
     char *tmp;
 
     switch (ty) {
-    case TY_bool:
-        tmp = "bool";
-        break;
-    case TY_float:
-        tmp = "float";
-        break;
-    case TY_int:
-        tmp = "int";
-        break;
-    case TY_void:
-        tmp = "void";
-        break;
-    case TY_unknown:
-        DBUG_ASSERT( 0, "unknown type detected!");
+        case TY_bool:
+            tmp = "bool";
+            break;
+        case TY_float:
+            tmp = "float";
+            break;
+        case TY_int:
+            tmp = "int";
+            break;
+        case TY_void:
+            tmp = "void";
+            break;
+        case TY_unknown:
+            tmp = "unknown";
     }
-    printf("%s", tmp);
+
+    return tmp;
 }
 
 static void print_global_prefix(enum global_prefix pfx) {
@@ -731,7 +736,7 @@ node *PRTcall (node * arg_node, info * arg_info)
 
     indent(arg_info);
 
-    printf("%s(", VAR_NAME(CALL_ID(arg_node)));
+    printf("%s(", CALL_ID(arg_node));
     CALL_ARGS( arg_node) = TRAVopt( CALL_ARGS( arg_node), arg_info);
     printf(")");
 

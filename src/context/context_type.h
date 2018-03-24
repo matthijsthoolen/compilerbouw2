@@ -6,9 +6,7 @@ extern node *CATCprogram(node *arg_node, info *arg_info);
 extern node *CATCfun(node *arg_node, info *arg_info);
 extern node *CATCvardeflist(node *arg_node, info *arg_info);
 extern node *CATCvardef(node *arg_node, info *arg_info);
-extern node *CATCinnerblock(node *arg_node, info *arg_info);
 extern node *CATCassign(node *arg_node, info *arg_info);
-extern node *CATCstmts(node *arg_node, info *arg_info);
 extern node *CATCwhile(node *arg_node, info *arg_info);
 extern node *CATCdowhile(node *arg_node, info *arg_info);
 extern node *CATCif(node *arg_node, info *arg_info);
@@ -22,6 +20,7 @@ extern node *CATCbool(node *arg_node, info *arg_info);
 extern node *CATCcall(node *arg_node, info *arg_info);
 extern node *CATCcast(node *arg_node, info *arg_info);
 extern node *CATCarray(node *arg_node, info *arg_info);
+extern node *CATCreturn(node *arg_node, info *arg_info);
 
 extern char *pretty_print_type(type prt);
 

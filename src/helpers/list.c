@@ -7,7 +7,7 @@
 #include "list.h"
 
 /**
- * Destory and empty the list
+ * Destroy and empty the list
  */
 bool list_free(list *head)
 {
@@ -32,7 +32,7 @@ bool list_free(list *head)
         tmp->next = NULL;
         MEMfree(tmp);
     }
-    
+
     printf("3");
 
     DBUG_RETURN(TRUE);
@@ -44,13 +44,13 @@ bool list_free(list *head)
 bool list_reset(list *head)
 {
     DBUG_ENTER("list_reset");
-    
+
     if (head == NULL) {
         DBUG_RETURN(TRUE);
     }
 
     head->next = NULL;
-    
+
     DBUG_RETURN(list_free(head->next));
 }
 
@@ -60,7 +60,7 @@ bool list_reset(list *head)
 list* list_new()
 {
     list *new;
-    
+
     DBUG_ENTER("list_new");
 
     new = (list *) MEMmalloc(sizeof(list));
@@ -116,7 +116,7 @@ bool list_push(list *head, void *value)
     new = list_new();
     new->value = value;
     new->next = head->next;
-    
+
     head->next = new;
 
     DBUG_RETURN(TRUE);

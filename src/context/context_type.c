@@ -17,9 +17,13 @@
 
 struct INFO {
     type returnType;
+    type funReturnType;
+    char * funName;
 };
 
 #define INFO_TYPE(n) ((n)->returnType)
+#define INFO_FUNTYPE(n) ((n)->funReturnType)
+#define INFO_FUNNAME(n) ((n)->funName)
 
 static info *MakeInfo()
 {
@@ -28,6 +32,9 @@ static info *MakeInfo()
     info *result;
 
     result = MEMmalloc(sizeof(info));
+
+    INFO_TYPE(result) = TY_unknown;
+    INFO_FUNTYPE(result) = TY_unknown;
 
     DBUG_RETURN(result);
 }
@@ -54,43 +61,12 @@ node *CATCprogram(node *arg_node, info *arg_info)
 
 node *CATCfun(node *arg_node, info *arg_info)
 {
-    node *returnStmt;
-    node *stmt;
-
     DBUG_ENTER("CATCfun");
 
     // Still not checking extern function, but now we do check void to make sure nothing is returned
     if (FUN_PREFIX(arg_node) != global_prefix_extern) {
-        returnStmt = NULL;
-        stmt = INNERBLOCK_STMTS(FUN_BODY(arg_node));
-
-        // Keep going until we find the return statement or no stmts left
-        while (stmt != NULL) {
-            if (NODE_TYPE(STMTS_STMT(stmt)) == N_return) {
-                returnStmt = STMTS_STMT(stmt);
-
-                TRAVdo(RETURN_EXPR(returnStmt), arg_info);
-
-                if (INFO_TYPE(arg_info) != TY_unknown) {
-                    // Save the return type for later
-                    RETURN_TY(returnStmt) = INFO_TYPE(arg_info);
-
-                    /*printf("--------------\n");
-                    print_type_debug(INFO_TYPE(arg_info));
-                    print_type_debug(FUN_RETTY(arg_node));
-                    printf("--------------\n");*/
-
-                    if (INFO_TYPE(arg_info) != FUN_RETTY(arg_node)) {
-                        CTIerror("Function '%s' has a incorrect return type", FUN_ID(arg_node));
-                    }
-
-                    // Reset info
-                    INFO_TYPE(arg_info) = TY_unknown;
-                }
-            }
-
-            stmt = STMTS_NEXT(stmt);
-        }
+        INFO_FUNTYPE(arg_info) = FUN_RETTY(arg_node);
+        INFO_FUNNAME(arg_info) = FUN_ID(arg_node);
     }
 
     FUN_BODY(arg_node) = TRAVopt(FUN_BODY(arg_node), arg_info);
@@ -124,31 +100,39 @@ node *CATCvardef(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
-node *CATCinnerblock(node *arg_node, info *arg_info)
+node *CATCreturn(node *arg_node, info *arg_info)
 {
-    DBUG_ENTER("CATCinnerblock");
+    DBUG_ENTER("CATCreturn");
 
-    INNERBLOCK_VARS(arg_node)  = TRAVopt(INNERBLOCK_VARS(arg_node), arg_info);
-    INNERBLOCK_STMTS(arg_node) = TRAVopt(INNERBLOCK_STMTS(arg_node), arg_info);
+    if (RETURN_EXPR(arg_node) != NULL) {
+        TRAVdo(RETURN_EXPR(arg_node), arg_info);
+        RETURN_TY(arg_node) = INFO_TYPE(arg_info);
+    } else {
+        RETURN_TY(arg_node) = TY_void;
+    }
 
-    DBUG_RETURN(arg_node);
-}
+    // Check if the expected return type for this function equals the type of
+    // the returned expression
+    if (RETURN_TY(arg_node) != INFO_FUNTYPE(arg_info)) {
+        CTIerrorLine(
+            NODE_LINE(arg_node),
+            "function '%s' has return type %s, got %s",
+            INFO_FUNNAME(arg_info),
+            pretty_print_type(INFO_FUNTYPE(arg_info)),
+            pretty_print_type(RETURN_TY(arg_node))
+        );
+    }
 
-node *CATCstmts(node *arg_node, info *arg_info)
-{
-    DBUG_ENTER("CATCstmts");
-
-    STMTS_STMT(arg_node) = TRAVdo(STMTS_STMT(arg_node), arg_info);
-
-    STMTS_NEXT(arg_node) = TRAVopt(STMTS_NEXT(arg_node), arg_info);
+    // Reset info
+    INFO_TYPE(arg_info) = TY_unknown;
 
     DBUG_RETURN(arg_node);
 }
 
 node *CATCassign(node *arg_node, info *arg_info)
 {
-    type leftType;
     DBUG_ENTER("CATCassign");
+    type leftType;
 
     if (NODE_TYPE(VAR_DECL(ASSIGN_LEFT(arg_node))) == N_vardef) {
         leftType = VARDEF_TY(VAR_DECL(ASSIGN_LEFT(arg_node)));
@@ -261,6 +245,11 @@ node *CATCif(node *arg_node, info *arg_info)
 node *CATCvar(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCvar");
+
+    DBUG_PRINT(
+        "CATCvar",
+        ("%s", VAR_NAME(arg_node))
+    );
 
     if (NODE_TYPE(VAR_DECL(arg_node)) == N_vardef) {
         INFO_TYPE(arg_info) = VARDEF_TY(VAR_DECL(arg_node));
@@ -488,7 +477,7 @@ node *CATCcall(node *arg_node, info *arg_info)
     }
 
     // Now count the function parameters
-    list = FUN_PARAMS(VAR_DECL(CALL_ID(arg_node)));
+    list = FUN_PARAMS(CALL_DECL(arg_node));
     while(list) {
         list = FUNPARAMLIST_NEXT(list);
         countParams++;
@@ -500,7 +489,7 @@ node *CATCcall(node *arg_node, info *arg_info)
         CTIerror(
             "Row '%d': %s is called with %d parameters but requires %d.",
             NODE_LINE(arg_node),
-            VAR_NAME(CALL_ID(arg_node)),
+            CALL_ID(arg_node),
             countArgs,
             countParams
         );
@@ -510,7 +499,7 @@ node *CATCcall(node *arg_node, info *arg_info)
     i = 1;
 
     list  = CALL_ARGS(arg_node);
-    list2 = FUN_PARAMS(VAR_DECL(CALL_ID(arg_node)));
+    list2 = FUN_PARAMS(CALL_DECL(arg_node));
     while (list) {
         TRAVdo(EXPRLIST_EXPR(list), arg_info);
         exprType    = INFO_TYPE(arg_info);
@@ -531,7 +520,7 @@ node *CATCcall(node *arg_node, info *arg_info)
         i++;
     }
 
-    INFO_TYPE(arg_info) = FUN_RETTY(VAR_DECL(CALL_ID(arg_node)));
+    INFO_TYPE(arg_info) = FUN_RETTY(CALL_DECL(arg_node));
 
     DBUG_RETURN(arg_node);
 }
@@ -580,7 +569,6 @@ void print_type_debug(type prt)
 /*
  * Traversal start function
  */
-
 node *CATCdoContextTypeCheck( node *syntaxtree)
 {
     info *info;
