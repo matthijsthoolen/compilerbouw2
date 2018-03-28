@@ -1,37 +1,37 @@
 /* ---------------------------------------------------------------------------
- *
+ * 
  * SAC Compiler Construction Framework
- *
+ * 
  * ---------------------------------------------------------------------------
- *
+ * 
  * SAC COPYRIGHT NOTICE, LICENSE, AND DISCLAIMER
- *
+ * 
  * (c) Copyright 1994 - 2011 by
- *
+ * 
  *   SAC Development Team
  *   SAC Research Foundation
- *
+ * 
  *   http://www.sac-home.org
  *   email:info@sac-home.org
- *
+ * 
  *   All rights reserved
- *
+ * 
  * ---------------------------------------------------------------------------
- *
- * The SAC compiler construction framework, all accompanying
+ * 
+ * The SAC compiler construction framework, all accompanying 
  * software and documentation (in the following named this software)
  * is developed by the SAC Development Team (in the following named
  * the developer) which reserves all rights on this software.
- *
+ * 
  * Permission to use this software is hereby granted free of charge
- * exclusively for the duration and purpose of the course
- *   "Compilers and Operating Systems"
+ * exclusively for the duration and purpose of the course 
+ *   "Compilers and Operating Systems" 
  * of the MSc programme Grid Computing at the University of Amsterdam.
  * Redistribution of the software or any parts thereof as well as any
- * alteration  of the software or any parts thereof other than those
+ * alteration  of the software or any parts thereof other than those 
  * required to use the compiler construction framework for the purpose
  * of the above mentioned course are not permitted.
- *
+ * 
  * The developer disclaims all warranties with regard to this software,
  * including all implied warranties of merchantability and fitness.  In no
  * event shall the developer be liable for any special, indirect or
@@ -41,86 +41,82 @@
  * performance of this software. The entire risk as to the quality and
  * performance of this software is with you. Should this software prove
  * defective, you assume the cost of all servicing, repair, or correction.
- *
+ * 
  * ---------------------------------------------------------------------------
- */
+ */ 
 
 
-#ifndef GLOBALtype
-#define GLOBALtype( type)
-#endif
 
-#ifndef GLOBALname
-#define GLOBALname( name)
-#endif
-
-#ifndef GLOBALinit
-#define GLOBALinit( init)
-#endif
-
-
-#define GLOBAL( type, name, init) GLOBALtype(type) GLOBALname(name) GLOBALinit(init)
+#include <stdio.h>
+#include <string.h>
+#include "scanparse.h"
+#include "dbug.h"
+#include "globals.h"
+#include "ctinfo.h"
+#include "str.h"
+#include "memory.h"
 
 
 /*
- * Phase mechanism globals
+ * file handle for parsing
  */
-
-GLOBAL( compiler_phase_t, compiler_phase, PH_initial)
-GLOBAL( compiler_phase_t, compiler_subphase, PH_initial)
-GLOBAL( compiler_phase_t, compiler_cyclephase, PH_initial)
-GLOBAL( compiler_phase_t, compiler_anyphase, PH_initial)
-GLOBAL( int, cycle_counter, 0)
-GLOBAL( int, max_optcycles, 10)
-GLOBAL( bool, treecheck, FALSE)
-
+FILE *yyin;
 
 /*
- * Compile time information globals
+ * external parser function from fun.y
  */
+extern node *YYparseTree();
 
-GLOBAL( int, verbosity, 3)
+node *SPdoScanParse( node *syntax_tree)
+{
+  node *result = NULL;
+  char *filename;
+  
+  DBUG_ENTER("SPdoScanParse");
 
+  DBUG_ASSERT( syntax_tree == NULL, 
+               "SPdoScanParse() called with existing syntax tree.");
+  
+  if (global.cpp) {
+    asprintf(&filename, "%s.cpp", global.infile);
+  }
+  else {
+    filename = strdup(global.infile);
+  }
+  
+  yyin = fopen( filename, "r");
+  
+  if (yyin == NULL) {
+    CTIabort( "Cannot open file '%s'.", filename);
+  }
 
-/*
- * Break mechanism globals
- */
+  MEMfree( filename);
+  
+  result = YYparseTree();
 
-GLOBAL( compiler_phase_t, break_after_phase, PH_undefined)
-GLOBAL( compiler_phase_t, break_after_subphase, PH_undefined)
-GLOBAL( compiler_phase_t, break_after_cyclephase, PH_undefined)
-GLOBAL( int, break_cycle_specifier, 1)
-
-
-/*
- * DBUG mechanism globals
- */
-
-GLOBAL( compiler_phase_t, my_dbug_from, PH_initial)
-GLOBAL( compiler_phase_t, my_dbug_to, PH_final)
-GLOBAL( bool, my_dbug, FALSE)
-GLOBAL( bool, my_dbug_active, FALSE)
-GLOBAL( char *, my_dbug_str, NULL)
-
-
-/*
- * File handling globals
- */
-
-GLOBAL( char*, infile, NULL)
-GLOBAL( char*, outfile, NULL)
-
-
-/*
- * Scanner and parser globals
- */
-
-GLOBAL( int, line, 0)
-GLOBAL( int, col, 0)
-GLOBAL( int, cpp_pid, FALSE)
+  DBUG_RETURN( result);
+}
 
 
-#undef GLOBALtype
-#undef GLOBALname
-#undef GLOBALinit
-#undef GLOBAL
+node *SPdoRunPreProcessor( node *syntax_tree)
+{
+  int  err;
+  char *cppcallstr;
+  
+  DBUG_ENTER("SPdoRunPreProcessor");
+
+  asprintf(&cppcallstr, "gcc -x c -E %s > %s.cpp", global.infile, global.infile);
+  
+  err = system( cppcallstr);
+
+  cppcallstr = MEMfree( cppcallstr);
+
+  if ( err) {
+    CTIabort( "Unable to run C preprocessor");
+  }
+  
+  global.cpp = TRUE;
+  
+  DBUG_RETURN( syntax_tree);
+}
+

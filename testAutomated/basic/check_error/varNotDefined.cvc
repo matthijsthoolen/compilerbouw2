@@ -1,0 +1,8 @@
+void printInt(int i) {
+}
+
+export int main()
+{
+    printInt(i);
+    return 0;
+}

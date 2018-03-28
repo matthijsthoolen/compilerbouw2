@@ -1,0 +1,9 @@
+void returnMe() {
+    return 3;
+}
+
+export int main() {
+    returnMe();
+
+    return 1;
+}

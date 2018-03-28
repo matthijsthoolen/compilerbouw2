@@ -70,8 +70,8 @@ struct NODE {
   int                  lineno;         /* line of definition */
   int                  colno;         /* line of definition */
   node*                error;          /* error node */
-  struct SONUNION      sons;           /* the sons */
-  struct ATTRIBUNION   attribs;        /* the nodes attributes */
+  union SONUNION      sons;           /* the sons */
+  union ATTRIBUNION   attribs;        /* the nodes attributes */
 };
 
 #include "node_basic.h"

@@ -48,6 +48,7 @@
 
         <traversal id="CAV" name="Context Analysis Variables" default="sons" include="context_vars.h">
             <travuser>
+                <node name="Program" />
                 <node name="Fun" />
                 <node name="FunParam" />
                 <node name="VarDefList" />

@@ -46,6 +46,37 @@ static info *FreeInfo(info *info)
     DBUG_RETURN(info);
 }
 
+node *CAVprogram(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CAVProgram");
+
+    node *declarations = arg_node;
+
+    // Find and register all global variables first
+    while (declarations != NULL) {
+        if (NODE_TYPE(PROGRAM_HEAD(declarations)) == N_vardef) {
+            node *varDef = PROGRAM_HEAD(declarations);
+            PROGRAM_HEAD(declarations) = TRAVdo(varDef, arg_info);
+        }
+
+        declarations = PROGRAM_NEXT(declarations);
+    }
+
+    // Now that we have found all global variables, do it again for the functions
+    declarations = arg_node;
+
+    while (declarations != NULL) {
+        if (NODE_TYPE(PROGRAM_HEAD(declarations)) != N_vardef) {
+            node *fun = PROGRAM_HEAD(declarations);
+            PROGRAM_HEAD(declarations) = TRAVdo(fun, arg_info);
+        }
+
+        declarations = PROGRAM_NEXT(declarations);
+    }
+
+    DBUG_RETURN(arg_node);
+}
+
 node *CAVfun(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAVfun");

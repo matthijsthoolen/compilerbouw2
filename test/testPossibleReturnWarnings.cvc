@@ -1,0 +1,49 @@
+int testUnreachableCodeInIF() {
+    int a;
+    int b;
+    int c;
+
+    if (true == false) {
+        a = 5;
+
+        return a;
+
+        b = a + 2;
+    } else {
+        b = 4;
+
+        return b;
+    }
+
+    return 5;
+
+}
+
+bool testNoReturn() {
+    int a = 12;
+    int x = 12;
+    int y = 12;
+
+    if (x != y) {
+        return false;
+    }
+
+    a = 12;
+}
+
+bool testNoReturnNoMoreStatements() {
+    int a = 12;
+
+    if (a != a) {
+        return false;
+    }
+}
+
+bool testMoreCodeAfterReturn() {
+    int a = 55;
+    int b = 42;
+
+    return false;
+
+    a = b + 12;
+}

@@ -128,7 +128,7 @@
  * called N_nodename.
  ****************************************************************************/
     </xsl:text>
-    <xsl:value-of select="'struct SONUNION { '"/>
+    <xsl:value-of select="'union SONUNION { '"/>
     <xsl:text>
     </xsl:text>
     <xsl:apply-templates select="node" mode="generate-sons-union">

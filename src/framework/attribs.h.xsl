@@ -161,7 +161,7 @@
  * called N_nodename.
  ****************************************************************************/
     </xsl:text>
-    <xsl:value-of select="'struct ATTRIBUNION { '"/>
+    <xsl:value-of select="'union ATTRIBUNION { '"/>
     <xsl:text>
     </xsl:text>
     <xsl:apply-templates select="node" mode="generate-attrib-union">
