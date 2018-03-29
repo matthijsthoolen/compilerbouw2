@@ -555,7 +555,7 @@ node *PRTvardef (node * arg_node, info * arg_info)
     print_global_prefix(VARDEF_PREFIX(arg_node));
     print_type(VARDEF_TY(arg_node));
 
-    if (VARDEF_DIMENSIONCOUNT(arg_node) != 0) {
+    if (INT_VALUE(VARDEF_DIMENSIONCOUNT(arg_node)) != 0) {
       printf("[%d]", INT_VALUE(VARDEF_DIMENSIONCOUNT(arg_node)));
     }
 

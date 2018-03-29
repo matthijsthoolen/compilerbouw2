@@ -57,9 +57,9 @@ node *CAfun(node *arg_node, info *arg_info)
 
     DBUG_PRINT("CA", ("Processing function '%s'", FUN_ID(arg_node)));
 
-    node* funSymbolTable = createNewSymbolTable(arg_node);
-
-    addToSymboltable(funSymbolTable, arg_node);
+    // node* funSymbolTable = createNewSymbolTable(arg_node);
+    //
+    // addToSymboltable(funSymbolTable, arg_node);
 
     FUN_PARAMS(arg_node) = TRAVopt(FUN_PARAMS(arg_node), arg_info);
     FUN_BODY(arg_node)   = TRAVopt(FUN_BODY(arg_node), arg_info);

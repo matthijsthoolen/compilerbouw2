@@ -160,7 +160,7 @@ node *DSEfor(node *arg_node, info *arg_info)
                     VAR_NAME(ASSIGN_LEFT(for_assign)),
                     NULL,
                     NULL,
-                    0
+                    TBmakeInt(0)
               );
 
     // Add the new name and old name to the queue for changing the names in a later stage

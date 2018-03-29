@@ -111,11 +111,11 @@ vardeflist: vardef vardeflist
 
 vardef: global_prefix ty ID LET expr SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, $3, NULL, $5, 0);
+        $$ = TBmakeVardef($1, $2, $3, NULL, $5, TBmakeInt(0));
     }
     | global_prefix ty ID LET expr_array SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, $3, NULL, $5, 0);
+        $$ = TBmakeVardef($1, $2, $3, NULL, $5, TBmakeInt(0));
     }
     | global_prefix ty SQBRACKET_L numberint SQBRACKET_R ID LET expr SEMICOLON
     {
@@ -127,11 +127,11 @@ vardef: global_prefix ty ID LET expr SEMICOLON
     }
     | global_prefix ty SQBRACKET_L SQBRACKET_R ID SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, $5, NULL, NULL, 0);
+        $$ = TBmakeVardef($1, $2, $5, NULL, NULL, TBmakeInt(0));
     }
     | global_prefix ty ID SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, $3, NULL, NULL, 0);
+        $$ = TBmakeVardef($1, $2, $3, NULL, NULL, TBmakeInt(0));
     };
 
 funheader: global_prefix ty ID BRACKET_L fun_params BRACKET_R

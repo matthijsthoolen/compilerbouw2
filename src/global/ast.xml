@@ -40,7 +40,6 @@
 
             <traversal id="CA" name="Context Analysis" default="sons" include="context_analysis.h">
                 <travuser>
-                    <node name="Program"/>
                     <node name="Fun"/>
                     <node name="VarDef"/>
                     <node name="Var"/>
@@ -104,7 +103,6 @@
             <traversal id="DSGI" name="Desugar Global Init" default="sons" include="global_init.h">
                 <travuser>
                     <node name="Program"/>
-                    <node name="VarDef"/>
                 </travuser>
             </traversal>
 

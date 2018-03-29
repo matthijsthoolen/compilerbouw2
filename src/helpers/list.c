@@ -67,7 +67,7 @@ list* list_new()
     new = (list *) MEMmalloc(sizeof(list));
 
     new->value = NULL;
-    new->next = NULL;
+    new->next  = NULL;
 
     DBUG_RETURN(new);
 }
@@ -111,6 +111,7 @@ bool list_push(list *head, void *value)
     DBUG_ENTER("list_push");
 
     if (head == NULL) {
+        DBUG_PRINT("LIST", ("HEAD CANT BE NULL"));
         DBUG_RETURN(FALSE);
     }
 
@@ -137,7 +138,7 @@ int list_length(list *head)
     DBUG_ENTER("list_length");
 
     if (head == NULL) {
-        return 0;
+        DBUG_RETURN(0);
     }
 
     length = 0;

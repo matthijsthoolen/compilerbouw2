@@ -13,15 +13,16 @@
 #include "globals.h"
 #include "str.h"
 #include "ctinfo.h"
-#include "list.h"
 
 #include "global_init.h"
 
 struct INFO {
-    list *assigns;
+    node* symbol_table;
+    node* inner_block;
 };
 
-#define INFO_ASSIGNS(n) ((n)->assigns)
+#define INFO_CURSYMBOLTABLE(n) ((n)->symbol_table)
+#define INFO_INNERBLOCK(n) ((n)->inner_block)
 
 static info *MakeInfo()
 {
@@ -30,8 +31,8 @@ static info *MakeInfo()
     info *result;
 
     result = MEMmalloc(sizeof(info));
-
-    INFO_ASSIGNS(result) = list_new();
+    INFO_CURSYMBOLTABLE(result) = TBmakeSymboltable(NULL);
+    INFO_INNERBLOCK(result) = TBmakeInnerblock(NULL, NULL);
 
     DBUG_RETURN(result);
 }
@@ -39,6 +40,9 @@ static info *MakeInfo()
 static info *FreeInfo(info *info)
 {
     DBUG_ENTER("FreeInfo");
+
+    free(INFO_CURSYMBOLTABLE(info));
+    free(INFO_INNERBLOCK(info));
 
     info = MEMfree(info);
 
@@ -49,48 +53,66 @@ node *DSGIprogram(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("DSGIprogram");
 
-    PROGRAM_HEAD(arg_node) = TRAVdo(PROGRAM_HEAD(arg_node), arg_info);
+    node *innerblock = TBmakeInnerblock(NULL, NULL);
 
-    PROGRAM_NEXT(arg_node) = TRAVopt(PROGRAM_NEXT(arg_node), arg_info);
+    node *declarations = arg_node;
 
-    DBUG_RETURN(arg_node);
-}
+    // Find and register all global variables first
+    while (declarations != NULL) {
+        if (NODE_TYPE(PROGRAM_HEAD(declarations)) == N_vardef) {
+            node *varDef = PROGRAM_HEAD(declarations);
 
-node *DSGIvardef(node *arg_node, info *arg_info)
-{
-    node *assign;
+            if (VARDEF_PREFIX(varDef) == global_prefix_var && VARDEF_INIT(varDef) != NULL) {
 
-    DBUG_ENTER("DSGIvardef");
+                DBUG_PRINT("DSGIVARDEF", ("Found global vardef '%s'", VARDEF_ID(varDef)));
 
-    DBUG_PRINT("HELP", ("%s", VARDEF_ID(arg_node)));
+                node *var = TBmakeVar(STRcpy(VARDEF_ID(varDef)), NULL);
 
-    if (VARDEF_PREFIX(arg_node) == global_prefix_var) {
+                VAR_DECL(var) = varDef;
 
-        if (VARDEF_INIT(arg_node) != NULL) {
-            assign = TBmakeAssign(
-                        TBmakeVar(STRcpy(VARDEF_ID(arg_node)), NULL),
-                        VARDEF_INIT(arg_node)
-                     );
+                // Now lets do the split
+                node *stmts = TBmakeStmts(
+                    TBmakeAssign(var, VARDEF_INIT(varDef)),
+                    NULL
+                );
 
-            DBUG_PRINT("HELP", ("%s", get_type_name(NODE_TYPE(assign))));
+                // Vardef init can be removed now
+                VARDEF_INIT(varDef) = NULL;
 
-            list_push(INFO_ASSIGNS(arg_info), assign);
+                if (INNERBLOCK_STMTS(innerblock)) {
+                    node *tail = INNERBLOCK_STMTS(innerblock);
+                    DBUG_PRINT("DSGIVARDEF", ("Splitting else %d", NODE_TYPE(tail)));
+                    // Get to the end
+                    while(STMTS_NEXT(tail)) {
+                        DBUG_PRINT("DSGIVARDEF", ("Splitting vardef '%s'", VAR_NAME(ASSIGN_LEFT(STMTS_STMT(tail)))));
+                        tail = STMTS_NEXT(tail);
+                    }
 
-            // Vardef init can be removed now
-            VARDEF_INIT(arg_node) = NULL;
+                    STMTS_NEXT(tail) = stmts;
+                } else {
+                    DBUG_PRINT("DSGIVARDEF", ("Splitting emptyness"));
+                    INNERBLOCK_STMTS(innerblock) = stmts;
+                }
+            }
+            PROGRAM_HEAD(declarations) = TRAVdo(varDef, arg_info);
         }
 
+        declarations = PROGRAM_NEXT(declarations);
     }
+
+    construct_init(arg_node, innerblock);
 
     DBUG_RETURN(arg_node);
 }
 
 /** Helper function **/
 
-void construct_init(node *syntaxtree, info *info)
+void construct_init(node *syntaxtree, node *innerblock)
 {
     node *current;
     node *initFun;
+
+    DBUG_ENTER("construct_init");
 
     current = syntaxtree;
 
@@ -100,49 +122,26 @@ void construct_init(node *syntaxtree, info *info)
     }
 
     // Generate the new __init function
-    initFun = generate_init(info);
+    initFun = generate_init(innerblock);
 
     PROGRAM_NEXT(current) = TBmakeProgram(initFun, NULL, TBmakeSymboltable(NULL));
+
+    DBUG_VOID_RETURN(syntaxtree);
 }
 
-node *generate_init(info *info)
+node *generate_init(node *innerblock)
 {
     node *initFun;
     node *body;
-    node *stmtList;
-    list *assigns;
 
     DBUG_ENTER("generate_init");
-
-    assigns = INFO_ASSIGNS(info);
-    stmtList = NULL;
-
-    // First of all we need to create a stmtList for the assign vars
-    while((assigns = assigns->next)) {
-
-        if (assigns->value == NULL) {
-            DBUG_PRINT("HELP", ("%s", assigns->value));
-        } else {
-            DBUG_PRINT("GVD", ("%s", assigns->value));
-        }
-
-        stmtList = TBmakeStmts(
-            assigns->value,
-            stmtList
-        );
-    }
-
-    body = TBmakeInnerblock(
-                NULL,
-                stmtList
-           );
 
     initFun = TBmakeFun(
                 global_prefix_none,
                 TY_void,
                 STRcpy("__init"),
                 NULL,
-                body,
+                innerblock,
                 TBmakeSymboltable(NULL)
             );
 
@@ -161,8 +160,6 @@ node *DSGIdoGlobalInit(node *syntaxtree)
     TRAVpush(TR_dsgi);
 
     syntaxtree = TRAVdo( syntaxtree, info);
-
-    construct_init(syntaxtree, info);
 
     TRAVpop();
 

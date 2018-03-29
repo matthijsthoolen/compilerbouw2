@@ -30,7 +30,7 @@ node *addToSymboltable(node* symbolTable, node* arg_node)
     SYMBOLTABLEROW_SOURCE(row) = arg_node;
     // SYMBOLTABLEROW_NAME(row) = NULL;
     // SYMBOLTABLEROW_TYPE(row) = NULL;
-    SYMBOLTABLEROW_NESTINGLVL(row) = NULL;
+    //SYMBOLTABLEROW_NESTINGLVL(row) = NULL;
 
     NODE_LINE(row) = NODE_LINE(arg_node);
     NODE_COL(row) = NODE_COL(arg_node);

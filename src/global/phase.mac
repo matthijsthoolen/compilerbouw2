@@ -91,7 +91,13 @@ SUBPHASE( catc,
           CATCdoContextTypeCheck,
           ALWAYS,
           con)
-         
+
+SUBPHASE( ca,
+          "ContextAnalysis",
+          CAdoContextAnalysis,
+          ALWAYS,
+          con)
+
 ENDPHASE( con)
 
 PHASE( lds,
@@ -103,6 +109,12 @@ SUBPHASE( DSGI,
           DSGIdoGlobalInit,
           ALWAYS,
           lds)
+
+SUBPHASE( prt,
+       "Print ast",
+       PRTdoPrint,
+       ALWAYS,
+       lds)
 
 ENDPHASE( lds)
 
