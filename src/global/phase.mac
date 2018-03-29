@@ -68,9 +68,9 @@ SUBPHASE( prt,
           ALWAYS,
           con)
 
-SUBPHASE( ca,
+SUBPHASE( caf,
           "ContextAnalysisFun",
-          CAdoContextAnalysisFun,
+          CAFdoContextAnalysisFun,
           ALWAYS,
           con)
 
@@ -91,7 +91,7 @@ SUBPHASE( catc,
           CATCdoContextTypeCheck,
           ALWAYS,
           con)
-
+         
 ENDPHASE( con)
 
 PHASE( lds,

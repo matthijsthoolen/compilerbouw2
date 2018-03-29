@@ -62,6 +62,8 @@ node *DSGIvardef(node *arg_node, info *arg_info)
 
     DBUG_ENTER("DSGIvardef");
 
+    DBUG_PRINT("HELP", ("%s", VARDEF_ID(arg_node)));
+
     if (VARDEF_PREFIX(arg_node) == global_prefix_var) {
 
         if (VARDEF_INIT(arg_node) != NULL) {
@@ -69,6 +71,8 @@ node *DSGIvardef(node *arg_node, info *arg_info)
                         TBmakeVar(STRcpy(VARDEF_ID(arg_node)), NULL),
                         VARDEF_INIT(arg_node)
                      );
+
+            DBUG_PRINT("HELP", ("%s", get_type_name(NODE_TYPE(assign))));
 
             list_push(INFO_ASSIGNS(arg_info), assign);
 
@@ -98,7 +102,7 @@ void construct_init(node *syntaxtree, info *info)
     // Generate the new __init function
     initFun = generate_init(info);
 
-    PROGRAM_NEXT(current) = TBmakeProgram(initFun, NULL);
+    PROGRAM_NEXT(current) = TBmakeProgram(initFun, NULL, TBmakeSymboltable(NULL));
 }
 
 node *generate_init(info *info)
@@ -115,6 +119,13 @@ node *generate_init(info *info)
 
     // First of all we need to create a stmtList for the assign vars
     while((assigns = assigns->next)) {
+
+        if (assigns->value == NULL) {
+            DBUG_PRINT("HELP", ("%s", assigns->value));
+        } else {
+            DBUG_PRINT("GVD", ("%s", assigns->value));
+        }
+
         stmtList = TBmakeStmts(
             assigns->value,
             stmtList
@@ -131,7 +142,8 @@ node *generate_init(info *info)
                 TY_void,
                 STRcpy("__init"),
                 NULL,
-                body
+                body,
+                TBmakeSymboltable(NULL)
             );
 
     DBUG_RETURN(initFun);

@@ -18,8 +18,10 @@ extern node *PRTbinop (node * arg_node, info * arg_info);
 extern node *PRTfloat (node * arg_node, info * arg_info);
 extern node *PRTint (node * arg_node, info * arg_info);
 extern node *PRTbool (node * arg_node, info * arg_info);
-extern node *PRTsymboltableentry (node * arg_node, info * arg_info);
 extern node *PRTerror (node * arg_node, info * arg_info);
+
+extern node *PRTsymboltable (node * arg_node, info * arg_info);
+extern node *PRTsymboltablerow (node * arg_node, info * arg_info);
 
 extern node *PRTprogram (node * arg_node, info * arg_info);
 extern node *PRTvardef (node * arg_node, info * arg_info);

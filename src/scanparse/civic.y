@@ -78,11 +78,11 @@ result: program
 
 program: decl program
     {
-        $$ = TBmakeProgram($1, $2);
+        $$ = TBmakeProgram($1, $2, TBmakeSymboltable(NULL));
     }
     | decl
     {
-        $$ = TBmakeProgram($1, NULL);
+        $$ = TBmakeProgram($1, NULL, TBmakeSymboltable(NULL));
     };
 
 decl: fundef
@@ -111,32 +111,32 @@ vardeflist: vardef vardeflist
 
 vardef: global_prefix ty ID LET expr SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, 0, $3, NULL, $5);
+        $$ = TBmakeVardef($1, $2, $3, NULL, $5, 0);
     }
     | global_prefix ty ID LET expr_array SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, 0, $3, NULL, $5);
+        $$ = TBmakeVardef($1, $2, $3, NULL, $5, 0);
     }
-    | global_prefix ty SQBRACKET_L INTVALUE SQBRACKET_R ID LET expr SEMICOLON
+    | global_prefix ty SQBRACKET_L numberint SQBRACKET_R ID LET expr SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, $4, $6, NULL, $8);
+        $$ = TBmakeVardef($1, $2, $6, NULL, $8, $4);
     }
-    | global_prefix ty SQBRACKET_L INTVALUE SQBRACKET_R ID SEMICOLON
+    | global_prefix ty SQBRACKET_L numberint SQBRACKET_R ID SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, $4, $6, NULL, NULL);
+        $$ = TBmakeVardef($1, $2, $6, NULL, NULL, $4);
     }
     | global_prefix ty SQBRACKET_L SQBRACKET_R ID SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, 0, $5, NULL, NULL);
+        $$ = TBmakeVardef($1, $2, $5, NULL, NULL, 0);
     }
     | global_prefix ty ID SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, 0, $3, NULL, NULL);
+        $$ = TBmakeVardef($1, $2, $3, NULL, NULL, 0);
     };
 
 funheader: global_prefix ty ID BRACKET_L fun_params BRACKET_R
     {
-         $$ = TBmakeFun($1, $2, $3, $5, NULL);
+         $$ = TBmakeFun($1, $2, $3, $5, NULL, TBmakeSymboltable(NULL));
     };
 
 fun_params: fun_param COMMA fun_params

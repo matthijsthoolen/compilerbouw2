@@ -16,9 +16,9 @@ struct INFO {
     hashmap *local;
 };
 
-#define INFO_NESTLVL(n)     ((n)->nest_lvl)
-#define INFO_GLOBAL(n)      ((n)->global)
-#define INFO_LOCAL(n)       ((n)->local)
+#define INFO_NESTLVL(n)        ((n)->nest_lvl)
+#define INFO_GLOBAL(n)         ((n)->global)
+#define INFO_LOCAL(n)          ((n)->local)
 
 static info *MakeInfo()
 {
@@ -27,9 +27,9 @@ static info *MakeInfo()
     info *result;
 
     result = MEMmalloc(sizeof(info));
-    INFO_NESTLVL(result)    = 0;
-    INFO_GLOBAL(result)     = new_map();
-    INFO_LOCAL(result)      = new_map();
+    INFO_NESTLVL(result)        = 0;
+    INFO_GLOBAL(result)         = new_map();
+    INFO_LOCAL(result)          = new_map();
 
     DBUG_RETURN(result);
 }
@@ -38,7 +38,9 @@ static info *FreeInfo(info *info)
 {
     DBUG_ENTER("FreeInfo");
 
-    free(INFO_GLOBAL(info));
+    free(info->global);
+    free(info->local);
+    
     free(INFO_LOCAL(info));
 
     info = MEMfree(info);

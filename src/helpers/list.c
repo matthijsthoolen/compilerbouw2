@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "dbug.h"
 #include "str.h"
+
 #include "list.h"
 
 /**
@@ -115,7 +116,7 @@ bool list_push(list *head, void *value)
 
     new = list_new();
     new->value = value;
-    new->next = head->next;
+    new->next  = head->next;
 
     head->next = new;
 

@@ -392,9 +392,16 @@ PRTvar (node * arg_node, info * arg_info)
  *
  ***************************************************************************/
 
-node *PRTsymboltableentry (node * arg_node, info * arg_info)
+ node *PRTsymboltable (node * arg_node, info * arg_info)
+ {
+   DBUG_ENTER ("PRTsymboltable");
+
+   DBUG_RETURN (arg_node);
+ }
+
+node *PRTsymboltablerow (node * arg_node, info * arg_info)
 {
-  DBUG_ENTER ("PRTsymboltableentry");
+  DBUG_ENTER ("PRTsymboltablerow");
 
   DBUG_RETURN (arg_node);
 }
@@ -549,7 +556,7 @@ node *PRTvardef (node * arg_node, info * arg_info)
     print_type(VARDEF_TY(arg_node));
 
     if (VARDEF_DIMENSIONCOUNT(arg_node) != 0) {
-      printf("[%d]", VARDEF_DIMENSIONCOUNT(arg_node));
+      printf("[%d]", INT_VALUE(VARDEF_DIMENSIONCOUNT(arg_node)));
     }
 
     printf(" %s", VARDEF_ID(arg_node));

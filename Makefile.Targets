@@ -71,7 +71,7 @@ framework   = memory.o str.o ctinfo.o main_args.o dbug.o globals.o \
               traverse_tables.o traverse_helper.o check.o \
               check_node.o check_attribs.o lookup_table.o map.o
 
-helpers     = hash_list.o list.o numbers.o
+helpers     = hash_list.o list.o numbers.o symbol_table.o
 
 global      = options.o usage.o myglobals.o
 
@@ -83,7 +83,7 @@ codegen     = gen_byte_code.o
 
 desugar     = initial_desugar.o vardef_split.o global_init.o array_init.o
 
-context     = context_functions.o context_vars.o context_type.o context_return.o
+context     = context_analysis.o context_functions.o context_vars.o context_type.o context_return.o
 
 ###############################################################################
 #

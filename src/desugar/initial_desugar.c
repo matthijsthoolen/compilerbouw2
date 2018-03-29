@@ -157,10 +157,10 @@ node *DSEfor(node *arg_node, info *arg_info)
     new_vardef = TBmakeVardef(
                     0,
                     TY_int,
-                    0,
                     VAR_NAME(ASSIGN_LEFT(for_assign)),
                     NULL,
-                    NULL
+                    NULL,
+                    0
               );
 
     // Add the new name and old name to the queue for changing the names in a later stage
