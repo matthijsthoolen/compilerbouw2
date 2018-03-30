@@ -57,9 +57,11 @@ node *CAfun(node *arg_node, info *arg_info)
 
     DBUG_PRINT("CA", ("Processing function '%s'", FUN_ID(arg_node)));
 
-    // node* funSymbolTable = createNewSymbolTable(arg_node);
-    //
-    // addToSymboltable(funSymbolTable, arg_node);
+    node* funSymbolTable = FUN_SYMBOLTABLE(arg_node);
+
+    addToSymboltable(funSymbolTable, arg_node, FUN_ID(arg_node), FUN_RETTY(arg_node));
+
+    INFO_CURSYMBOLTABLE(arg_info) = FUN_SYMBOLTABLE(arg_node);
 
     FUN_PARAMS(arg_node) = TRAVopt(FUN_PARAMS(arg_node), arg_info);
     FUN_BODY(arg_node)   = TRAVopt(FUN_BODY(arg_node), arg_info);
@@ -72,6 +74,8 @@ node *CAvardef(node *arg_node, info *arg_info)
     DBUG_ENTER("CAvardef");
 
     DBUG_PRINT("CA", ("Processing vardef '%s'", VARDEF_ID(arg_node)));
+
+    addToSymboltable(INFO_CURSYMBOLTABLE(arg_info), arg_node, VARDEF_ID(arg_node), VARDEF_TY(arg_node));
 
     VARDEF_INIT(arg_node) = TRAVopt(VARDEF_INIT(arg_node), arg_info);
 

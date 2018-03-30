@@ -394,16 +394,26 @@ PRTvar (node * arg_node, info * arg_info)
 
  node *PRTsymboltable (node * arg_node, info * arg_info)
  {
-   DBUG_ENTER ("PRTsymboltable");
+    DBUG_ENTER("PRTsymboltable");
 
-   DBUG_RETURN (arg_node);
+    printf("/** \n * SYMBOLTABLE \n");
+
+    TRAVopt(SYMBOLTABLE_SYMBOLTABLEENTRY(arg_node), arg_info);
+
+    printf(" *\n * END \n */ \n");
+
+    DBUG_RETURN(arg_node);
  }
 
-node *PRTsymboltablerow (node * arg_node, info * arg_info)
+node *PRTsymboltableentry (node * arg_node, info * arg_info)
 {
-  DBUG_ENTER ("PRTsymboltablerow");
+    DBUG_ENTER("PRTsymboltableentry");
 
-  DBUG_RETURN (arg_node);
+    printf(" * %s \n", SYMBOLTABLEENTRY_NAME(arg_node));
+
+    TRAVopt(SYMBOLTABLEENTRY_NEXT(arg_node), arg_info);
+
+    DBUG_RETURN(arg_node);
 }
 
 /** <!--******************************************************************-->
@@ -579,6 +589,8 @@ node *PRTfun (node * arg_node, info * arg_info)
     DBUG_ENTER("PRTfun");
 
     indent(arg_info);
+
+    TRAVopt(FUN_SYMBOLTABLE(arg_node), arg_info);
 
     print_global_prefix(FUN_PREFIX(arg_node));
     print_type(FUN_RETTY(arg_node));

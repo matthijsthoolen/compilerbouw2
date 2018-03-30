@@ -136,7 +136,7 @@ vardef: global_prefix ty ID LET expr SEMICOLON
 
 funheader: global_prefix ty ID BRACKET_L fun_params BRACKET_R
     {
-         $$ = TBmakeFun($1, $2, $3, $5, NULL, TBmakeSymboltable(NULL));
+         $$ = TBmakeFun($1, $2, $3, $5, NULL, NULL);
     };
 
 fun_params: fun_param COMMA fun_params

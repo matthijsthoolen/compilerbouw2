@@ -41,8 +41,6 @@ static info *FreeInfo(info *info)
     free(info->global);
     free(info->local);
 
-    free(INFO_NESTLVL(info));
-
     info = MEMfree(info);
 
     DBUG_RETURN(info);

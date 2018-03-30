@@ -124,7 +124,7 @@ void construct_init(node *syntaxtree, node *innerblock)
     // Generate the new __init function
     initFun = generate_init(innerblock);
 
-    PROGRAM_NEXT(current) = TBmakeProgram(initFun, NULL, TBmakeSymboltable(NULL));
+    PROGRAM_NEXT(current) = TBmakeProgram(initFun, NULL, TBmakeSymboltable(TBmakeSymboltableentry(NULL)));
 
     DBUG_VOID_RETURN(syntaxtree);
 }
@@ -132,7 +132,6 @@ void construct_init(node *syntaxtree, node *innerblock)
 node *generate_init(node *innerblock)
 {
     node *initFun;
-    node *body;
 
     DBUG_ENTER("generate_init");
 
@@ -142,7 +141,7 @@ node *generate_init(node *innerblock)
                 STRcpy("__init"),
                 NULL,
                 innerblock,
-                TBmakeSymboltable(NULL)
+                TBmakeSymboltable(TBmakeSymboltableentry(NULL))
             );
 
     DBUG_RETURN(initFun);

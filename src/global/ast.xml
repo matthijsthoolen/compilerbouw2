@@ -156,11 +156,11 @@
         <node name="SymbolTable">
             <description>The symboltable</description>
             <sons>
-                <son name="SymbolTableRow">
+                <son name="SymbolTableEntry">
                     <description>The first symbol table row. Other rows are linked after this row.</description>
                     <targets>
                         <target mandatory="no">
-                            <node name="SymbolTableRow"/>
+                            <node name="SymbolTableEntry"/>
                             <phases>
                                 <phase from="Context Analysis"/>
                             </phases>
@@ -184,14 +184,14 @@
             </attributes>
         </node>
 
-        <node name="SymbolTableRow">
+        <node name="SymbolTableEntry">
             <description>One symboltable row. Is internally linked to the next row</description>
             <sons>
                 <son name="Next">
                     <description>Link to the next row if available</description>
                     <targets>
                         <target mandatory="no">
-                            <node name="SymbolTableRow"/>
+                            <node name="SymbolTableEntry"/>
                             <phases>
                                 <phase from="Context Analysis"/>
                             </phases>
