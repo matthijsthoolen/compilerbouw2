@@ -48,6 +48,8 @@ node *CAprogram(node *arg_node, info *arg_info)
     PROGRAM_HEAD(arg_node) = TRAVdo(PROGRAM_HEAD(arg_node), arg_info);
     PROGRAM_NEXT(arg_node) = TRAVopt(PROGRAM_NEXT(arg_node), arg_info);
 
+    PROGRAM_SYMBOLTABLE(arg_node) = INFO_CURSYMBOLTABLE(arg_info);
+
     DBUG_RETURN(arg_node);
 }
 
@@ -57,14 +59,24 @@ node *CAfun(node *arg_node, info *arg_info)
 
     DBUG_PRINT("CA", ("Processing function '%s'", FUN_ID(arg_node)));
 
-    node* funSymbolTable = FUN_SYMBOLTABLE(arg_node);
+    if (FUN_BODY(arg_node)) {
 
-    addToSymboltable(funSymbolTable, arg_node, FUN_ID(arg_node), FUN_RETTY(arg_node));
+        // node* funSymbolTable = FUN_SYMBOLTABLE(arg_node);
+        // node* funSymbolTable = createNewSymbolTable(arg_node);
+        node *previousScope = INFO_CURSYMBOLTABLE(arg_info);
+        node *funSymbolTable = TBmakeSymboltable(NULL);
 
-    INFO_CURSYMBOLTABLE(arg_info) = FUN_SYMBOLTABLE(arg_node);
+        // addToSymboltable(funSymbolTable, arg_node, FUN_ID(arg_node), FUN_RETTY(arg_node));
 
-    FUN_PARAMS(arg_node) = TRAVopt(FUN_PARAMS(arg_node), arg_info);
-    FUN_BODY(arg_node)   = TRAVopt(FUN_BODY(arg_node), arg_info);
+        FUN_SYMBOLTABLE(arg_node) = funSymbolTable;
+        INFO_CURSYMBOLTABLE(arg_info) = FUN_SYMBOLTABLE(arg_node);
+        //
+        // TRAVdo(FUN_PARAMS(arg_node), arg_info);
+        TRAVopt(FUN_BODY(arg_node), arg_info);
+
+        INFO_CURSYMBOLTABLE(arg_info) = previousScope;
+
+    }
 
     DBUG_RETURN(arg_node);
 }
