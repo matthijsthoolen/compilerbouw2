@@ -409,7 +409,16 @@ node *PRTsymboltableentry (node * arg_node, info * arg_info)
 {
     DBUG_ENTER("PRTsymboltableentry");
 
-    printf(" * %s \n", SYMBOLTABLEENTRY_NAME(arg_node));
+    if (SYMBOLTABLEENTRY_NAME(arg_node) == NULL) {
+        DBUG_RETURN(arg_node);
+    }
+
+    printf(
+        " * %d > %-7s %s \n",
+        SYMBOLTABLEENTRY_NESTINGLVL(arg_node),
+        get_type_name(SYMBOLTABLEENTRY_TYPE(arg_node)),
+        SYMBOLTABLEENTRY_NAME(arg_node)
+    );
 
     TRAVopt(SYMBOLTABLEENTRY_NEXT(arg_node), arg_info);
 
@@ -513,6 +522,10 @@ static void print_global_prefix(enum global_prefix pfx) {
 node *PRTprogram (node * arg_node, info * arg_info)
 {
     DBUG_ENTER("PRTprogram");
+
+    if (PROGRAM_ISGLOBAL(arg_node) == TRUE) {
+        TRAVopt(PROGRAM_SYMBOLTABLE(arg_node), arg_info);
+    }
 
     PROGRAM_HEAD(arg_node) = TRAVdo(PROGRAM_HEAD(arg_node), arg_info);
 

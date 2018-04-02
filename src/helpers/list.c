@@ -21,11 +21,7 @@ bool list_free(list *head)
         DBUG_RETURN(FALSE);
     }
 
-    printf("1");
-
     curr = head;
-
-    printf("2");
 
     while (curr) {
         tmp = curr;
@@ -33,8 +29,6 @@ bool list_free(list *head)
         tmp->next = NULL;
         MEMfree(tmp);
     }
-
-    printf("3");
 
     DBUG_RETURN(TRUE);
 }

@@ -127,7 +127,7 @@ PHASE( cg,
        ALWAYS)
 
 SUBPHASE( prt, "Generating byte code", GBCdoGenByteCode, ALWAYS, cg)
-SUBPHASE( prt_ast, "Print ast", PRTdoPrint, ALWAYS, cg)
+/*SUBPHASE( prt_ast, "Print ast", PRTdoPrint, ALWAYS, cg)*/
 
 SUBPHASE( frtr,
           "De-allocating syntax tree representation",

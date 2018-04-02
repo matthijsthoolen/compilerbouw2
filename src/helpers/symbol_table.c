@@ -23,49 +23,51 @@ node *createNewSymbolTable(node* arg_node)
 /**
  * Add a Symbol to the end of the scope's symbol table
  * @param  symbolTable [description]
- * @param  arg_node    [description]
+ * @param  source_node    [description]
  * @param  name        [description]
  * @param  node_type   [description]
  * @return             [description]
  */
-node *addToSymboltable(node* symbolTable, node* arg_node, char* name, type node_type)
+node *addToSymboltable(node* symbolTable, node* source_node, char* name, type node_type, int lvl)
 {
     DBUG_ENTER("addToSymboltable");
     DBUG_PRINT("HELP", ("Add a row to the symbol table"));
 
-    // if (SYMBOLTABLE_SYMBOLTABLEENTRY(arg_node))
     node *row = TBmakeSymboltableentry(NULL);
     //
     DBUG_PRINT("SymbolTable", ("Created a new symboltable entry"));
-    SYMBOLTABLEENTRY_SOURCE(row) = arg_node;
+    SYMBOLTABLEENTRY_SOURCE(row) = source_node;
     SYMBOLTABLEENTRY_NAME(row) = name;
     SYMBOLTABLEENTRY_TYPE(row) = node_type;
-    // //SYMBOLTABLEENTRY_NESTINGLVL(row) = NULL;
-    //
-    NODE_LINE(row) = NODE_LINE(arg_node);
-    NODE_COL(row) = NODE_COL(arg_node);
-    //
-    //
+    SYMBOLTABLEENTRY_NESTINGLVL(row) = lvl;
+
+    NODE_LINE(row) = NODE_LINE(source_node);
+    NODE_COL(row) = NODE_COL(source_node);
 
     node *lastEntry = SYMBOLTABLE_SYMBOLTABLEENTRY(symbolTable);
 
     if (lastEntry == NULL) {
         DBUG_PRINT("SymbolTable", ("First entry for this scope"));
         SYMBOLTABLE_SYMBOLTABLEENTRY(symbolTable) = row;
+        if (NODE_TYPE(source_node) == N_vardef) {
+            SYMBOLTABLE_VARCOUNT(symbolTable) = 1;
+        } else if (NODE_TYPE(source_node) == N_funparam) {
+            SYMBOLTABLE_PARAMCOUNT(symbolTable) = 1;
+        }
     } else {
         DBUG_PRINT("SymbolTable", ("Entries are already present"));
         while (SYMBOLTABLEENTRY_NEXT(lastEntry)) {
             lastEntry = SYMBOLTABLEENTRY_NEXT(lastEntry);
         }
 
-        DBUG_PRINT("SymbolTable", ("So find the latest"));
-
         SYMBOLTABLEENTRY_NEXT(lastEntry) = row;
 
-        DBUG_PRINT("SymbolTable", ("Found!"));
+        if (NODE_TYPE(source_node) == N_vardef) {
+            SYMBOLTABLE_VARCOUNT(symbolTable)++;
+        } else if (NODE_TYPE(source_node) == N_funparam) {
+            SYMBOLTABLE_PARAMCOUNT(symbolTable)++;
+        }
     }
-
-
 
     DBUG_RETURN(row);
 }

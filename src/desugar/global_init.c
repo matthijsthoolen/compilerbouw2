@@ -100,7 +100,10 @@ node *DSGIprogram(node *arg_node, info *arg_info)
         declarations = PROGRAM_NEXT(declarations);
     }
 
-    construct_init(arg_node, innerblock);
+    // Only add the init function if there are global vars found
+    if (INNERBLOCK_STMTS(innerblock) != NULL) {
+        construct_init(arg_node, innerblock);
+    }
 
     DBUG_RETURN(arg_node);
 }
@@ -126,7 +129,7 @@ void construct_init(node *syntaxtree, node *innerblock)
 
     PROGRAM_NEXT(current) = TBmakeProgram(initFun, NULL, TBmakeSymboltable(TBmakeSymboltableentry(NULL)));
 
-    DBUG_VOID_RETURN(syntaxtree);
+    DBUG_VOID_RETURN;
 }
 
 node *generate_init(node *innerblock)

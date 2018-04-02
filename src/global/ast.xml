@@ -40,9 +40,11 @@
 
             <traversal id="CA" name="Context Analysis" default="sons" include="context_analysis.h">
                 <travuser>
+                    <node name="Program"/>
                     <node name="Fun"/>
                     <node name="VarDef"/>
                     <node name="Var"/>
+                    <node name="FunParam"/>
                 </travuser>
             </traversal>
 
@@ -112,6 +114,9 @@
                     <node name="Fun"/>
                     <node name="VarDefList"/>
                     <node name="VarDef"/>
+                    <node name="Assign"/>
+                    <node name="Float"/>
+                    <node name="Int"/>
                     <node name="InnerBlock"/>
                 </travuser>
             </traversal>
@@ -172,6 +177,30 @@
                 <attribute name="Parent">
                     <description>The parent symbol table</description>
                     <type name="Link">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Context Analysis"/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="VarCount">
+                    <description>A helper to easily keep track of the total number of variables registerd</description>
+                    <type name="Int">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Context Analysis"/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="ParamCount">
+                    <description>A helper to easily keep track of the total number of funparams registerd</description>
+                    <type name="Int">
                         <targets>
                             <target mandatory="no">
                                 <phases>
@@ -288,6 +317,20 @@
                     </targets>
                 </son>
             </sons>
+            <attributes>
+                <attribute name="IsGlobal">
+                    <description>Is this the main global program</description>
+                    <type name="Bool">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+            </attributes>
         </node>
 
         <node name="InnerBlock">
@@ -434,6 +477,18 @@
                         </targets>
                     </type>
                 </attribute>
+                <attribute name="SymbolTableEntry">
+                    <description>the linked symboltableentry</description>
+                    <type name="Link">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Context Analysis"/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
             </attributes>
         </node>
 
@@ -573,6 +628,18 @@
                             <target mandatory="yes">
                                 <phases>
                                     <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="SymbolTableEntry">
+                    <description>the linked symboltableentry</description>
+                    <type name="Link">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Context Analysis"/>
                                 </phases>
                             </target>
                         </targets>

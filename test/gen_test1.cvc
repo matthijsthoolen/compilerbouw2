@@ -1,0 +1,13 @@
+void foo(int z, bool t) {
+    bool b;
+    int i;
+    float f;
+
+    bool b2 = true;
+    int i2 = 16345;
+    float f2 = 5.0;
+
+    i = z;
+
+    f2 = 4.0;
+}
