@@ -117,6 +117,7 @@
                     <node name="Assign"/>
                     <node name="Float"/>
                     <node name="Int"/>
+                    <node name="Bool"/>
                     <node name="InnerBlock"/>
                 </travuser>
             </traversal>
@@ -267,6 +268,18 @@
                 </attribute>
                 <attribute name="NestingLvl">
                     <description>The nesting lvl of the var or fun</description>
+                    <type name="Int">
+                        <targets>
+                            <target mandatory="yes">
+                                <phases>
+                                    <phase from="Context Analysis"/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="Index">
+                    <description>The index of the var</description>
                     <type name="Int">
                         <targets>
                             <target mandatory="yes">

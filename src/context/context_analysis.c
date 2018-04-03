@@ -13,10 +13,12 @@
 struct INFO {
     node* symbol_table;
     bool is_first;
+    int const_count;
 };
 
 #define INFO_CURSYMBOLTABLE(n) ((n)->symbol_table)
 #define INFO_ISFIRST(n)        ((n)->is_first)
+#define INFO_CONSTCOUNT(n)     ((n)->const_count)
 
 static info *MakeInfo()
 {
@@ -27,6 +29,7 @@ static info *MakeInfo()
     result = MEMmalloc(sizeof(info));
     INFO_CURSYMBOLTABLE(result) = NULL;
     INFO_ISFIRST(result) = TRUE;
+    INFO_CONSTCOUNT(result) = 1;
 
     DBUG_RETURN(result);
 }
@@ -99,12 +102,15 @@ node *CAvardef(node *arg_node, info *arg_info)
 
     DBUG_PRINT("CA", ("Processing vardef '%s'", VARDEF_ID(arg_node)));
 
+    INFO_CONSTCOUNT(arg_info)++;
+
     node *symbolTableEntry = addToSymboltable(
         INFO_CURSYMBOLTABLE(arg_info),
         arg_node,
         VARDEF_ID(arg_node),
         VARDEF_TY(arg_node),
-        1 //TODO: something useful
+        INFO_CONSTCOUNT(arg_info),
+        0
     );
 
     VARDEF_SYMBOLTABLEENTRY(arg_node) = symbolTableEntry;
@@ -134,7 +140,8 @@ node *CAfunparam(node *arg_node, info *arg_info)
         arg_node,
         FUNPARAM_ID(arg_node),
         FUNPARAM_TY(arg_node),
-        1 //TODO: something useful
+        0,
+        0
     );
 
     FUNPARAM_SYMBOLTABLEENTRY(arg_node) = symbolTableEntry;

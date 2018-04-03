@@ -237,11 +237,9 @@ node *GBCassign(node *arg_node, info *arg_info)
         symbolTableEntry = FUNPARAM_SYMBOLTABLEENTRY(VAR_DECL(ASSIGN_LEFT(arg_node)));
     }
 
-    int index = 1;
-
     // DBUG_PRINT("GBCassign", ("Node type = %s", get_type_name(NODE_TYPE(ASSIGN_RIGHT(arg_node)))));
 
-    fprintf(outfile, "    %sstore %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), index);
+    fprintf(outfile, "    %sstore %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
 
     DBUG_RETURN(arg_node);
 }
@@ -252,6 +250,8 @@ node *GBCfloat(node *arg_node, info *arg_info)
 
     addFloatConstant(arg_info, FLOAT_VALUE(arg_node));
 
+    fprintf(outfile, "    floadc %d\n", list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
+
     DBUG_RETURN(arg_node);
 }
 
@@ -260,6 +260,21 @@ node *GBCint(node *arg_node, info *arg_info)
     DBUG_ENTER("GBCint");
 
     addIntConstant(arg_info, INT_VALUE(arg_node));
+
+    fprintf(outfile, "    iloadc %d\n", list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
+
+    DBUG_RETURN(arg_node);
+}
+
+node *GBCbool(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCint");
+
+    if (BOOL_VALUE(arg_node)) {
+        fprintf(outfile, "    bloadc_t\n");
+    } else {
+        fprintf(outfile, "    bloadc_f\n");
+    }
 
     DBUG_RETURN(arg_node);
 }

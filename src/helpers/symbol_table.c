@@ -28,7 +28,7 @@ node *createNewSymbolTable(node* arg_node)
  * @param  node_type   [description]
  * @return             [description]
  */
-node *addToSymboltable(node* symbolTable, node* source_node, char* name, type node_type, int lvl)
+node *addToSymboltable(node* symbolTable, node* source_node, char* name, type node_type, int index, int lvl)
 {
     DBUG_ENTER("addToSymboltable");
     DBUG_PRINT("HELP", ("Add a row to the symbol table"));
@@ -39,6 +39,7 @@ node *addToSymboltable(node* symbolTable, node* source_node, char* name, type no
     SYMBOLTABLEENTRY_SOURCE(row) = source_node;
     SYMBOLTABLEENTRY_NAME(row) = name;
     SYMBOLTABLEENTRY_TYPE(row) = node_type;
+    SYMBOLTABLEENTRY_INDEX(row) = index;
     SYMBOLTABLEENTRY_NESTINGLVL(row) = lvl;
 
     NODE_LINE(row) = NODE_LINE(source_node);

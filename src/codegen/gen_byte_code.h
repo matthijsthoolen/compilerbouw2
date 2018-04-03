@@ -9,6 +9,7 @@ extern node *GBCvardef(node *arg_node, info *arg_info);
 extern node *GBCassign(node *arg_node, info *arg_info);
 extern node *GBCfloat(node *arg_node, info *arg_info);
 extern node *GBCint(node *arg_node, info *arg_info);
+extern node *GBCbool(node *arg_node, info *arg_info);
 extern node *GBCinnerblock(node *arg_node, info *arg_info);
 
 extern void export_assembly(info *info);
