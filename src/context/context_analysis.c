@@ -16,13 +16,15 @@ struct INFO {
     bool is_first;
     bool global;
     int const_count;
+    int glob_const_count;
 };
 
 #define INFO_CURSYMBOLTABLE(n)  ((n)->symbol_table)
 #define INFO_GLOBSYMBOLTABLE(n) ((n)->global_symbol_table)
 #define INFO_ISFIRST(n)         ((n)->is_first)
-#define INFO_GLOBAL(n)           ((n)->global)
+#define INFO_GLOBAL(n)          ((n)->global)
 #define INFO_CONSTCOUNT(n)      ((n)->const_count)
+#define INFO_GLOBCONSTCOUNT(n)  ((n)->glob_const_count)
 
 static info *MakeInfo()
 {
@@ -35,7 +37,8 @@ static info *MakeInfo()
     INFO_CURSYMBOLTABLE(result) = NULL;
     INFO_GLOBAL(result) = TRUE;
     INFO_ISFIRST(result) = TRUE;
-    INFO_CONSTCOUNT(result) = 1;
+    INFO_CONSTCOUNT(result) = 0;
+    INFO_GLOBCONSTCOUNT(result) = 0;
 
     DBUG_RETURN(result);
 }
@@ -57,14 +60,14 @@ node *CAprogram(node *arg_node, info *arg_info)
 
     //INFO_CURSYMBOLTABLE(arg_info) = PROGRAM_SYMBOLTABLE(arg_node);
 
+    INFO_GLOBAL(arg_info) = TRUE;
+
     if (INFO_ISFIRST(arg_info) == TRUE) {
         PROGRAM_ISGLOBAL(arg_node) = TRUE;
         INFO_ISFIRST(arg_info) = FALSE;
         INFO_GLOBSYMBOLTABLE(arg_info) = PROGRAM_SYMBOLTABLE(arg_node);
-        INFO_GLOBAL(arg_info) = TRUE;
     } else {
         PROGRAM_ISGLOBAL(arg_node) = FALSE;
-        INFO_GLOBAL(arg_info) = TRUE;
     }
 
     PROGRAM_HEAD(arg_node) = TRAVdo(PROGRAM_HEAD(arg_node), arg_info);
@@ -86,6 +89,7 @@ node *CAfun(node *arg_node, info *arg_info)
 
     FUN_SYMBOLTABLE(arg_node) = funSymbolTable;
     INFO_CURSYMBOLTABLE(arg_info) = FUN_SYMBOLTABLE(arg_node);
+    INFO_GLOBAL(arg_info) = FALSE;
 
     FUN_PARAMS(arg_node) = TRAVopt(FUN_PARAMS(arg_node), arg_info);
 
@@ -112,18 +116,28 @@ node *CAvardef(node *arg_node, info *arg_info)
 
     DBUG_PRINT("CA", ("Processing vardef '%s'", VARDEF_ID(arg_node)));
 
-    INFO_CONSTCOUNT(arg_info)++;
+    if (INFO_GLOBAL(arg_info) == TRUE) {
+        DBUG_PRINT("CA", ("Sending global scope"));
+    } else {
+        DBUG_PRINT("CA", ("Sending local scope"));
+    }
 
     node *symbolTableEntry = addToSymboltable(
         (INFO_GLOBAL(arg_info) == TRUE) ? INFO_GLOBSYMBOLTABLE(arg_info) : INFO_CURSYMBOLTABLE(arg_info),
         arg_node,
         VARDEF_ID(arg_node),
         VARDEF_TY(arg_node),
-        INFO_CONSTCOUNT(arg_info),
-        0
+        (INFO_GLOBAL(arg_info) == TRUE) ? INFO_GLOBCONSTCOUNT(arg_info) : INFO_CONSTCOUNT(arg_info),
+        (INFO_GLOBAL(arg_info) == TRUE) ? 0 : 1
     );
 
     VARDEF_SYMBOLTABLEENTRY(arg_node) = symbolTableEntry;
+
+    if (INFO_GLOBAL(arg_info) == TRUE) {
+        INFO_GLOBCONSTCOUNT(arg_info)++;
+    } else {
+        INFO_CONSTCOUNT(arg_info)++;
+    }
 
     VARDEF_INIT(arg_node) = TRAVopt(VARDEF_INIT(arg_node), arg_info);
 
@@ -135,6 +149,32 @@ node *CAvar(node *arg_node, info *arg_info)
     DBUG_ENTER("CAvar");
 
     DBUG_PRINT("CA", ("Processing var '%s'", VAR_NAME(arg_node)));
+
+    DBUG_RETURN(arg_node);
+}
+
+node *CAint(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CAint");
+
+    DBUG_PRINT("CA", ("Processing int '%d'", INT_VALUE(arg_node)));
+
+    if (INFO_GLOBAL(arg_info) == TRUE) {
+        INT_ISGLOBAL(arg_node) = TRUE;
+    }
+
+    DBUG_RETURN(arg_node);
+}
+
+node *CAfloat(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CAfloat");
+
+    DBUG_PRINT("CA", ("Processing var '%f'", FLOAT_VALUE(arg_node)));
+
+    if (INFO_GLOBAL(arg_info) == TRUE) {
+        FLOAT_ISGLOBAL(arg_node) = TRUE;
+    }
 
     DBUG_RETURN(arg_node);
 }
@@ -151,7 +191,7 @@ node *CAfunparam(node *arg_node, info *arg_info)
         FUNPARAM_ID(arg_node),
         FUNPARAM_TY(arg_node),
         0,
-        0
+        1
     );
 
     FUNPARAM_SYMBOLTABLEENTRY(arg_node) = symbolTableEntry;

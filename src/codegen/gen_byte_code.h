@@ -4,9 +4,11 @@
 
 extern node *GBCprogram(node *arg_node, info *arg_info);
 extern node *GBCfun(node *arg_node, info *arg_info);
+extern node *GBCcall(node *arg_node, info *arg_info);
 extern node *GBCvardeflist(node *arg_node, info *arg_info);
 extern node *GBCvardef(node *arg_node, info *arg_info);
 extern node *GBCassign(node *arg_node, info *arg_info);
+extern node *GBCvar(node *arg_node, info *arg_info);
 extern node *GBCfloat(node *arg_node, info *arg_info);
 extern node *GBCint(node *arg_node, info *arg_info);
 extern node *GBCbool(node *arg_node, info *arg_info);

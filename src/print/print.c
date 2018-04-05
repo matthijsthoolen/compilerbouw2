@@ -753,10 +753,10 @@ node *PRTexprlist (node * arg_node, info * arg_info)
 {
     DBUG_ENTER("PRTexprlist");
 
-    EXPRLIST_EXPR( arg_node) = TRAVdo( EXPRLIST_EXPR( arg_node), arg_info);
-    if (EXPRLIST_NEXT( arg_node) != NULL) {
+    EXPRLIST_EXPR(arg_node) = TRAVdo(EXPRLIST_EXPR(arg_node), arg_info);
+    if (EXPRLIST_NEXT(arg_node) != NULL) {
         printf(", ");
-        EXPRLIST_NEXT( arg_node) = TRAVdo( EXPRLIST_NEXT( arg_node), arg_info);
+        EXPRLIST_NEXT(arg_node) = TRAVdo(EXPRLIST_NEXT(arg_node), arg_info);
     }
 
     DBUG_RETURN(arg_node);
@@ -769,7 +769,7 @@ node *PRTcall (node * arg_node, info * arg_info)
     indent(arg_info);
 
     printf("%s(", CALL_ID(arg_node));
-    CALL_ARGS( arg_node) = TRAVopt( CALL_ARGS( arg_node), arg_info);
+    CALL_ARGS(arg_node) = TRAVopt(CALL_ARGS(arg_node), arg_info);
     printf(")");
 
     DBUG_RETURN(arg_node);

@@ -51,6 +51,8 @@
                     <node name="Fun"/>
                     <node name="VarDef"/>
                     <node name="Var"/>
+                    <node name="Int"/>
+                    <node name="Float"/>
                     <node name="FunParam"/>
                 </travuser>
             </traversal>
@@ -119,8 +121,10 @@
                 <travuser>
                     <node name="Program"/>
                     <node name="Fun"/>
+                    <node name="Call"/>
                     <node name="VarDefList"/>
                     <node name="VarDef"/>
+                    <node name="Var"/>
                     <node name="Assign"/>
                     <node name="Float"/>
                     <node name="Int"/>
@@ -1102,6 +1106,17 @@
                         </targets>
                     </type>
                 </attribute>
+                <attribute name="isGlobal">
+                    <type name="Bool">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Context Analysis"/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
             </attributes>
         </node>
 
@@ -1126,6 +1141,17 @@
                             <target mandatory="no">
                                 <phases>
                                     <phase from="Generating Code"/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="isGlobal">
+                    <type name="Bool">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Context Analysis"/>
                                 </phases>
                             </target>
                         </targets>

@@ -9,9 +9,11 @@
 #include "dbug.h"
 #include "str.h"
 #include "list.h"
+#include "globals.h"
 
 struct INFO {
     list* constants_list;
+    bool global;
 };
 
 typedef struct CONSTANT_LIST_ITEM {
@@ -24,6 +26,7 @@ typedef struct CONSTANT_LIST_ITEM {
 } listItem;
 
 #define INFO_CONSTANTSLIST(n) ((n)->constants_list)
+#define INFO_GLOBAL(n) ((n)->global)
 
 static FILE *outfile = NULL;
 
@@ -36,6 +39,7 @@ static info *MakeInfo()
     result = MEMmalloc(sizeof(info));
 
     INFO_CONSTANTSLIST(result) = list_new();
+    INFO_GLOBAL(result) = FALSE;
 
     DBUG_RETURN(result);
 }
@@ -55,7 +59,21 @@ static int addFloatConstant(info *arg_info, float value)
 {
     DBUG_ENTER("addFloatConstant");
 
-    listItem *item = MEMmalloc(sizeof(listItem));
+    listItem *item;
+
+    list *current = INFO_CONSTANTSLIST(arg_info);
+
+    // If float value is already in the list, return the index
+    while((current = current->next)) {
+        item = current->value;
+
+        if (item->type == TY_float && item->valFloat == value) {
+            DBUG_RETURN(item->index);
+        }
+        item = NULL;
+    }
+
+    item = MEMmalloc(sizeof(listItem));
 
     item->index  = list_length(INFO_CONSTANTSLIST(arg_info));
     item->type   = TY_float;
@@ -70,7 +88,21 @@ static int addIntConstant(info *arg_info, int value)
 {
     DBUG_ENTER("addIntConstant");
 
-    listItem *item = MEMmalloc(sizeof(listItem));
+    listItem *item;
+
+    list *current = INFO_CONSTANTSLIST(arg_info);
+
+    // If int value is already in the list, return the index
+    while((current = current->next)) {
+        item = current->value;
+
+        if (item->type == TY_int && item->valInt == value) {
+            DBUG_RETURN(item->index);
+        }
+        item = NULL;
+    }
+
+    item = MEMmalloc(sizeof(listItem));
 
     item->index  = list_length(INFO_CONSTANTSLIST(arg_info));
     item->type   = TY_int;
@@ -86,7 +118,6 @@ static void printConstants(info *arg_info)
     DBUG_ENTER("printConstants");
 
     list *current = INFO_CONSTANTSLIST(arg_info);
-
     listItem *item;
 
     while((current = current->next)) {
@@ -138,11 +169,13 @@ node *GBCprogram(node *arg_node, info *arg_info)
 
     PROGRAM_NEXT(arg_node) = TRAVopt(PROGRAM_NEXT(arg_node), arg_info);
 
-    fprintf(outfile, "\n");
+    if (PROGRAM_ISGLOBAL(arg_node) == TRUE) {
+        fprintf(outfile, "\n");
 
-    printConstants(arg_info);
+        printConstants(arg_info);
 
-    fprintf(outfile, "\n\n");
+        fprintf(outfile, "\n\n");
+    }
 
     DBUG_RETURN(arg_node);
 }
@@ -154,7 +187,7 @@ node *GBCfun(node *arg_node, info *arg_info)
     // Print some debug information
     fprintf(
         outfile,
-        "; function '%s' with %d parameters and %d local vars\n",
+        "\n; function '%s' with %d parameters and %d local vars\n",
         FUN_ID(arg_node),
         SYMBOLTABLE_PARAMCOUNT(FUN_SYMBOLTABLE(arg_node)),
         SYMBOLTABLE_VARCOUNT(FUN_SYMBOLTABLE(arg_node))
@@ -162,7 +195,17 @@ node *GBCfun(node *arg_node, info *arg_info)
 
     fprintf(outfile, "%s:\n", FUN_ID(arg_node));
 
-    fprintf(outfile, "    esr %d\n", SYMBOLTABLE_VARCOUNT(FUN_SYMBOLTABLE(arg_node)));
+    if (SYMBOLTABLE_VARCOUNT(FUN_SYMBOLTABLE(arg_node)) > 0) {
+        fprintf(outfile, "    esr %d\n", SYMBOLTABLE_VARCOUNT(FUN_SYMBOLTABLE(arg_node)));
+    }
+
+    if (STReq(FUN_ID(arg_node), "__init")) {
+        DBUG_PRINT("GBC", ("__init function, see it as a global function"));
+        INFO_GLOBAL(arg_info) = TRUE;
+    } else {
+        DBUG_PRINT("GBC", ("Not the __init function"));
+        INFO_GLOBAL(arg_info) = FALSE;
+    }
 
     TRAVopt(FUN_PARAMS(arg_node), arg_info);
 
@@ -193,7 +236,20 @@ node *GBCfunparam(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCfunparam");
 
+    DBUG_RETURN(arg_node);
+}
 
+node *GBCcall(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCfuncall");
+
+    node *symboltable = FUN_SYMBOLTABLE(CALL_DECL(arg_node));
+
+    fprintf(outfile, "    isrg\n");
+
+    CALL_ARGS(arg_node) = TRAVopt(CALL_ARGS(arg_node), arg_info);
+
+    fprintf(outfile, "    jsr %d %s\n", SYMBOLTABLE_PARAMCOUNT(symboltable), FUN_ID(CALL_DECL(arg_node)));
 
     DBUG_RETURN(arg_node);
 }
@@ -232,6 +288,7 @@ node *GBCassign(node *arg_node, info *arg_info)
     DBUG_ENTER("GBCassign");
 
     node *symbolTableEntry;
+    char *global = "";
 
     if (NODE_TYPE(ASSIGN_RIGHT(arg_node)) == N_var && NODE_TYPE(ASSIGN_LEFT(arg_node)) == N_var) {
         if (NODE_TYPE(VAR_DECL(ASSIGN_LEFT(arg_node))) == N_vardef) {
@@ -251,9 +308,33 @@ node *GBCassign(node *arg_node, info *arg_info)
         symbolTableEntry = FUNPARAM_SYMBOLTABLEENTRY(VAR_DECL(ASSIGN_LEFT(arg_node)));
     }
 
+    if (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) == 0) {
+        global = "g";
+    }
+
     // DBUG_PRINT("GBCassign", ("Node type = %s", get_type_name(NODE_TYPE(ASSIGN_RIGHT(arg_node)))));
 
-    fprintf(outfile, "    %sstore %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
+    fprintf(outfile, "    %sstore%s %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), global, SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
+
+    DBUG_RETURN(arg_node);
+}
+
+node *GBCvar(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCvar");
+
+    node *symbolTableEntry = VARDEF_SYMBOLTABLEENTRY(VAR_DECL(arg_node));
+
+    char *scopeStr = (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) == 0) ? "g" : "c";
+    int index = SYMBOLTABLEENTRY_INDEX(symbolTableEntry);;
+
+    DBUG_PRINT("GBC", ("%s", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry))));
+
+    if (index < 4 && SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) != 0) {
+        fprintf(outfile, "    %sload_%d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), index);
+    } else {
+        fprintf(outfile, "    %sload%s %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), scopeStr, index);
+    }
 
     DBUG_RETURN(arg_node);
 }
@@ -262,13 +343,15 @@ node *GBCfloat(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCfloat");
 
+    char *scopeStr = (FLOAT_ISGLOBAL(arg_node) == TRUE) ? "g" : "c";
+
     if (FLOAT_VALUE(arg_node) == 0.0 || FLOAT_VALUE(arg_node) == 1.0) {
-        fprintf(outfile, "    floadc_%d\n", (int)FLOAT_VALUE(arg_node));
+        fprintf(outfile, "    fload%s_%d\n", scopeStr, (int)FLOAT_VALUE(arg_node));
         DBUG_RETURN(arg_node);
     }
 
     FLOAT_CONSTINDEX(arg_node) = addFloatConstant(arg_info, FLOAT_VALUE(arg_node));
-    fprintf(outfile, "    floadc %d\n", list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
+    fprintf(outfile, "    fload%s %d\n", scopeStr, list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
 
     DBUG_RETURN(arg_node);
 }
@@ -279,17 +362,19 @@ node *GBCint(node *arg_node, info *arg_info)
 
     DBUG_PRINT("GBC", ("Checking int %i", INT_VALUE(arg_node)));
 
+    char *scopeStr = (INT_ISGLOBAL(arg_node) == TRUE && INFO_GLOBAL(arg_info) == FALSE) ? "g" : "c";
+
     switch(INT_VALUE(arg_node)) {
         case -1:
-            fprintf(outfile, "    iloadc_m1\n");
+            fprintf(outfile, "    iload%s_m1\n", scopeStr);
             break;
         case 0:
         case 1:
-            fprintf(outfile, "    iloadc_%d\n", INT_VALUE(arg_node));
+            fprintf(outfile, "    iload%s_%d\n", scopeStr, INT_VALUE(arg_node));
             break;
         default:
             INT_CONSTINDEX(arg_node) = addIntConstant(arg_info, INT_VALUE(arg_node));
-            fprintf(outfile, "    iloadc %d\n", list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
+            fprintf(outfile, "    iload%s %d\n", scopeStr, list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
     }
 
     DBUG_RETURN(arg_node);
@@ -336,7 +421,11 @@ node *GBCdoGenByteCode( node *syntaxtree)
 
     info = MakeInfo();
 
-    outfile = stdout;
+    if (global.outfile) {
+        outfile = fopen(global.outfile, "w+");
+    } else {
+        outfile = stdout;
+    }
 
     TRAVpush(TR_gbc);
 
@@ -347,6 +436,10 @@ node *GBCdoGenByteCode( node *syntaxtree)
     TRAVpop();
 
     info = FreeInfo(info);
+
+    if (global.outfile) {
+        fclose(outfile);
+    }
 
     outfile = NULL;
 

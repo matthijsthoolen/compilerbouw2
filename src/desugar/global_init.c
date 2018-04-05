@@ -112,22 +112,17 @@ node *DSGIprogram(node *arg_node, info *arg_info)
 
 void construct_init(node *syntaxtree, node *innerblock)
 {
-    node *current;
     node *initFun;
+    node *tmp;
 
     DBUG_ENTER("construct_init");
-
-    current = syntaxtree;
-
-    // Get to the end of the declarations
-    while (PROGRAM_NEXT(current) != NULL) {
-        current = PROGRAM_NEXT(current);
-    }
 
     // Generate the new __init function
     initFun = generate_init(innerblock);
 
-    PROGRAM_NEXT(current) = TBmakeProgram(initFun, NULL, TBmakeSymboltable(TBmakeSymboltableentry(NULL)));
+    tmp = PROGRAM_NEXT(syntaxtree);
+
+    PROGRAM_NEXT(syntaxtree) = TBmakeProgram(initFun, tmp, TBmakeSymboltable(TBmakeSymboltableentry(NULL)));
 
     DBUG_VOID_RETURN;
 }
@@ -139,7 +134,7 @@ node *generate_init(node *innerblock)
     DBUG_ENTER("generate_init");
 
     initFun = TBmakeFun(
-                global_prefix_none,
+                global_prefix_export,
                 TY_void,
                 STRcpy("__init"),
                 NULL,
