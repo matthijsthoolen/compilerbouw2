@@ -39,13 +39,22 @@ node *addToSymboltable(node* symbolTable, node* source_node, char* name, type no
     SYMBOLTABLEENTRY_SOURCE(row) = source_node;
     SYMBOLTABLEENTRY_NAME(row) = name;
     SYMBOLTABLEENTRY_TYPE(row) = node_type;
+
+    DBUG_PRINT("SymbolTable", ("Point 1"));
+
     SYMBOLTABLEENTRY_INDEX(row) = index;
     SYMBOLTABLEENTRY_NESTINGLVL(row) = lvl;
+
+    DBUG_PRINT("SymbolTable", ("Point 2"));
 
     NODE_LINE(row) = NODE_LINE(source_node);
     NODE_COL(row) = NODE_COL(source_node);
 
+    DBUG_PRINT("SymbolTable", ("Point 3"));
+
     node *lastEntry = SYMBOLTABLE_SYMBOLTABLEENTRY(symbolTable);
+
+    DBUG_PRINT("SymbolTable", ("Point 4"));
 
     if (lastEntry == NULL) {
         DBUG_PRINT("SymbolTable", ("First entry for this scope"));

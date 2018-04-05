@@ -12,13 +12,17 @@
 
 struct INFO {
     node* symbol_table;
+    node* global_symbol_table;
     bool is_first;
+    bool global;
     int const_count;
 };
 
-#define INFO_CURSYMBOLTABLE(n) ((n)->symbol_table)
-#define INFO_ISFIRST(n)        ((n)->is_first)
-#define INFO_CONSTCOUNT(n)     ((n)->const_count)
+#define INFO_CURSYMBOLTABLE(n)  ((n)->symbol_table)
+#define INFO_GLOBSYMBOLTABLE(n) ((n)->global_symbol_table)
+#define INFO_ISFIRST(n)         ((n)->is_first)
+#define INFO_GLOBAL(n)           ((n)->global)
+#define INFO_CONSTCOUNT(n)      ((n)->const_count)
 
 static info *MakeInfo()
 {
@@ -27,7 +31,9 @@ static info *MakeInfo()
     info *result;
 
     result = MEMmalloc(sizeof(info));
+    INFO_GLOBSYMBOLTABLE(result) = NULL;
     INFO_CURSYMBOLTABLE(result) = NULL;
+    INFO_GLOBAL(result) = TRUE;
     INFO_ISFIRST(result) = TRUE;
     INFO_CONSTCOUNT(result) = 1;
 
@@ -49,18 +55,22 @@ node *CAprogram(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAprogram");
 
-    // INFO_CURSYMBOLTABLE(arg_info) = PROGRAM_SYMBOLTABLE(arg_node);
+    //INFO_CURSYMBOLTABLE(arg_info) = PROGRAM_SYMBOLTABLE(arg_node);
 
     if (INFO_ISFIRST(arg_info) == TRUE) {
         PROGRAM_ISGLOBAL(arg_node) = TRUE;
+        INFO_ISFIRST(arg_info) = FALSE;
+        INFO_GLOBSYMBOLTABLE(arg_info) = PROGRAM_SYMBOLTABLE(arg_node);
+        INFO_GLOBAL(arg_info) = TRUE;
     } else {
         PROGRAM_ISGLOBAL(arg_node) = FALSE;
+        INFO_GLOBAL(arg_info) = TRUE;
     }
 
     PROGRAM_HEAD(arg_node) = TRAVdo(PROGRAM_HEAD(arg_node), arg_info);
     PROGRAM_NEXT(arg_node) = TRAVopt(PROGRAM_NEXT(arg_node), arg_info);
 
-    // PROGRAM_SYMBOLTABLE(arg_node) = INFO_CURSYMBOLTABLE(arg_info);
+    // PROGRAM_SYMBOLTABLE(arg_node) = INFO_GLOBSYMBOLTABLE(arg_info);
 
     DBUG_RETURN(arg_node);
 }
@@ -105,7 +115,7 @@ node *CAvardef(node *arg_node, info *arg_info)
     INFO_CONSTCOUNT(arg_info)++;
 
     node *symbolTableEntry = addToSymboltable(
-        INFO_CURSYMBOLTABLE(arg_info),
+        (INFO_GLOBAL(arg_info) == TRUE) ? INFO_GLOBSYMBOLTABLE(arg_info) : INFO_CURSYMBOLTABLE(arg_info),
         arg_node,
         VARDEF_ID(arg_node),
         VARDEF_TY(arg_node),
