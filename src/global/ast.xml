@@ -19,6 +19,12 @@
             <traversal id="FREE" name="Free Syntax Tree" default="user" include="free_node.h"/>
             <traversal id="CHK" name="Check Syntax Tree" default="user" include="check.h"/>
 
+            <traversal id="DCC" name="Do code clean" default="sons" include="clean.h">
+                <travuser>
+                    <node name="MonOp"/>
+                </travuser>
+            </traversal>
+
             <traversal id="DSVS" name="Desugar vardef split" default="sons" include="vardef_split.h">
                 <travuser>
                     <node name="Fun"/>
@@ -35,6 +41,7 @@
                     <node name="For"/>
                     <node name="Var"/>
                     <node name="Stmts"/>
+                    <node name="Monop"/>
                 </travuser>
             </traversal>
 
@@ -1084,6 +1091,17 @@
                         </targets>
                     </type>
                 </attribute>
+                <attribute name="ConstIndex">
+                    <type name="Int">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Generating Code"/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
             </attributes>
         </node>
 
@@ -1097,6 +1115,17 @@
                             <target mandatory="yes">
                                 <phases>
                                     <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="ConstIndex">
+                    <type name="Int">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Generating Code"/>
                                 </phases>
                             </target>
                         </targets>

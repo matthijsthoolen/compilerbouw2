@@ -3,11 +3,21 @@ void foo(int z, bool t) {
     int i;
     float f;
 
-    bool b2 = true;
-    int i2 = 16345;
+    bool b2  = true;
+    int i2   = 16345;
     float f2 = 5.0;
+    float f3 = 1.0;
 
     i = z;
+    f = f2;
+    i = 1;
+    i = 0;
+    i = -1;
+    i = -57;
+    f = 0.0;
+    f = 1.0;
+    f = -1.0;
+    f = -56.0;
 
     f2 = 4.0;
 }

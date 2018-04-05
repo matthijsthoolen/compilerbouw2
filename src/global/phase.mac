@@ -36,6 +36,12 @@ PHASE(  ds,
         "Desugar code",
         ALWAYS)
 
+SUBPHASE(dcc,
+         "Clean code",
+         DCCdoCodeClean,
+         ALWAYS,
+         ds)
+
 SUBPHASE(dsvs,
          "Desugar vardef split",
          DSVSdoVardefSplit,

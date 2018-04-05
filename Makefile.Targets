@@ -81,7 +81,7 @@ print       = print.o
 
 codegen     = gen_byte_code.o
 
-desugar     = initial_desugar.o vardef_split.o global_init.o array_init.o
+desugar     = initial_desugar.o vardef_split.o global_init.o array_init.o clean.o
 
 context     = context_analysis.o context_functions.o context_vars.o context_type.o context_return.o
 
@@ -101,7 +101,7 @@ TEST_CFLAGS := ""
 
 # Whether to run tests that compare program output. Set to 1 after you have
 # implemented your assembly phase.
-TEST_RUN_FUNCTIONAL := 0
+TEST_RUN_FUNCTIONAL := 1
 
 # Path to toolchain files, relative to the root directory (used for functional
 # test).

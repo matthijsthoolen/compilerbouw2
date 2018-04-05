@@ -51,7 +51,7 @@ static info *FreeInfo(info *info)
     DBUG_RETURN(info);
 }
 
-static void addFloatConstant(info *arg_info, float value)
+static int addFloatConstant(info *arg_info, float value)
 {
     DBUG_ENTER("addFloatConstant");
 
@@ -62,9 +62,11 @@ static void addFloatConstant(info *arg_info, float value)
     item->valFloat = value;
 
     list_reversepush(INFO_CONSTANTSLIST(arg_info), item);
+
+    DBUG_RETURN(item->index);
 }
 
-static void addIntConstant(info *arg_info, int value)
+static int addIntConstant(info *arg_info, int value)
 {
     DBUG_ENTER("addIntConstant");
 
@@ -75,6 +77,8 @@ static void addIntConstant(info *arg_info, int value)
     item->valInt = value;
 
     list_reversepush(INFO_CONSTANTSLIST(arg_info), item);
+
+    DBUG_RETURN(item->index);
 }
 
 static void printConstants(info *arg_info)
@@ -229,7 +233,17 @@ node *GBCassign(node *arg_node, info *arg_info)
 
     node *symbolTableEntry;
 
-    TRAVopt(ASSIGN_RIGHT(arg_node), arg_info);
+    if (NODE_TYPE(ASSIGN_RIGHT(arg_node)) == N_var && NODE_TYPE(ASSIGN_LEFT(arg_node)) == N_var) {
+        if (NODE_TYPE(VAR_DECL(ASSIGN_LEFT(arg_node))) == N_vardef) {
+            symbolTableEntry = VARDEF_SYMBOLTABLEENTRY(VAR_DECL(ASSIGN_RIGHT(arg_node)));
+        } else if (NODE_TYPE(VAR_DECL(ASSIGN_LEFT(arg_node))) == N_funparam) {
+            symbolTableEntry = FUNPARAM_SYMBOLTABLEENTRY(VAR_DECL(ASSIGN_RIGHT(arg_node)));
+        }
+
+        fprintf(outfile, "    %sload_%d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
+    } else {
+        TRAVopt(ASSIGN_RIGHT(arg_node), arg_info);
+    }
 
     if (NODE_TYPE(VAR_DECL(ASSIGN_LEFT(arg_node))) == N_vardef) {
         symbolTableEntry = VARDEF_SYMBOLTABLEENTRY(VAR_DECL(ASSIGN_LEFT(arg_node)));
@@ -248,8 +262,12 @@ node *GBCfloat(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCfloat");
 
-    addFloatConstant(arg_info, FLOAT_VALUE(arg_node));
+    if (FLOAT_VALUE(arg_node) == 0.0 || FLOAT_VALUE(arg_node) == 1.0) {
+        fprintf(outfile, "    floadc_%d\n", (int)FLOAT_VALUE(arg_node));
+        DBUG_RETURN(arg_node);
+    }
 
+    FLOAT_CONSTINDEX(arg_node) = addFloatConstant(arg_info, FLOAT_VALUE(arg_node));
     fprintf(outfile, "    floadc %d\n", list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
 
     DBUG_RETURN(arg_node);
@@ -259,9 +277,20 @@ node *GBCint(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCint");
 
-    addIntConstant(arg_info, INT_VALUE(arg_node));
+    DBUG_PRINT("GBC", ("Checking int %i", INT_VALUE(arg_node)));
 
-    fprintf(outfile, "    iloadc %d\n", list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
+    switch(INT_VALUE(arg_node)) {
+        case -1:
+            fprintf(outfile, "    iloadc_m1\n");
+            break;
+        case 0:
+        case 1:
+            fprintf(outfile, "    iloadc_%d\n", INT_VALUE(arg_node));
+            break;
+        default:
+            INT_CONSTINDEX(arg_node) = addIntConstant(arg_info, INT_VALUE(arg_node));
+            fprintf(outfile, "    iloadc %d\n", list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
+    }
 
     DBUG_RETURN(arg_node);
 }
