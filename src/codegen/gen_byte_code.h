@@ -17,6 +17,8 @@ extern node *GBCbool(node *arg_node, info *arg_info);
 extern node *GBCinnerblock(node *arg_node, info *arg_info);
 extern node *GBCif(node *arg_node, info *arg_info);
 extern node *GBCwhile(node *arg_node, info *arg_info);
+extern node *GBCdowhile(node *arg_node, info *arg_info);
+extern node *GBCfor(node *arg_node, info *arg_info);
 
 extern void export_assembly(info *info);
 

@@ -14,6 +14,9 @@
 struct INFO {
     list* constants_list;
     int labels_if;
+    int labels_while;
+    int labels_dowhile;
+    int labels_for;
     bool global;
 };
 
@@ -28,6 +31,9 @@ typedef struct CONSTANT_LIST_ITEM {
 
 #define INFO_CONSTANTSLIST(n) ((n)->constants_list)
 #define INFO_LABELS_IF(n) ((n)->labels_if)
+#define INFO_LABELS_WHILE(n) ((n)->labels_while)
+#define INFO_LABELS_DOWHILE(n) ((n)->labels_dowhile)
+#define INFO_LABELS_FOR(n) ((n)->labels_for)
 #define INFO_GLOBAL(n) ((n)->global)
 
 static FILE *outfile = NULL;
@@ -40,9 +46,12 @@ static info *MakeInfo()
 
     result = MEMmalloc(sizeof(info));
 
-    INFO_CONSTANTSLIST(result) = list_new();
-    INFO_LABELS_IF(result)     = 0;
-    INFO_GLOBAL(result)        = FALSE;
+    INFO_CONSTANTSLIST(result)  = list_new();
+    INFO_LABELS_IF(result)      = 0;
+    INFO_LABELS_WHILE(result)   = 0;
+    INFO_LABELS_DOWHILE(result) = 0;
+    INFO_LABELS_FOR(result)     = 0;
+    INFO_GLOBAL(result)         = FALSE;
 
     DBUG_RETURN(result);
 }
@@ -179,24 +188,35 @@ type getNodeType(node *arg_node)
 
     switch (NODE_TYPE(arg_node)) {
         case N_vardef:
+            DBUG_PRINT("GETNODETYPE", ("N_VARDEF"));
             type = VARDEF_TY(arg_node);
             break;
         case N_var:
+            DBUG_PRINT("GETNODETYPE", ("N_var"));
             type = getNodeType(VAR_DECL(arg_node));
             break;
         case N_int:
+            DBUG_PRINT("GETNODETYPE", ("N_int"));
             type = TY_int;
             break;
         case N_float:
+            DBUG_PRINT("GETNODETYPE", ("N_float"));
             type = TY_float;
             break;
         case N_bool:
+            DBUG_PRINT("GETNODETYPE", ("N_bool"));
             type = TY_bool;
             break;
-        default:
-            type = TY_unknown;
+        case N_binop:
+            DBUG_PRINT("GETNODETYPE", ("N_binop"));
+            type = getNodeType(BINOP_LEFT(arg_node));
             break;
+        default:
+            DBUG_PRINT("GETNODETYPE", ("default %d", NODE_TYPE(arg_node)));
+            type = TY_unknown;
     }
+
+    DBUG_PRINT("GETNODETYPE", ("default %d", NODE_TYPE(arg_node)));
 
     DBUG_RETURN(type);
 }
@@ -536,14 +556,17 @@ node *GBCif(node *arg_node, info *arg_info)
         INFO_LABELS_IF(arg_info)++;
 
         // Only a true block,
-        if (IF_BLOCKF(arg_node) == NULL) {
+        if (IF_BLOCKF(arg_node) == NULL && IF_BLOCKT(arg_node) != NULL) {
             fprintf(outfile, "    branch_f %d_end\n", INFO_LABELS_IF(arg_info));
             TRAVopt(IF_BLOCKT(arg_node), arg_info);
-        } else {
-            fprintf(outfile, "    branch_f %d_else:\n", INFO_LABELS_IF(arg_info));
+        } else if (IF_BLOCKF(arg_node) != NULL && IF_BLOCKT(arg_node) != NULL){
+            fprintf(outfile, "    branch_f %d_else\n", INFO_LABELS_IF(arg_info));
             TRAVopt(IF_BLOCKT(arg_node), arg_info);
-            fprintf(outfile, "    jump %d_end:\n", INFO_LABELS_IF(arg_info));
+            fprintf(outfile, "    jump %d_end\n", INFO_LABELS_IF(arg_info));
             fprintf(outfile, "%d_else:\n", INFO_LABELS_IF(arg_info));
+            TRAVopt(IF_BLOCKF(arg_node), arg_info);
+        } else if (IF_BLOCKF(arg_node) != NULL && IF_BLOCKT(arg_node) == NULL) {
+            fprintf(outfile, "    branch_t %d_end\n", INFO_LABELS_IF(arg_info));
             TRAVopt(IF_BLOCKF(arg_node), arg_info);
         }
     }
@@ -554,6 +577,48 @@ node *GBCif(node *arg_node, info *arg_info)
 }
 
 node *GBCwhile(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCwhile");
+
+    // If while block is empty we don't want to print it and we can exit.
+    if (WHILE_BLOCK(arg_node) == NULL) {
+        DBUG_RETURN(arg_node);
+    }
+
+    INFO_LABELS_WHILE(arg_info)++;
+    fprintf(outfile, "%d_while:\n", INFO_LABELS_WHILE(arg_info));
+    TRAVdo(WHILE_COND(arg_node), arg_info);
+    fprintf(outfile, "    branch_f %d_while_end\n", INFO_LABELS_WHILE(arg_info));
+
+    TRAVopt(WHILE_BLOCK(arg_node), arg_info);
+
+    fprintf(outfile, "    jump %d_while\n", INFO_LABELS_WHILE(arg_info));
+    fprintf(outfile, "%d_while_end:\n", INFO_LABELS_WHILE(arg_info));
+
+    DBUG_RETURN(arg_node);
+}
+
+node *GBCdowhile(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCdowhile");
+
+    // If dowhile block is empty we don't want to print it and we can exit.
+    if (DOWHILE_BLOCK(arg_node) == NULL) {
+        DBUG_RETURN(arg_node);
+    }
+
+    INFO_LABELS_DOWHILE(arg_info)++;
+    fprintf(outfile, "%d_dowhile:\n", INFO_LABELS_DOWHILE(arg_info));
+
+    TRAVopt(DOWHILE_BLOCK(arg_node), arg_info);
+    TRAVdo(DOWHILE_COND(arg_node), arg_info);
+
+    fprintf(outfile, "    branch_t %d_dowhile\n", INFO_LABELS_DOWHILE(arg_info));
+
+    DBUG_RETURN(arg_node);
+}
+
+node *GBCfor(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCwhile");
 
