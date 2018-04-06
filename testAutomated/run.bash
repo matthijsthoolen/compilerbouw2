@@ -45,7 +45,7 @@ function check_output {
         failed_tests=$((failed_tests+1))
     fi
 
-    rm -f tmp.res tmp.s tmp.o tmp.out
+    rm -f tmp.res tmp.s tmp.o
 }
 
 # Special case: multiple files must be compiled and run together (e.g., for

@@ -161,18 +161,55 @@ node *GBCprogram(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCprogram");
 
-    if (PROGRAM_ISGLOBAL(arg_node) == TRUE) {
-        fprintf(outfile, "; %s\n", "HELLO!");
-    }
-
     PROGRAM_HEAD(arg_node) = TRAVdo(PROGRAM_HEAD(arg_node), arg_info);
 
     PROGRAM_NEXT(arg_node) = TRAVopt(PROGRAM_NEXT(arg_node), arg_info);
 
     if (PROGRAM_ISGLOBAL(arg_node) == TRUE) {
-        fprintf(outfile, "\n");
+        fprintf(outfile, "\n ; constants: \n");
 
         printConstants(arg_info);
+
+        fprintf(outfile, "\n ; export functions:\n");
+
+        node *declarations = arg_node;
+        node *fun;
+
+        while (declarations != NULL) {
+            if (NODE_TYPE(PROGRAM_HEAD(declarations)) == N_fun && FUN_PREFIX(PROGRAM_HEAD(declarations)) == global_prefix_export) {
+                fun = PROGRAM_HEAD(declarations);
+
+                DBUG_PRINT("GBC", ("Checking function %s %d", FUN_ID(fun), FUN_PREFIX(fun)));
+                fprintf(outfile, ".exportfun \"%s\" %s %s\n" , FUN_ID(fun), get_type_name(FUN_RETTY(fun)), FUN_ID(fun));
+            }
+
+            declarations = PROGRAM_NEXT(declarations);
+        }
+
+        fprintf(outfile, "\n ; import functions:\n");
+
+        declarations = arg_node;
+
+        while (declarations != NULL) {
+            if (NODE_TYPE(PROGRAM_HEAD(declarations)) == N_fun && (FUN_PREFIX(PROGRAM_HEAD(declarations)) == global_prefix_extern)) {
+                fun = PROGRAM_HEAD(declarations);
+
+                DBUG_PRINT("GBC", ("Checking function %s %d", FUN_ID(fun), FUN_PREFIX(fun)));
+                fprintf(outfile, ".importfun \"%s\" %s" , FUN_ID(fun), get_type_name(FUN_RETTY(fun)));
+
+                node *paramList = FUN_PARAMS(fun);
+
+                while (paramList != NULL) {
+                    fprintf(outfile, " %s", get_type_name(FUNPARAM_TY(FUNPARAMLIST_PARAM(paramList))));
+
+                    paramList = FUNPARAMLIST_NEXT(paramList);
+                }
+
+                fprintf(outfile, "\n");
+            }
+
+            declarations = PROGRAM_NEXT(declarations);
+        }
 
         fprintf(outfile, "\n\n");
     }
@@ -183,6 +220,10 @@ node *GBCprogram(node *arg_node, info *arg_info)
 node *GBCfun(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCfun");
+
+    if (FUN_PREFIX(arg_node) == global_prefix_extern) {
+        DBUG_RETURN(arg_node);
+    }
 
     // Print some debug information
     fprintf(
@@ -249,7 +290,11 @@ node *GBCcall(node *arg_node, info *arg_info)
 
     CALL_ARGS(arg_node) = TRAVopt(CALL_ARGS(arg_node), arg_info);
 
-    fprintf(outfile, "    jsr %d %s\n", SYMBOLTABLE_PARAMCOUNT(symboltable), FUN_ID(CALL_DECL(arg_node)));
+    if (FUN_PREFIX(CALL_DECL(arg_node)) == global_prefix_extern) {
+        fprintf(outfile, "    jsre %d\n", 0);
+    } else {
+        fprintf(outfile, "    jsr %d %s\n", SYMBOLTABLE_PARAMCOUNT(symboltable), FUN_ID(CALL_DECL(arg_node)));
+    }
 
     DBUG_RETURN(arg_node);
 }

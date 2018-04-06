@@ -505,16 +505,16 @@ static void print_global_prefix(enum global_prefix pfx) {
     char *tmp;
 
     switch (pfx) {
-    case global_prefix_none:
-        return;
-    case global_prefix_export:
-        tmp = "export";
-        break;
-    case global_prefix_extern:
-        tmp = "extern";
-        break;
-    case global_prefix_var:
-        return;
+        case global_prefix_none:
+            return;
+        case global_prefix_export:
+            tmp = "export";
+            break;
+        case global_prefix_extern:
+            tmp = "extern";
+            break;
+        case global_prefix_var:
+            return;
     }
     printf("%s ", tmp);
 }

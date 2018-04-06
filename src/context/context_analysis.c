@@ -110,6 +110,15 @@ node *CAfun(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
+node *CAcall(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("CAcall");
+
+    DBUG_PRINT("CA", ("Processing a function call to '%s'", FUN_ID(CALL_DECL(arg_node))));
+
+    DBUG_RETURN(arg_node);
+}
+
 node *CAvardef(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CAvardef");

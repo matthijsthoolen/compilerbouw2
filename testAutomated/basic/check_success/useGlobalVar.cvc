@@ -6,7 +6,7 @@ void printInt(int i, int o) {
 void printFloat(float j) {
 }
 
-export int main()
+export int main(int m, float n)
 {
     int j = 56;
     int l = 56;
