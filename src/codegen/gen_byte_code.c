@@ -492,9 +492,20 @@ node *GBCbinop(node *arg_node, info *arg_info)
 }
 
 node *GBCternop(node *arg_node, info *arg_info)
-
 {
     DBUG_ENTER("GBCternop");
+
+    int i = INFO_LABELS_IF(arg_info)++;
+
+    TRAVdo(TERNOP_COND(arg_node), arg_info);
+    fprintf(outfile, "    branch_f %d_ternop_else\n", i);
+
+    TRAVdo(TERNOP_THEN(arg_node), arg_info);
+    fprintf(outfile, "    jump %d_ternop_end\n", i);
+    fprintf(outfile, "%d_ternop_else:\n", i);
+
+    TRAVdo(TERNOP_ELSE(arg_node), arg_info);
+    fprintf(outfile, "%d_ternop_end:\n", i);
 
     DBUG_RETURN(arg_node);
 }
@@ -569,25 +580,25 @@ node *GBCif(node *arg_node, info *arg_info)
 
     if (IF_BLOCKT(arg_node) != NULL || IF_BLOCKF(arg_node) != NULL) {
         TRAVdo(IF_COND(arg_node), arg_info);
-        INFO_LABELS_IF(arg_info)++;
+        int i = INFO_LABELS_IF(arg_info)++;
 
         // Only a true block,
         if (IF_BLOCKF(arg_node) == NULL && IF_BLOCKT(arg_node) != NULL) {
-            fprintf(outfile, "    branch_f %d_end\n", INFO_LABELS_IF(arg_info));
+            fprintf(outfile, "    branch_f %d_end\n", i);
             TRAVopt(IF_BLOCKT(arg_node), arg_info);
         } else if (IF_BLOCKF(arg_node) != NULL && IF_BLOCKT(arg_node) != NULL){
-            fprintf(outfile, "    branch_f %d_else\n", INFO_LABELS_IF(arg_info));
+            fprintf(outfile, "    branch_f %d_else\n", i);
             TRAVopt(IF_BLOCKT(arg_node), arg_info);
-            fprintf(outfile, "    jump %d_end\n", INFO_LABELS_IF(arg_info));
-            fprintf(outfile, "%d_else:\n", INFO_LABELS_IF(arg_info));
+            fprintf(outfile, "    jump %d_end\n", i);
+            fprintf(outfile, "%d_else:\n", i);
             TRAVopt(IF_BLOCKF(arg_node), arg_info);
         } else if (IF_BLOCKF(arg_node) != NULL && IF_BLOCKT(arg_node) == NULL) {
-            fprintf(outfile, "    branch_t %d_end\n", INFO_LABELS_IF(arg_info));
+            fprintf(outfile, "    branch_t %d_end\n", i);
             TRAVopt(IF_BLOCKF(arg_node), arg_info);
         }
-    }
 
-    fprintf(outfile, "%d_end:\n", INFO_LABELS_IF(arg_info));
+        fprintf(outfile, "%d_end:\n", i);
+    }
 
     DBUG_RETURN(arg_node);
 }
@@ -601,15 +612,15 @@ node *GBCwhile(node *arg_node, info *arg_info)
         DBUG_RETURN(arg_node);
     }
 
-    INFO_LABELS_WHILE(arg_info)++;
-    fprintf(outfile, "%d_while:\n", INFO_LABELS_WHILE(arg_info));
+    int i = INFO_LABELS_WHILE(arg_info)++;
+    fprintf(outfile, "%d_while:\n", i);
     TRAVdo(WHILE_COND(arg_node), arg_info);
-    fprintf(outfile, "    branch_f %d_while_end\n", INFO_LABELS_WHILE(arg_info));
+    fprintf(outfile, "    branch_f %d_while_end\n", i);
 
     TRAVopt(WHILE_BLOCK(arg_node), arg_info);
 
-    fprintf(outfile, "    jump %d_while\n", INFO_LABELS_WHILE(arg_info));
-    fprintf(outfile, "%d_while_end:\n", INFO_LABELS_WHILE(arg_info));
+    fprintf(outfile, "    jump %d_while\n", i);
+    fprintf(outfile, "%d_while_end:\n", i);
 
     DBUG_RETURN(arg_node);
 }
@@ -623,13 +634,13 @@ node *GBCdowhile(node *arg_node, info *arg_info)
         DBUG_RETURN(arg_node);
     }
 
-    INFO_LABELS_DOWHILE(arg_info)++;
-    fprintf(outfile, "%d_dowhile:\n", INFO_LABELS_DOWHILE(arg_info));
+    int i = INFO_LABELS_DOWHILE(arg_info)++;
+    fprintf(outfile, "%d_dowhile:\n", i);
 
     TRAVopt(DOWHILE_BLOCK(arg_node), arg_info);
     TRAVdo(DOWHILE_COND(arg_node), arg_info);
 
-    fprintf(outfile, "    branch_t %d_dowhile\n", INFO_LABELS_DOWHILE(arg_info));
+    fprintf(outfile, "    branch_t %d_dowhile\n", i);
 
     DBUG_RETURN(arg_node);
 }
