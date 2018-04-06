@@ -15,6 +15,7 @@ extern node *PRTstmts (node * arg_node, info * arg_info);
 extern node *PRTassign (node * arg_node, info * arg_info);
 extern node *PRTvar (node * arg_node, info * arg_info);
 extern node *PRTbinop (node * arg_node, info * arg_info);
+extern node *PRTternop (node * arg_node, info * arg_info);
 extern node *PRTfloat (node * arg_node, info * arg_info);
 extern node *PRTint (node * arg_node, info * arg_info);
 extern node *PRTbool (node * arg_node, info * arg_info);

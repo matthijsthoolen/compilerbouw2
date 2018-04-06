@@ -491,6 +491,14 @@ node *GBCbinop(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
+node *GBCternop(node *arg_node, info *arg_info)
+
+{
+    DBUG_ENTER("GBCternop");
+
+    DBUG_RETURN(arg_node);
+}
+
 node *GBCfloat(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCfloat");

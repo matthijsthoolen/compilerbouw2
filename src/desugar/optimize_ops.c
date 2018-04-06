@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "dbug.h"
 #include "str.h"
+#include "free_node.h"
 
 struct INFO {
 };
@@ -34,6 +35,28 @@ static info *FreeInfo(info *info)
 node *DSOObinop(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("DSOObinop");
+
+    if (BINOP_OP(arg_node) != BO_or && BINOP_OP(arg_node) != BO_and) {
+        DBUG_RETURN(arg_node);
+    }
+
+    node *TernOp;
+
+    if (BINOP_OP(arg_node) == BO_or) {
+        TernOp = TBmakeTernop(BINOP_LEFT(arg_node), TBmakeBool(TRUE), BINOP_RIGHT(arg_node));
+        TERNOP_TYPE(arg_node) = BO_or;
+    }
+
+    if (BINOP_OP(arg_node) == BO_and) {
+        TernOp = TBmakeTernop(BINOP_LEFT(arg_node), BINOP_RIGHT(arg_node), TBmakeBool(FALSE));
+        TERNOP_TYPE(arg_node) = BO_and;
+    }
+
+    BINOP_LEFT(arg_node) = NULL;
+    BINOP_RIGHT(arg_node) = NULL;
+    arg_node = FREEbinop(arg_node, arg_info);
+
+    arg_node = TernOp;
 
     DBUG_RETURN(arg_node);
 }

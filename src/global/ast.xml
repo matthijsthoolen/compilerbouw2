@@ -134,6 +134,7 @@
                     <node name="Assign"/>
                     <node name="BinOp"/>
                     <node name="MonOp"/>
+                    <node name="TernOp"/>
                     <node name="Float"/>
                     <node name="Int"/>
                     <node name="Bool"/>
@@ -1108,6 +1109,60 @@
                                 <any/>
                                 <phases>
                                     <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+            </attributes>
+        </node>
+
+        <node name="TernOp">
+            <description>represents a ternary operator</description>
+            <sons>
+                <son name="Cond">
+                    <description>Ternary expression condition</description>
+                    <targets>
+                        <target mandatory="yes">
+                            <set name="Expr"/>
+                            <phases>
+                                <all/>
+                            </phases>
+                        </target>
+                    </targets>
+                </son>
+                <son name="Then">
+                    <description>Result if condition is true</description>
+                    <targets>
+                        <target mandatory="yes">
+                            <set name="Expr"/>
+                            <phases>
+                                <all/>
+                            </phases>
+                        </target>
+                    </targets>
+                </son>
+                <son name="Else">
+                    <description>Result if condition is false</description>
+                    <targets>
+                        <target mandatory="yes">
+                            <set name="Expr"/>
+                            <phases>
+                                <all/>
+                            </phases>
+                        </target>
+                    </targets>
+                </son>
+            </sons>
+            <attributes>
+                <description>operator type</description>
+                <attribute name="Type">
+                    <type name="Type">
+                        <targets>
+                            <target mandatory="no">
+                                <any/>
+                                <phases>
+                                    <phase from="Late desugar" />
                                 </phases>
                             </target>
                         </targets>
