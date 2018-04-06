@@ -46,5 +46,6 @@ extern node *PRTnewarray (node * arg_node, info * arg_info);
 extern node *PRTdoPrint( node *syntaxtree);
 
 extern char *get_type_name(type ty);
+extern char *get_binop_string(node *arg_node);
 
 #endif /* _SAC_PRT_NODE_H_ */

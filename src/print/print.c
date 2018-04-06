@@ -94,6 +94,59 @@ static void print_blocklike(node **stmts, info *arg_info) {
     printf("}");
 }
 
+char *get_binop_string(node *arg_node)
+{
+    DBUG_ENTER("get_binop_string");
+
+    char *tmp;
+
+    switch (BINOP_OP(arg_node)) {
+        case BO_add:
+          tmp = "add";
+          break;
+        case BO_sub:
+          tmp = "sub";
+          break;
+        case BO_mul:
+          tmp = "mul";
+          break;
+        case BO_div:
+          tmp = "div";
+          break;
+        case BO_mod:
+          tmp = "rem";
+          break;
+        case BO_lt:
+          tmp = "lt";
+          break;
+        case BO_le:
+          tmp = "le";
+          break;
+        case BO_gt:
+          tmp = "gt";
+          break;
+        case BO_ge:
+          tmp = "ge";
+          break;
+        case BO_eq:
+          tmp = "eq";
+          break;
+        case BO_ne:
+          tmp = "ne";
+          break;
+        case BO_or:
+          tmp = "and";
+          break;
+        case BO_and:
+          tmp = "mul";
+          break;
+        case BO_unknown:
+          DBUG_ASSERT( 0, "unknown binop detected!");
+    }
+
+    DBUG_RETURN(tmp);
+}
+
 /** <!--******************************************************************-->
  *
  * @fn PRTstmts

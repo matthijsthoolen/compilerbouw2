@@ -126,10 +126,14 @@
                     <node name="VarDef"/>
                     <node name="Var"/>
                     <node name="Assign"/>
+                    <node name="BinOp"/>
+                    <node name="MonOp"/>
                     <node name="Float"/>
                     <node name="Int"/>
                     <node name="Bool"/>
                     <node name="InnerBlock"/>
+                    <node name="If"/>
+                    <node name="While"/>
                 </travuser>
             </traversal>
         </general>
@@ -199,7 +203,7 @@
                     </type>
                 </attribute>
                 <attribute name="VarCount">
-                    <description>A helper to easily keep track of the total number of variables registerd</description>
+                    <description>A helper to easily keep track of the total number of variables registered for local functions.</description>
                     <type name="Int">
                         <targets>
                             <target mandatory="no">
@@ -212,6 +216,18 @@
                 </attribute>
                 <attribute name="ParamCount">
                     <description>A helper to easily keep track of the total number of funparams registerd</description>
+                    <type name="Int">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Context Analysis"/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="Index">
+                    <description>Index for extern functions</description>
                     <type name="Int">
                         <targets>
                             <target mandatory="no">
@@ -997,6 +1013,18 @@
                             <target mandatory="yes">
                                 <phases>
                                     <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="SymbolTableEntry">
+                    <description>the linked symboltableentry</description>
+                    <type name="Link">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <phase from="Context Analysis"/>
                                 </phases>
                             </target>
                         </targets>

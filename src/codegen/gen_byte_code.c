@@ -13,6 +13,7 @@
 
 struct INFO {
     list* constants_list;
+    int labels_if;
     bool global;
 };
 
@@ -26,6 +27,7 @@ typedef struct CONSTANT_LIST_ITEM {
 } listItem;
 
 #define INFO_CONSTANTSLIST(n) ((n)->constants_list)
+#define INFO_LABELS_IF(n) ((n)->labels_if)
 #define INFO_GLOBAL(n) ((n)->global)
 
 static FILE *outfile = NULL;
@@ -39,7 +41,8 @@ static info *MakeInfo()
     result = MEMmalloc(sizeof(info));
 
     INFO_CONSTANTSLIST(result) = list_new();
-    INFO_GLOBAL(result) = FALSE;
+    INFO_LABELS_IF(result)     = 0;
+    INFO_GLOBAL(result)        = FALSE;
 
     DBUG_RETURN(result);
 }
@@ -133,7 +136,13 @@ static void printConstants(info *arg_info)
     DBUG_VOID_RETURN;
 }
 
-char *getShortType(type type) {
+/**
+ * Get the shortened type name.
+ * @param  type [description]
+ * @return      [description]
+ */
+char *getShortType(type type)
+{
     DBUG_ENTER("getShortType");
 
     char *strType = "";
@@ -155,6 +164,53 @@ char *getShortType(type type) {
     }
 
     DBUG_RETURN(strType);
+}
+
+/**
+ * Find the (nested) node type
+ * @param  arg_node [description]
+ * @return          [description]
+ */
+type getNodeType(node *arg_node)
+{
+    DBUG_ENTER("getNodeType");
+
+    type type;
+
+    switch (NODE_TYPE(arg_node)) {
+        case N_vardef:
+            type = VARDEF_TY(arg_node);
+            break;
+        case N_var:
+            type = getNodeType(VAR_DECL(arg_node));
+            break;
+        case N_int:
+            type = TY_int;
+            break;
+        case N_float:
+            type = TY_float;
+            break;
+        case N_bool:
+            type = TY_bool;
+            break;
+        default:
+            type = TY_unknown;
+            break;
+    }
+
+    DBUG_RETURN(type);
+}
+
+/**
+ * Combination of getShortType and getNodeType
+ * @param  arg_node [description]
+ * @return          [description]
+ */
+char *getShortNodeType(node *arg_node)
+{
+    DBUG_ENTER("getShortNodeType");
+
+    DBUG_RETURN(getShortType(getNodeType(arg_node)));
 }
 
 node *GBCprogram(node *arg_node, info *arg_info)
@@ -291,7 +347,7 @@ node *GBCcall(node *arg_node, info *arg_info)
     CALL_ARGS(arg_node) = TRAVopt(CALL_ARGS(arg_node), arg_info);
 
     if (FUN_PREFIX(CALL_DECL(arg_node)) == global_prefix_extern) {
-        fprintf(outfile, "    jsre %d\n", 0);
+        fprintf(outfile, "    jsre %d\n", SYMBOLTABLE_INDEX(FUN_SYMBOLTABLE(CALL_DECL(arg_node))));
     } else {
         fprintf(outfile, "    jsr %d %s\n", SYMBOLTABLE_PARAMCOUNT(symboltable), FUN_ID(CALL_DECL(arg_node)));
     }
@@ -342,7 +398,11 @@ node *GBCassign(node *arg_node, info *arg_info)
             symbolTableEntry = FUNPARAM_SYMBOLTABLEENTRY(VAR_DECL(ASSIGN_RIGHT(arg_node)));
         }
 
-        fprintf(outfile, "    %sload_%d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
+        if (SYMBOLTABLEENTRY_INDEX(symbolTableEntry) < 4) {
+            fprintf(outfile, "    %sload_%d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
+        } else {
+            fprintf(outfile, "    %sload %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
+        }
     } else {
         TRAVopt(ASSIGN_RIGHT(arg_node), arg_info);
     }
@@ -380,6 +440,25 @@ node *GBCvar(node *arg_node, info *arg_info)
     } else {
         fprintf(outfile, "    %sload%s %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), scopeStr, index);
     }
+
+    DBUG_RETURN(arg_node);
+}
+
+node *GBCmonop(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCbinop");
+
+    DBUG_RETURN(arg_node);
+}
+
+node *GBCbinop(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCbinop");
+
+    TRAVdo(BINOP_LEFT(arg_node), arg_info);
+    TRAVdo(BINOP_RIGHT(arg_node), arg_info);
+
+    fprintf(outfile, "    %s%s\n", getShortType(getNodeType(BINOP_LEFT(arg_node))), get_binop_string(arg_node));
 
     DBUG_RETURN(arg_node);
 }
@@ -444,6 +523,39 @@ node *GBCinnerblock(node *arg_node, info *arg_info)
 
     TRAVopt(INNERBLOCK_VARS(arg_node), arg_info);
     TRAVopt(INNERBLOCK_STMTS(arg_node), arg_info);
+
+    DBUG_RETURN(arg_node);
+}
+
+node *GBCif(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCif");
+
+    if (IF_BLOCKT(arg_node) != NULL || IF_BLOCKF(arg_node) != NULL) {
+        TRAVdo(IF_COND(arg_node), arg_info);
+        INFO_LABELS_IF(arg_info)++;
+
+        // Only a true block,
+        if (IF_BLOCKF(arg_node) == NULL) {
+            fprintf(outfile, "    branch_f %d_end\n", INFO_LABELS_IF(arg_info));
+            TRAVopt(IF_BLOCKT(arg_node), arg_info);
+        } else {
+            fprintf(outfile, "    branch_f %d_else:\n", INFO_LABELS_IF(arg_info));
+            TRAVopt(IF_BLOCKT(arg_node), arg_info);
+            fprintf(outfile, "    jump %d_end:\n", INFO_LABELS_IF(arg_info));
+            fprintf(outfile, "%d_else:\n", INFO_LABELS_IF(arg_info));
+            TRAVopt(IF_BLOCKF(arg_node), arg_info);
+        }
+    }
+
+    fprintf(outfile, "%d_end:\n", INFO_LABELS_IF(arg_info));
+
+    DBUG_RETURN(arg_node);
+}
+
+node *GBCwhile(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCwhile");
 
     DBUG_RETURN(arg_node);
 }

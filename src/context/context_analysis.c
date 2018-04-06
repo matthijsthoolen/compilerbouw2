@@ -17,6 +17,7 @@ struct INFO {
     bool global;
     int const_count;
     int glob_const_count;
+    int extern_fun_count;
 };
 
 #define INFO_CURSYMBOLTABLE(n)  ((n)->symbol_table)
@@ -25,6 +26,7 @@ struct INFO {
 #define INFO_GLOBAL(n)          ((n)->global)
 #define INFO_CONSTCOUNT(n)      ((n)->const_count)
 #define INFO_GLOBCONSTCOUNT(n)  ((n)->glob_const_count)
+#define INFO_EXTERNFUNCOUNT(n)  ((n)->extern_fun_count)
 
 static info *MakeInfo()
 {
@@ -39,6 +41,7 @@ static info *MakeInfo()
     INFO_ISFIRST(result) = TRUE;
     INFO_CONSTCOUNT(result) = 0;
     INFO_GLOBCONSTCOUNT(result) = 0;
+    INFO_EXTERNFUNCOUNT(result) = 0;
 
     DBUG_RETURN(result);
 }
@@ -93,28 +96,14 @@ node *CAfun(node *arg_node, info *arg_info)
 
     FUN_PARAMS(arg_node) = TRAVopt(FUN_PARAMS(arg_node), arg_info);
 
-    // addToSymboltable(
-    //     INFO_CURSYMBOLTABLE(arg_info),
-    //     arg_node,
-    //     FUN_ID(arg_node),
-    //     FUN_RETTY(arg_node),
-    //     1 //TODO: something usefull
-    // );
-
-    if (FUN_BODY(arg_node)) {
+    if (FUN_PREFIX(arg_node) == global_prefix_extern) {
+        SYMBOLTABLE_INDEX(funSymbolTable) = INFO_EXTERNFUNCOUNT(arg_info);
+        INFO_EXTERNFUNCOUNT(arg_info)++;
+    } else if (FUN_BODY(arg_node)) {
         TRAVopt(FUN_BODY(arg_node), arg_info);
     }
 
     INFO_CURSYMBOLTABLE(arg_info) = previousScope;
-
-    DBUG_RETURN(arg_node);
-}
-
-node *CAcall(node *arg_node, info *arg_info)
-{
-    DBUG_ENTER("CAcall");
-
-    DBUG_PRINT("CA", ("Processing a function call to '%s'", FUN_ID(CALL_DECL(arg_node))));
 
     DBUG_RETURN(arg_node);
 }
