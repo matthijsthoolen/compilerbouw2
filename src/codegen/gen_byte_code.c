@@ -211,6 +211,14 @@ type getNodeType(node *arg_node)
             DBUG_PRINT("GETNODETYPE", ("N_binop"));
             type = getNodeType(BINOP_LEFT(arg_node));
             break;
+        case N_fun:
+            DBUG_PRINT("GETNODETYPE", ("N_fun"));
+            type = FUN_RETTY(arg_node);
+            break;
+        case N_call:
+            DBUG_PRINT("GETNODETYPE", ("N_call"));
+            type = getNodeType(CALL_DECL(arg_node));
+            break;
         default:
             DBUG_PRINT("GETNODETYPE", ("default %d", NODE_TYPE(arg_node)));
             type = TY_unknown;

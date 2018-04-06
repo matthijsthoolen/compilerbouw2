@@ -50,7 +50,7 @@ node *DCCdoCodeClean(node *syntaxtree)
 
     TRAVpush(TR_dcc);
 
-    info *info;
+    info *info = NULL;
 
     syntaxtree = TRAVdo( syntaxtree, info);
 

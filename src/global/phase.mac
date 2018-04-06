@@ -110,6 +110,12 @@ PHASE( lds,
        "Late desugar",
        ALWAYS)
 
+SUBPHASE( DSOO,
+         "Optimize binops and monops",
+         DSOOOptimizeOps,
+         ALWAYS,
+         lds)
+
 SUBPHASE( DSGI,
           "Make global __init function",
           DSGIdoGlobalInit,

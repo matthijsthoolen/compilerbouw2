@@ -117,6 +117,12 @@
                 </travuser>
             </traversal>
 
+            <traversal id="DSOO" name="Desugar Optimize Ops" default="sons" include="optimize_ops.h">
+                <travuser>
+                    <node name="BinOp"/>
+                </travuser>
+            </traversal>
+
             <traversal id="GBC" name="Generate Byte Code" default="sons" include="gen_byte_code.h">
                 <travuser>
                     <node name="Program"/>
