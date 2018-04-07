@@ -126,13 +126,15 @@ node *CAvardef(node *arg_node, info *arg_info)
         VARDEF_ID(arg_node),
         VARDEF_TY(arg_node),
         (INFO_GLOBAL(arg_info) == TRUE) ? INFO_GLOBCONSTCOUNT(arg_info) : INFO_CONSTCOUNT(arg_info),
-        (INFO_GLOBAL(arg_info) == TRUE) ? 0 : 1
+        (INFO_GLOBAL(arg_info) == TRUE) ? 0 : 1,
+        (INFO_GLOBAL(arg_info) == TRUE) ? SYMBOLTABLE_VARCOUNT(INFO_GLOBSYMBOLTABLE(arg_info)) : SYMBOLTABLE_VARCOUNT(INFO_CURSYMBOLTABLE(arg_info))
     );
 
     VARDEF_SYMBOLTABLEENTRY(arg_node) = symbolTableEntry;
 
     if (INFO_GLOBAL(arg_info) == TRUE) {
         INFO_GLOBCONSTCOUNT(arg_info)++;
+        // DBUG_PRINT("CA", ("Added vardef %s to the global scope %d", VARDEF_ID(arg_node), SYMBOLTABLE_VARCOUNT(INFO_CURSYMBOLTABLE(arg_info))));
     } else {
         INFO_CONSTCOUNT(arg_info)++;
     }
@@ -189,7 +191,8 @@ node *CAfunparam(node *arg_node, info *arg_info)
         FUNPARAM_ID(arg_node),
         FUNPARAM_TY(arg_node),
         0,
-        1
+        1,
+        0
     );
 
     FUNPARAM_SYMBOLTABLEENTRY(arg_node) = symbolTableEntry;

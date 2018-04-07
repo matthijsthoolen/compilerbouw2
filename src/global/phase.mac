@@ -99,10 +99,10 @@ SUBPHASE( catc,
           con)
 
 SUBPHASE( ca,
-          "ContextAnalysis",
-          CAdoContextAnalysis,
-          ALWAYS,
-          con)
+        "ContextAnalysis",
+        CAdoContextAnalysis,
+        ALWAYS,
+        con)
 
 ENDPHASE( con)
 
@@ -111,10 +111,10 @@ PHASE( lds,
        ALWAYS)
 
 SUBPHASE( DSOO,
-         "Optimize binops and monops",
-         DSOOOptimizeOps,
-         ALWAYS,
-         lds)
+        "Optimize binops and monops",
+        DSOOOptimizeOps,
+        ALWAYS,
+        lds)
 
 SUBPHASE( DSGI,
           "Make global __init function",

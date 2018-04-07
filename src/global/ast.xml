@@ -72,6 +72,7 @@
                     <node name="VarDefList"/>
                     <node name="VarDef"/>
                     <node name="Var"/>
+                    <node name="Assign"/>
                 </travuser>
             </traversal>
 
@@ -315,6 +316,18 @@
                     </type>
                 </attribute>
                 <attribute name="Index">
+                    <description>The index of the constant</description>
+                    <type name="Int">
+                        <targets>
+                            <target mandatory="yes">
+                                <phases>
+                                    <phase from="Context Analysis"/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="VarIndex">
                     <description>The index of the var</description>
                     <type name="Int">
                         <targets>
@@ -519,6 +532,18 @@
                     <type name="String">
                         <targets>
                             <target mandatory="yes">
+                                <phases>
+                                    <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+                <attribute name="WasInit">
+                    <description></description>
+                    <type name="Bool">
+                        <targets>
+                            <target mandatory="no">
                                 <phases>
                                     <all/>
                                 </phases>
@@ -751,6 +776,19 @@
                     </targets>
                 </son>
             </sons>
+            <attributes>
+                <attribute name="SplitFrom">
+                    <type name="String">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
+            </attributes>
         </node>
 
         <node name="If">

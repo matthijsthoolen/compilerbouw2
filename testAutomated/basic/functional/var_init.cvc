@@ -3,6 +3,7 @@ extern void printNewlines(int num);
 
 int a = 1;
 int b = 10;
+float c;
 
 void foo() {
     int a = 3;

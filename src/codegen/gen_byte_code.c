@@ -13,6 +13,7 @@
 
 struct INFO {
     list* constants_list;
+    list* globals_list;
     int labels_if;
     int labels_while;
     int labels_dowhile;
@@ -30,6 +31,7 @@ typedef struct CONSTANT_LIST_ITEM {
 } listItem;
 
 #define INFO_CONSTANTSLIST(n) ((n)->constants_list)
+#define INFO_GLOBALSLIST(n) ((n)->globals_list)
 #define INFO_LABELS_IF(n) ((n)->labels_if)
 #define INFO_LABELS_WHILE(n) ((n)->labels_while)
 #define INFO_LABELS_DOWHILE(n) ((n)->labels_dowhile)
@@ -47,6 +49,7 @@ static info *MakeInfo()
     result = MEMmalloc(sizeof(info));
 
     INFO_CONSTANTSLIST(result)  = list_new();
+    INFO_GLOBALSLIST(result)   = list_new();
     INFO_LABELS_IF(result)      = 0;
     INFO_LABELS_WHILE(result)   = 0;
     INFO_LABELS_DOWHILE(result) = 0;
@@ -61,6 +64,7 @@ static info *FreeInfo(info *info)
     DBUG_ENTER("FreeInfo");
 
     list_free(INFO_CONSTANTSLIST(info));
+    list_free(INFO_GLOBALSLIST(info));
 
     info = MEMfree(info);
 
@@ -140,6 +144,22 @@ static void printConstants(info *arg_info)
         } else if (item->type == TY_float) {
             fprintf(outfile, ".const float %f\n", item->valFloat);
         }
+    }
+
+    DBUG_VOID_RETURN;
+}
+
+static void printGlobalVardefs(info *arg_info)
+{
+    DBUG_ENTER("printConstants");
+
+    list *current = INFO_GLOBALSLIST(arg_info);
+    listItem *item;
+
+    while((current = current->next)) {
+        item = current->value;
+
+        fprintf(outfile, ".global %s\n", get_type_name(item->type));
     }
 
     DBUG_VOID_RETURN;
@@ -270,6 +290,10 @@ node *GBCprogram(node *arg_node, info *arg_info)
             declarations = PROGRAM_NEXT(declarations);
         }
 
+        fprintf(outfile, "\n ; global vardefs\n");
+
+        printGlobalVardefs(arg_info);
+
         fprintf(outfile, "\n ; import functions:\n");
 
         declarations = arg_node;
@@ -398,6 +422,15 @@ node *GBCvardef(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCvardef");
 
+    if (INFO_GLOBAL(arg_info) == TRUE) {
+        listItem *item = MEMmalloc(sizeof(listItem));
+
+        item->index  = list_length(INFO_CONSTANTSLIST(arg_info));
+        item->type   = VARDEF_TY(arg_node);
+
+        list_reversepush(INFO_GLOBALSLIST(arg_info), item);
+    }
+
     // nothing to do here
     if (VARDEF_INIT(arg_node) == NULL) {
         DBUG_RETURN(arg_node);
@@ -426,10 +459,12 @@ node *GBCassign(node *arg_node, info *arg_info)
             symbolTableEntry = FUNPARAM_SYMBOLTABLEENTRY(VAR_DECL(ASSIGN_RIGHT(arg_node)));
         }
 
-        if (SYMBOLTABLEENTRY_INDEX(symbolTableEntry) < 4) {
-            fprintf(outfile, "    %sload_%d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
+        if (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) != 0 && SYMBOLTABLEENTRY_INDEX(symbolTableEntry) < 4) {
+            fprintf(outfile, "    %sload_%d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry));
+        } else if (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) == 0) {
+            fprintf(outfile, "    %sloadg %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry));
         } else {
-            fprintf(outfile, "    %sload %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
+            fprintf(outfile, "    %sload %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry));
         }
     } else {
         TRAVopt(ASSIGN_RIGHT(arg_node), arg_info);
@@ -447,7 +482,7 @@ node *GBCassign(node *arg_node, info *arg_info)
 
     // DBUG_PRINT("GBCassign", ("Node type = %s", get_type_name(NODE_TYPE(ASSIGN_RIGHT(arg_node)))));
 
-    fprintf(outfile, "    %sstore%s %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), global, SYMBOLTABLEENTRY_INDEX(symbolTableEntry));
+    fprintf(outfile, "    %sstore%s %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), global, SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry));
 
     DBUG_RETURN(arg_node);
 }
@@ -456,10 +491,28 @@ node *GBCvar(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCvar");
 
-    node *symbolTableEntry = VARDEF_SYMBOLTABLEENTRY(VAR_DECL(arg_node));
+    node *symbolTableEntry;
+
+    if (NODE_TYPE(VAR_DECL(arg_node)) == N_vardef) {
+        symbolTableEntry = VARDEF_SYMBOLTABLEENTRY(VAR_DECL(arg_node));
+    } else if (NODE_TYPE(VAR_DECL(arg_node)) == N_funparam) {
+        symbolTableEntry = FUNPARAM_SYMBOLTABLEENTRY(VAR_DECL(arg_node));
+    }
+
+    if (symbolTableEntry == NULL) {
+        DBUG_PRINT("GBC", ("Point1ad"));
+    } else {
+        DBUG_PRINT("GBC", ("Point1asd %d", symbolTableEntry));
+    }
+
+    DBUG_PRINT("GBC", ("Point1"));
 
     char *scopeStr = (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) == 0) ? "g" : "c";
-    int index = SYMBOLTABLEENTRY_INDEX(symbolTableEntry);;
+    DBUG_PRINT("GBC", ("Point1b"));
+
+    int index = SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry);
+
+    DBUG_PRINT("GBC", ("Point2"));
 
     DBUG_PRINT("GBC", ("%s", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry))));
 

@@ -7,6 +7,7 @@
 #include "str.h"
 #include "ctinfo.h"
 #include "list.h"
+#include "copy.h"
 
 #include "vardef_split.h"
 
@@ -110,6 +111,7 @@ node *DSVSvardef(node *arg_node, info *arg_info)
     DBUG_ENTER("DSVSvardef");
 
     if (VARDEF_PREFIX(arg_node) == global_prefix_var) {
+        VARDEF_WASINIT(arg_node) = FALSE;
         DBUG_RETURN(arg_node);
     }
 
@@ -124,8 +126,11 @@ node *DSVSvardef(node *arg_node, info *arg_info)
                 VARDEF_INIT(arg_node)
              );
 
+    ASSIGN_SPLITFROM(assign) = VARDEF_ID(arg_node);
+
     // Remove the initial value
     VARDEF_INIT(arg_node) = NULL;
+    VARDEF_WASINIT(arg_node) = TRUE;
 
     list_push(INFO_ASSIGNS(arg_info), assign);
 

@@ -16,6 +16,8 @@ node *createNewSymbolTable(node* arg_node)
     DBUG_ENTER("createNewSymbolTable");
 
     node *symbolTable = TBmakeSymboltable(NULL);
+    SYMBOLTABLE_VARCOUNT(symbolTable) = 0;
+    SYMBOLTABLE_PARAMCOUNT(symbolTable) = 0;
 
     DBUG_RETURN(symbolTable);
 }
@@ -28,7 +30,7 @@ node *createNewSymbolTable(node* arg_node)
  * @param  node_type   [description]
  * @return             [description]
  */
-node *addToSymboltable(node* symbolTable, node* source_node, char* name, type node_type, int index, int lvl)
+node *addToSymboltable(node* symbolTable, node* source_node, char* name, type node_type, int index, int lvl, int svc)
 {
     DBUG_ENTER("addToSymboltable");
     DBUG_PRINT("HELP", ("Add a row to the symbol table"));
@@ -44,6 +46,7 @@ node *addToSymboltable(node* symbolTable, node* source_node, char* name, type no
 
     SYMBOLTABLEENTRY_INDEX(row) = index;
     SYMBOLTABLEENTRY_NESTINGLVL(row) = lvl;
+    SYMBOLTABLEENTRY_VARINDEX(row) = svc;
 
     DBUG_PRINT("SymbolTable", ("Point 2"));
 
