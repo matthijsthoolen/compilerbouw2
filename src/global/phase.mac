@@ -54,6 +54,12 @@ SUBPHASE(dse,
         ALWAYS,
         ds)
 
+SUBPHASE(dsfw,
+        "Convert for to while",
+        DSFWforToWhile,
+        ALWAYS,
+        ds)
+
 SUBPHASE(arr,
         "Desugar array inits",
         DSEdoArrayInit,
