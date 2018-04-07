@@ -9,6 +9,7 @@
 #include "dbug.h"
 #include "str.h"
 #include "free_node.h"
+#include "node_helper.h"
 
 struct INFO {
 };
@@ -64,6 +65,49 @@ node *DSOObinop(node *arg_node, info *arg_info)
 node *DSOOcast(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("DSOOcast");
+
+    // Try to find (bool) cast which we can change to a ternary operation
+    if (getNodeType(CAST_EXPR(arg_node)) == TY_bool) {
+        node *ternOp;
+
+        if (CAST_TY(arg_node) == TY_int || CAST_TY(arg_node) == TY_float) {
+            DBUG_PRINT("CAST", ("Changed cast from bool to int/float into a ternary operation."));
+            ternOp = TBmakeTernop(
+                CAST_EXPR(arg_node),
+                (CAST_TY(arg_node) == TY_int) ? TBmakeInt(1) : TBmakeFloat(1.0),
+                (CAST_TY(arg_node) == TY_int) ? TBmakeInt(0) : TBmakeFloat(1.0)
+            );
+            TERNOP_TYPE(ternOp) = CAST_TY(arg_node);
+
+            CAST_EXPR(arg_node) = NULL;
+            arg_node = FREEcast(arg_node, arg_info);
+            arg_node = ternOp;
+        }
+
+        DBUG_RETURN(arg_node);
+    }
+
+    // Try to find (bool) cast which we can change to a ternary operation
+    if (CAST_TY(arg_node) == TY_bool) {
+        DBUG_PRINT("CAST", ("Found a bool cast on line %d", NODE_LINE(arg_node)));
+
+        type type = getNodeType(CAST_EXPR(arg_node));
+
+        if (type == TY_int || type == TY_float) {
+            node* binOp = TBmakeBinop(
+                BO_ne,
+                CAST_EXPR(arg_node),
+                (type == TY_int) ? TBmakeInt(0) : TBmakeFloat(0.0)
+            );
+
+            node *ternOp = TBmakeTernop(binOp, TBmakeBool(TRUE), TBmakeBool(FALSE));
+            TERNOP_TYPE(ternOp) = TY_bool;
+
+            CAST_EXPR(arg_node) = NULL;
+            arg_node = FREEcast(arg_node, arg_info);
+            arg_node = ternOp;
+        }
+    }
 
     DBUG_RETURN(arg_node);
 }
