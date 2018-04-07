@@ -192,7 +192,7 @@ node *CAfunparam(node *arg_node, info *arg_info)
         FUNPARAM_TY(arg_node),
         INFO_CONSTCOUNT(arg_info),
         1,
-        SYMBOLTABLE_VARCOUNT(INFO_CURSYMBOLTABLE(arg_info))
+        SYMBOLTABLE_PARAMCOUNT(INFO_CURSYMBOLTABLE(arg_info))
     );
 
     INFO_CONSTCOUNT(arg_info)++;
