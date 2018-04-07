@@ -37,6 +37,9 @@ node *DSOObinop(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("DSOObinop");
 
+    BINOP_LEFT(arg_node)  = TRAVdo(BINOP_LEFT(arg_node), arg_info);
+    BINOP_RIGHT(arg_node) = TRAVdo(BINOP_RIGHT(arg_node), arg_info);
+
     if (BINOP_OP(arg_node) != BO_or && BINOP_OP(arg_node) != BO_and) {
         DBUG_RETURN(arg_node);
     }
@@ -65,6 +68,8 @@ node *DSOObinop(node *arg_node, info *arg_info)
 node *DSOOcast(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("DSOOcast");
+
+    CAST_EXPR(arg_node) = TRAVdo(CAST_EXPR(arg_node), arg_info);
 
     // Try to find (bool) cast which we can change to a ternary operation
     if (getNodeType(CAST_EXPR(arg_node)) == TY_bool) {

@@ -4,6 +4,7 @@
 
 extern node *GBCprogram(node *arg_node, info *arg_info);
 extern node *GBCfun(node *arg_node, info *arg_info);
+extern node *GBCreturn(node *arg_node, info *arg_info);
 extern node *GBCcall(node *arg_node, info *arg_info);
 extern node *GBCvardeflist(node *arg_node, info *arg_info);
 extern node *GBCvardef(node *arg_node, info *arg_info);

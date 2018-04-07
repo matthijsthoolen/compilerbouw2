@@ -47,6 +47,8 @@
 
             <traversal id="DSFW" name="Convert for to while" default="sons" include="for_to_while.h">
                 <travuser>
+                    <node name="Fun"/>
+                    <node name="Stmts"/>
                     <node name="For"/>
                 </travuser>
             </traversal>
@@ -136,6 +138,7 @@
                 <travuser>
                     <node name="Program"/>
                     <node name="Fun"/>
+                    <node name="Return"/>
                     <node name="Call"/>
                     <node name="VarDefList"/>
                     <node name="VarDef"/>
@@ -170,6 +173,7 @@
                 <node name="Call"/>
                 <node name="Cast"/>
                 <node name="Array"/>
+                <node name="TernOp"/>
             </target>
         </nodeset>
         <nodeset name="Stmt">

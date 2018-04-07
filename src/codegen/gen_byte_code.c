@@ -265,23 +265,24 @@ node *GBCfun(node *arg_node, info *arg_info)
 
     TRAVopt(FUN_BODY(arg_node), arg_info);
 
-    // End of function
-    switch (FUN_RETTY(arg_node)) {
-        case TY_void:
-            fprintf(outfile, "    return\n");
-            break;
-        case TY_float:
-            fprintf(outfile, "    freturn\n");
-            break;
-        case TY_int:
-            fprintf(outfile, "    ireturn\n");
-            break;
-        case TY_bool:
-            fprintf(outfile, "    breturn\n");
-            break;
-        default:
-            fprintf(outfile, "    return\n");
+    if (FUN_RETTY(arg_node) == TY_void) {
+        fprintf(outfile, "    return\n");
     }
+
+    DBUG_RETURN(arg_node);
+}
+
+node *GBCreturn(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("GBCreturn");
+
+    if (RETURN_EXPR(arg_node) == NULL) {
+        fprintf(outfile, "    return\n");
+        DBUG_RETURN(arg_node);
+    }
+
+    TRAVdo(RETURN_EXPR(arg_node), arg_info);
+    fprintf(outfile, "    %sreturn\n", getShortNodeType(RETURN_EXPR(arg_node)));
 
     DBUG_RETURN(arg_node);
 }

@@ -246,7 +246,7 @@ stmt_for: FOR BRACKET_L INT var LET expr COMMA expr COMMA expr BRACKET_R block
                 }
                 | FOR BRACKET_L INT var LET expr COMMA expr BRACKET_R block
                 {
-                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, NULL, $10);
+                    $$ = TBmakeFor(TBmakeAssign($4, $6), $8, TBmakeInt(1), $10);
                 };
 
 expr: expr12 { $$ = $1; };

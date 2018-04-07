@@ -231,8 +231,10 @@ node *CAVvar(node *arg_node, info *arg_info)
     }
 
     if (!var_decl) {
-        CTIerror("Var '%s' is not defined in local or global scope.",
-                 VAR_NAME(arg_node));
+        CTIerror(
+            "Var '%s' on line is not defined in local or global scope.",
+            VAR_NAME(arg_node)
+        );
         DBUG_RETURN(arg_node);
     }
 
