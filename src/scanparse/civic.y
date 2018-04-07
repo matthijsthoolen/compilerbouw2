@@ -250,22 +250,22 @@ stmt_for: FOR BRACKET_L INT var LET expr COMMA expr COMMA expr BRACKET_R block
                 };
 
 expr: expr12 { $$ = $1; };
-expr12: expr12 binop12 expr11           { $$ = TBmakeBinop($2, $1, $3); }
+expr12: expr12 binop12 expr11           { $$ = TBmakeBinop(TY_unknown, $2, $1, $3); }
       | expr11                          { $$ = $1; }
       ;
-expr11: expr11 binop11 expr7            { $$ = TBmakeBinop($2, $1, $3); }
+expr11: expr11 binop11 expr7            { $$ = TBmakeBinop(TY_unknown, $2, $1, $3); }
      | expr7                            { $$ = $1; }
      ;
-expr7: expr7 binop7 expr6               { $$ = TBmakeBinop($2, $1, $3); }
+expr7: expr7 binop7 expr6               { $$ = TBmakeBinop(TY_unknown, $2, $1, $3); }
      | expr6                            { $$ = $1; }
      ;
-expr6: expr6 binop6 expr4               { $$ = TBmakeBinop($2, $1, $3); }
+expr6: expr6 binop6 expr4               { $$ = TBmakeBinop(TY_unknown, $2, $1, $3); }
      | expr4                            { $$ = $1; }
      ;
-expr4: expr4 binop4 expr3               { $$ = TBmakeBinop($2, $1, $3); }
+expr4: expr4 binop4 expr3               { $$ = TBmakeBinop(TY_unknown, $2, $1, $3); }
      | expr3                            { $$ = $1; }
      ;
-expr3: expr3 binop3 expr2               { $$ = TBmakeBinop($2, $1, $3); }
+expr3: expr3 binop3 expr2               { $$ = TBmakeBinop(TY_unknown, $2, $1, $3); }
      | expr2                            { $$ = $1; }
      ;
 expr2: BRACKET_L ty BRACKET_R expr2     { $$ = TBmakeCast($2, $4); }

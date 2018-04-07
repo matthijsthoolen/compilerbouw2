@@ -326,12 +326,14 @@ node *CATCbinop(node *arg_node, info *arg_info)
                 INFO_TYPE(arg_info) = TY_unknown;
             } else {
                 INFO_TYPE(arg_info) = TY_bool;
+                BINOP_TYPE(arg_node) = TY_bool;
             }
             break;
         case BO_add:
         case BO_mul:
             if (left == right) {
                 INFO_TYPE(arg_info) = left;
+                BINOP_TYPE(arg_node) = left;
             } else {
                 CTIerror(
                     "Row %d: incorrect binary operator.",
@@ -349,6 +351,7 @@ node *CATCbinop(node *arg_node, info *arg_info)
                 INFO_TYPE(arg_info) = TY_unknown;
             } else {
                 INFO_TYPE(arg_info) = TY_int;
+                BINOP_TYPE(arg_node) = left;
             }
             break;
         case BO_sub:
@@ -361,12 +364,14 @@ node *CATCbinop(node *arg_node, info *arg_info)
                 INFO_TYPE(arg_info) = TY_unknown;
             } else {
                 INFO_TYPE(arg_info) = left;
+                BINOP_TYPE(arg_node) = left;
             }
             break;
         case BO_eq:
         case BO_ne:
             if (left == right) {
                 INFO_TYPE(arg_info) = TY_bool;
+                BINOP_TYPE(arg_node) = TY_bool;
             } else {
                 CTIerror(
                     "Row %d: incorrect binary operator. Both sides must be of the same type to be compared.",
@@ -379,6 +384,7 @@ node *CATCbinop(node *arg_node, info *arg_info)
         case BO_or:
             if (left == TY_bool && right == TY_bool) {
                 INFO_TYPE(arg_info) = TY_bool;
+                BINOP_TYPE(arg_node) = TY_bool;
             } else {
                 CTIerror(
                     "Row %d: incorrect binary operator. Both sides must be boolean expressions",

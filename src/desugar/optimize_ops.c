@@ -100,6 +100,7 @@ node *DSOOcast(node *arg_node, info *arg_info)
 
         if (type == TY_int || type == TY_float) {
             node* binOp = TBmakeBinop(
+                TY_bool,
                 BO_ne,
                 CAST_EXPR(arg_node),
                 (type == TY_int) ? TBmakeInt(0) : TBmakeFloat(0.0)

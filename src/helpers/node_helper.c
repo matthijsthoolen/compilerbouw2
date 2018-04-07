@@ -21,6 +21,8 @@ char *getShortType(type type)
 
     char *strType = "";
 
+    DBUG_PRINT("GETNODETYPE", ("getShortType for %d", type));
+
     switch (type) {
         case TY_bool:
             strType = "b";
@@ -74,11 +76,7 @@ type getNodeType(node *arg_node)
             break;
         case N_binop:
             DBUG_PRINT("GETNODETYPE", ("N_binop"));
-            if (BINOP_OP(arg_node) == BO_ne || BINOP_OP(arg_node) == BO_ge || BINOP_OP(arg_node) == BO_gt) {
-                type = TY_bool;
-            } else {
-                type = getNodeType(BINOP_LEFT(arg_node));
-            }
+            type = BINOP_TYPE(arg_node);
             break;
         case N_fun:
             DBUG_PRINT("GETNODETYPE", ("N_fun"));

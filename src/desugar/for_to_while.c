@@ -109,9 +109,9 @@ node *DSFWfor(node *arg_node, info *arg_info)
     DBUG_PRINT("DSEfor", ("Point 4"));
 
     node *cond  = TBmakeTernop(
-        TBmakeBinop(BO_gt, COPYdoCopy(step), TBmakeInt(0)),
-        TBmakeBinop(BO_lt, COPYdoCopy(whileLoopVar), COPYdoCopy(upper)),
-        TBmakeBinop(BO_gt, COPYdoCopy(whileLoopVar), COPYdoCopy(upper))
+        TBmakeBinop(TY_bool, BO_gt, COPYdoCopy(step), TBmakeInt(0)),
+        TBmakeBinop(TY_bool, BO_lt, COPYdoCopy(whileLoopVar), COPYdoCopy(upper)),
+        TBmakeBinop(TY_bool, BO_gt, COPYdoCopy(whileLoopVar), COPYdoCopy(upper))
     );
     TERNOP_TYPE(cond) = TY_bool;
 
@@ -120,7 +120,7 @@ node *DSFWfor(node *arg_node, info *arg_info)
     node *block = TBmakeStmts(
         TBmakeAssign(
             COPYdoCopy(whileLoopVar),
-            TBmakeBinop(BO_add, COPYdoCopy(whileLoopVar), COPYdoCopy(step))
+            TBmakeBinop(TY_bool, BO_add, COPYdoCopy(whileLoopVar), COPYdoCopy(step))
         ),
         FOR_BLOCK(arg_node)
     );

@@ -1143,7 +1143,7 @@
                     <description>right operand expression</description>
                     <targets>
                         <target mandatory="yes">
-                            <set name="Expr"/>
+                            <type name="Type" />
                             <phases>
                                 <all/>
                             </phases>
@@ -1152,7 +1152,17 @@
                 </son>
             </sons>
             <attributes>
-                <description>operator type</description>
+                <attribute name="Type">
+                    <type name="Type">
+                        <targets>
+                            <target mandatory="yes">
+                                <phases>
+                                    <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
                 <attribute name="Op">
                     <type name="BinOp">
                         <targets>
