@@ -9,6 +9,7 @@ extern node *GBCvardeflist(node *arg_node, info *arg_info);
 extern node *GBCvardef(node *arg_node, info *arg_info);
 extern node *GBCassign(node *arg_node, info *arg_info);
 extern node *GBCvar(node *arg_node, info *arg_info);
+extern node *GBCcast(node *arg_node, info *arg_info);
 extern node *GBCmonop(node *arg_node, info *arg_info);
 extern node *GBCbinop(node *arg_node, info *arg_info);
 extern node *GBCternop(node *arg_node, info *arg_info);

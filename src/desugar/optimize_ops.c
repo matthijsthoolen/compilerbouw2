@@ -61,6 +61,13 @@ node *DSOObinop(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
+node *DSOOcast(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("DSOOcast");
+
+    DBUG_RETURN(arg_node);
+}
+
 /*
  * Traversal start function
  */

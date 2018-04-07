@@ -121,6 +121,7 @@
             <traversal id="DSOO" name="Desugar Optimize Ops" default="sons" include="optimize_ops.h">
                 <travuser>
                     <node name="BinOp"/>
+                    <node name="Cast"/>
                 </travuser>
             </traversal>
 
@@ -132,6 +133,7 @@
                     <node name="VarDefList"/>
                     <node name="VarDef"/>
                     <node name="Var"/>
+                    <node name="Cast"/>
                     <node name="Assign"/>
                     <node name="BinOp"/>
                     <node name="MonOp"/>
