@@ -291,6 +291,8 @@ node *GBCfunparam(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCfunparam");
 
+    
+
     DBUG_RETURN(arg_node);
 }
 

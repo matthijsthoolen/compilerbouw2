@@ -1,73 +1,45 @@
 
-; function 'is_prime' with 1 parameters and 1 local vars
-is_prime:
-    esr 1
-    iloadc 0
-    istore 0
-0_while:
+; function 'gcd' with 2 parameters and 0 local vars
+gcd:
     iload_0
-    iload_0
-    imul
-    iload_0
-    ile
-    branch_f 0_while_end
-    iload_0
-    iload_0
-    rem
     iloadc_0
     ieq
     branch_f 0_end
-    bloadc_f
-    breturn
-0_end:
     iload_0
-    iloadc_1
-    iadd
-    istore 0
-    jump 0_while
-0_while_end:
-    bloadc_t
-    breturn
+    ireturn
+0_end:
+    isrg
+    iload_0
+    iload_0
+    iload_0
+    irem
+    jsr 2 gcd
+    ireturn
 
 ; function 'main' with 0 parameters and 2 local vars
 main:
     esr 2
-    iloadc 1
+    iloadc 0
     istore 0
     iloadc 1
     istore 1
-1_while:
-    iload_0
-    iloadc_0
-    igt
-    branch_f 1_while_end
     isrg
-    iload_1
-    jsr 1 is_prime
-    branch_f 1_end
     iload_0
-    iloadc_1
-    isub
+    iload_1
+    jsr 2 gcd
     istore 0
     isrg
-    iload_1
+    iload_0
     jsre 0
     isrg
     iloadc_1
     jsre 5
-1_end:
-    iload_1
-    iloadc_1
-    iadd
-    istore 1
-    jump 1_while
-1_while_end:
     iloadc_0
     ireturn
 
  ; constants: 
-.const int 2
-.const int 100
+.const int 560
+.const int 320
 
  ; export functions:
 .exportfun "main" int main

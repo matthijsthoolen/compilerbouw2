@@ -127,7 +127,7 @@ node *CAvardef(node *arg_node, info *arg_info)
         VARDEF_TY(arg_node),
         (INFO_GLOBAL(arg_info) == TRUE) ? INFO_GLOBCONSTCOUNT(arg_info) : INFO_CONSTCOUNT(arg_info),
         (INFO_GLOBAL(arg_info) == TRUE) ? 0 : 1,
-        (INFO_GLOBAL(arg_info) == TRUE) ? SYMBOLTABLE_VARCOUNT(INFO_GLOBSYMBOLTABLE(arg_info)) : SYMBOLTABLE_VARCOUNT(INFO_CURSYMBOLTABLE(arg_info))
+        (INFO_GLOBAL(arg_info) == TRUE) ? SYMBOLTABLE_VARCOUNT(INFO_GLOBSYMBOLTABLE(arg_info)) : SYMBOLTABLE_VARCOUNT(INFO_CURSYMBOLTABLE(arg_info)) + SYMBOLTABLE_PARAMCOUNT(INFO_CURSYMBOLTABLE(arg_info))
     );
 
     VARDEF_SYMBOLTABLEENTRY(arg_node) = symbolTableEntry;
@@ -190,10 +190,12 @@ node *CAfunparam(node *arg_node, info *arg_info)
         arg_node,
         FUNPARAM_ID(arg_node),
         FUNPARAM_TY(arg_node),
-        0,
+        INFO_CONSTCOUNT(arg_info),
         1,
-        0
+        SYMBOLTABLE_VARCOUNT(INFO_CURSYMBOLTABLE(arg_info))
     );
+
+    INFO_CONSTCOUNT(arg_info)++;
 
     FUNPARAM_SYMBOLTABLEENTRY(arg_node) = symbolTableEntry;
 

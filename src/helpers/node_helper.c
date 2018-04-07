@@ -82,6 +82,10 @@ type getNodeType(node *arg_node)
             DBUG_PRINT("GETNODETYPE", ("N_fun"));
             type = FUN_RETTY(arg_node);
             break;
+        case N_funparam:
+            DBUG_PRINT("GETNODETYPE", ("N_funparam"));
+            type = FUNPARAM_TY(arg_node);
+            break;
         case N_call:
             DBUG_PRINT("GETNODETYPE", ("N_call"));
             type = getNodeType(CALL_DECL(arg_node));
