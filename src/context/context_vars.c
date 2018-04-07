@@ -204,6 +204,11 @@ node *CAVvar(node *arg_node, info *arg_info)
 
     DBUG_PRINT("CAV", ("Processing var '%s'", VAR_NAME(arg_node)));
 
+    if (VAR_DECL(arg_node) != NULL) {
+        DBUG_PRINT("CAV", ("Skipping because this var already has a DECL defined"));
+        DBUG_RETURN(arg_node);
+    }
+
     var_decl = map_get(INFO_LOCAL(arg_info), VAR_NAME(arg_node));
 
     DBUG_PRINT("CAV", ("SPLITFROM = %s", INFO_SPLIT_FROM(arg_info)));
@@ -219,26 +224,6 @@ node *CAVvar(node *arg_node, info *arg_info)
         DBUG_PRINT("CAV", ("row decl %d and row init %d", NODE_LINE(var_decl), NODE_LINE(arg_node)));
         var_decl = FALSE;
     }
-
-    // if (INFO_SPLIT_FROM(arg_info) && var_decl) {
-    //     var_decl2 = map_get(INFO_LOCAL(arg_info), INFO_SPLIT_FROM(arg_info));
-    //     int i = SYMBOLTABLEENTRY_VARINDEX(VARDEF_SYMBOLTABLEENTRY(var_decl));
-    //     int j = SYMBOLTABLEENTRY_VARINDEX(VARDEF_SYMBOLTABLEENTRY(var_decl2));
-    //
-    //     DBUG_PRINT("CAV", ("Wasnt declared yet. %d < %d", i, j));
-    //
-    //     if (i > j) {
-    //         var_decl = FALSE;
-    //         DBUG_PRINT("CAV", ("AGAIN! declared yet. %d < %d", i, j));
-    //     }
-    // }
-
-    // if (var_decl && i != NULL && j != NULL && i < j) {
-    //     DBUG_PRINT("CAV", ("Wasnt declared yet."));
-    //     var_decl = FALSE;
-    // }
-
-    DBUG_PRINT("CAV", ("%d", NODE_TYPE(var_decl)));
 
     if (!var_decl) {
         DBUG_PRINT("CAV", ("var '%s' not defined local, checking global", VAR_NAME(arg_node)));

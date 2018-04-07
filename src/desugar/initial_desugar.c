@@ -19,6 +19,11 @@ struct INFO {
     int varCounter;
 };
 
+typedef struct LIST_ITEM {
+    char *name;
+    node *decl;
+} listItem;
+
 #define INFO_CHECKEDFUNCTIONS(n)    ((n)->checkedFunctions)
 #define INFO_NESTLVL(n)             ((n)->nestLevel)
 #define INFO_VARDEFS(n)             ((n)->vardefs)
@@ -163,8 +168,18 @@ node *DSEfor(node *arg_node, info *arg_info)
                     TBmakeInt(0)
               );
 
+    VAR_DECL(ASSIGN_LEFT(for_assign)) = new_vardef;
+
+    listItem *item = MEMmalloc(sizeof(listItem));
+    item->name     = STRcpy(VAR_NAME(ASSIGN_LEFT(for_assign)));
+    item->decl     = new_vardef;
+
     // Add the new name and old name to the queue for changing the names in a later stage
-    map_push(INFO_QUEUE(arg_info), old_name, STRcpy(VAR_NAME(ASSIGN_LEFT(for_assign))));
+    map_push(
+        INFO_QUEUE(arg_info),
+        old_name,
+        item
+    );
 
     FOR_BLOCK(arg_node) = TRAVopt(FOR_BLOCK(arg_node), arg_info);
 
@@ -178,7 +193,7 @@ node *DSEfor(node *arg_node, info *arg_info)
 node *DSEvar(node *arg_node, info *arg_info)
 {
     char *name;
-    char *new_name;
+    listItem *item;
 
     DBUG_ENTER("DSEvar");
 
@@ -186,8 +201,9 @@ node *DSEvar(node *arg_node, info *arg_info)
     if (INFO_NESTLVL(arg_info) > 0) {
         name = VAR_NAME(arg_node);
 
-        if ((new_name = map_get(INFO_QUEUE(arg_info), name)) != NULL) {
-            VAR_NAME(arg_node) = new_name;
+        if ((item = map_get(INFO_QUEUE(arg_info), name)) != NULL) {
+            VAR_NAME(arg_node) = item->name;
+            VAR_DECL(arg_node) = item->decl;
         }
     }
 
