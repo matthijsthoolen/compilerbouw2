@@ -1143,7 +1143,7 @@
                     <description>right operand expression</description>
                     <targets>
                         <target mandatory="yes">
-                            <type name="Type" />
+                            <set name="Expr" />
                             <phases>
                                 <all/>
                             </phases>

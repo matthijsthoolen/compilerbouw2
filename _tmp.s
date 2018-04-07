@@ -15,7 +15,7 @@ is_prime:
     iload_0
     rem
     iloadc_0
-    eq
+    ieq
     branch_f 0_end
     bloadc_f
     breturn
