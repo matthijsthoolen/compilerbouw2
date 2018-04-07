@@ -53,7 +53,6 @@
                 </travuser>
             </traversal>
 
-
             <traversal id="CA" name="Context Analysis" default="sons" include="context_analysis.h">
                 <travuser>
                     <node name="Program"/>
@@ -103,6 +102,7 @@
                     <node name="Bool"/>
                     <node name="Call"/>
                     <node name="Cast"/>
+                    <node name="While"/>
                 </travuser>
             </traversal>
 
@@ -1213,7 +1213,7 @@
                             <target mandatory="no">
                                 <any/>
                                 <phases>
-                                    <phase from="Late desugar" />
+                                    <phase from="Late desugar"/>
                                 </phases>
                             </target>
                         </targets>

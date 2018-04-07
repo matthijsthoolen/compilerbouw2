@@ -14,6 +14,7 @@
 #include "memory.h"
 #include "dbug.h"
 #include "str.h"
+#include "node_helper.h"
 
 struct INFO {
     type returnType;
@@ -164,7 +165,7 @@ node *CATCwhile(node *arg_node, info *arg_info)
 
     WHILE_COND(arg_node) = TRAVdo(WHILE_COND(arg_node), arg_info);
 
-    if (INFO_TYPE(arg_info) != TY_bool) {
+    if (getNodeType(WHILE_COND(arg_node)) != TY_bool) {
         CTIerror(
             "Row %d: the while condition must return a boolean to succeed",
             NODE_LINE(WHILE_COND(arg_node))

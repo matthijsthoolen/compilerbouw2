@@ -74,7 +74,11 @@ type getNodeType(node *arg_node)
             break;
         case N_binop:
             DBUG_PRINT("GETNODETYPE", ("N_binop"));
-            type = getNodeType(BINOP_LEFT(arg_node));
+            if (BINOP_OP(arg_node) == BO_ne || BINOP_OP(arg_node) == BO_ge || BINOP_OP(arg_node) == BO_gt) {
+                type = TY_bool;
+            } else {
+                type = getNodeType(BINOP_LEFT(arg_node));
+            }
             break;
         case N_fun:
             DBUG_PRINT("GETNODETYPE", ("N_fun"));
@@ -87,6 +91,14 @@ type getNodeType(node *arg_node)
         case N_cast:
             DBUG_PRINT("GETNODETYPE", ("N_cast"));
             type = CAST_TY(arg_node);
+            break;
+        case N_ternop:
+            DBUG_PRINT("GETNODETYPE", ("N_ternop"));
+            type = TERNOP_TYPE(arg_node);
+            break;
+        case N_return:
+            DBUG_PRINT("GETNODETYPE", ("N_return"));
+            type = RETURN_TY(arg_node);
             break;
         default:
             DBUG_PRINT("GETNODETYPE", ("default %d", NODE_TYPE(arg_node)));
