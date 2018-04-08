@@ -48,6 +48,7 @@
             <traversal id="DSFW" name="Convert for to while" default="sons" include="for_to_while.h">
                 <travuser>
                     <node name="Fun"/>
+                    <node name="InnerBlock"/>
                     <node name="Stmts"/>
                     <node name="For"/>
                 </travuser>

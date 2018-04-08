@@ -17,10 +17,12 @@
 struct INFO {
     node *curFun;
     node *curStmt;
+    node *prevStmt;
 };
 
 #define INFO_CURFUN(n)             ((n)->curFun)
 #define INFO_CURSTMT(n)            ((n)->curStmt)
+#define INFO_PREVSTMT(n)           ((n)->prevStmt)
 
 static info *MakeInfo()
 {
@@ -31,6 +33,8 @@ static info *MakeInfo()
     result = MEMmalloc(sizeof(info));
 
     INFO_CURFUN(result) = NULL;
+    INFO_PREVSTMT(result) = NULL;
+    INFO_CURSTMT(result) = NULL;
 
     DBUG_RETURN(result);
 }
@@ -58,10 +62,24 @@ node *DSFWfun(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
+node *DSFWinnerblock(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("DSFWinnerblock");
+
+    TRAVopt(INNERBLOCK_VARS(arg_node), arg_info);
+
+    INFO_CURSTMT(arg_info) = INNERBLOCK_STMTS(arg_node);
+
+    TRAVopt(INNERBLOCK_STMTS(arg_node), arg_info);
+
+    DBUG_RETURN(arg_node);
+}
+
 node *DSFWstmts(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("DSFWstmts");
 
+    INFO_PREVSTMT(arg_info) = INFO_CURSTMT(arg_info);
     INFO_CURSTMT(arg_info) = arg_node;
     TRAVdo(STMTS_STMT(arg_node), arg_info);
     TRAVopt(STMTS_NEXT(arg_node), arg_info);
@@ -82,15 +100,20 @@ node *DSFWfor(node *arg_node, info *arg_info)
 
     DBUG_PRINT("DSEfor", ("Point 2"));
 
+    STMTS_NEXT(INFO_PREVSTMT(arg_info)) = TBmakeStmts(
+        assign,
+        STMTS_NEXT(INFO_PREVSTMT(arg_info))
+    );
+
     node *step       = TBmakeVar(STRcat(VAR_NAME(whileLoopVar), "_step"), NULL);
     NODE_LINE(step)  = NODE_LINE(arg_node);
     NODE_COL(step)   = NODE_COL(arg_node);
     node *stepVardef = TBmakeVardef(0, TY_int, VAR_NAME(step), NULL, NULL, TBmakeInt(0));
     VAR_DECL(step)   = stepVardef;
-    INNERBLOCK_VARS(innerblock)        = TBmakeVardeflist(stepVardef, INNERBLOCK_VARS(innerblock));
-    STMTS_NEXT(INFO_CURSTMT(arg_info)) = TBmakeStmts(
+    INNERBLOCK_VARS(innerblock)         = TBmakeVardeflist(stepVardef, INNERBLOCK_VARS(innerblock));
+    STMTS_NEXT(INFO_PREVSTMT(arg_info)) = TBmakeStmts(
         TBmakeAssign(COPYdoCopy(step), COPYdoCopy(FOR_STEP(arg_node))),
-        STMTS_NEXT(INFO_CURSTMT(arg_info))
+        STMTS_NEXT(INFO_PREVSTMT(arg_info))
     );
 
     DBUG_PRINT("DSEfor", ("Point 3"));
@@ -101,9 +124,9 @@ node *DSFWfor(node *arg_node, info *arg_info)
     node *upperVardef = TBmakeVardef(0, TY_int, VAR_NAME(upper), NULL, NULL, TBmakeInt(0));
     VAR_DECL(upper)   = upperVardef;
     INNERBLOCK_VARS(innerblock) = TBmakeVardeflist(upperVardef, INNERBLOCK_VARS(innerblock));
-    STMTS_NEXT(INFO_CURSTMT(arg_info)) = TBmakeStmts(
+    STMTS_NEXT(INFO_PREVSTMT(arg_info)) = TBmakeStmts(
         TBmakeAssign(COPYdoCopy(upper), COPYdoCopy(FOR_UPPER(arg_node))),
-        STMTS_NEXT(INFO_CURSTMT(arg_info))
+        STMTS_NEXT(INFO_PREVSTMT(arg_info))
     );
 
     DBUG_PRINT("DSEfor", ("Point 4"));
@@ -117,18 +140,20 @@ node *DSFWfor(node *arg_node, info *arg_info)
 
     DBUG_PRINT("DSEfor", ("Point 5"));
 
-    node *block = TBmakeStmts(
-        TBmakeAssign(
-            COPYdoCopy(whileLoopVar),
-            TBmakeBinop(TY_bool, BO_add, COPYdoCopy(whileLoopVar), COPYdoCopy(step))
-        ),
-        FOR_BLOCK(arg_node)
-    );
+    node *tail = FOR_BLOCK(arg_node);
 
+    while (STMTS_NEXT(tail)) {
+        tail = STMTS_NEXT(tail);
+    }
+
+    STMTS_NEXT(tail) = TBmakeAssign(
+        COPYdoCopy(whileLoopVar),
+        TBmakeBinop(TY_bool, BO_add, COPYdoCopy(whileLoopVar), COPYdoCopy(step))
+    );
     DBUG_PRINT("DSEfor", ("Point 6"));
 
     // Cond (expr) block(Stmts)
-    node *whileLoop = TBmakeWhile(cond, block);
+    node *whileLoop = TBmakeWhile(cond, FOR_BLOCK(arg_node));
 
     // Now the while loop is created, the old FOR loop may be removed and replaced by the new while lookup
     FOR_BLOCK(arg_node) = NULL;
