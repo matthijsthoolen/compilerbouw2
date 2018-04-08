@@ -34,7 +34,7 @@ typedef struct CONSTANT_LIST_ITEM {
 
 typedef struct IMPORT_VAR_ITEM {
     int index;
-    char name;
+    char* name;
     type type;
 } importVarItem;
 
@@ -140,15 +140,30 @@ static int addIntConstant(info *arg_info, int value)
     DBUG_RETURN(item->index);
 }
 
-static int addImportVar(info *arg_info, char name, type type) {
+static int addImportVar(info *arg_info, node *arg_node) {
     DBUG_ENTER("addImportVar");
 
     importVarItem *item;
 
+    list *current = INFO_IMPORTVARLIST(arg_info);
+
+    // If float value is already in the list, return the index
+    while((current = current->next)) {
+        item = current->value;
+
+        if (STReq(item->name, VAR_NAME(arg_node))) {
+            DBUG_PRINT("GBC", ("Constant '%s' already in list", item->name));
+            DBUG_RETURN(item->index);
+        }
+        item = NULL;
+    }
+
     item = MEMmalloc(sizeof(listItem));
     item->index  = list_length(INFO_IMPORTVARLIST(arg_info));
-    item->type   = type;
-    item->name   = name;
+    item->type   = VARDEF_TY(VAR_DECL(arg_node));
+    item->name   = STRcpy(VAR_NAME(arg_node));
+
+    DBUG_PRINT("GBC", ("Added constant %s", item->name));
 
     list_reversepush(INFO_IMPORTVARLIST(arg_info), item);
 
@@ -215,12 +230,19 @@ node *GBCprogram(node *arg_node, info *arg_info)
 
     PROGRAM_NEXT(arg_node) = TRAVopt(PROGRAM_NEXT(arg_node), arg_info);
 
+    DBUG_PRINT("GBC", ("VERBOSITY LVL %d", global.verbosity));
+
     if (PROGRAM_ISGLOBAL(arg_node) == TRUE) {
-        fprintf(outfile, "\n ; constants: \n");
+        fprintf(outfile, "\n");
+        if (global.verbosity >= 1) {
+            fprintf(outfile, " ; constants: \n");
+        }
 
         printConstants(arg_info);
 
-        fprintf(outfile, "\n ; export functions:\n");
+        if (global.verbosity >= 1) {
+            fprintf(outfile, "\n ; export functions:\n");
+        }
 
         node *declarations = arg_node;
         node *fun;
@@ -236,11 +258,31 @@ node *GBCprogram(node *arg_node, info *arg_info)
             declarations = PROGRAM_NEXT(declarations);
         }
 
-        fprintf(outfile, "\n ; global vardefs\n");
+        if (global.verbosity >= 1) {
+            fprintf(outfile, "\n ; export vars:\n");
+        }
+
+        declarations = arg_node;
+        node *vardef;
+
+        while (declarations != NULL) {
+            if (NODE_TYPE(PROGRAM_HEAD(declarations)) == N_vardef && VARDEF_PREFIX(PROGRAM_HEAD(declarations)) == global_prefix_export) {
+                vardef = PROGRAM_HEAD(declarations);
+                fprintf(outfile, ".exportvar \"%s\" %d\n" , VARDEF_ID(vardef), SYMBOLTABLEENTRY_INDEX(VARDEF_SYMBOLTABLEENTRY(vardef)));
+            }
+
+            declarations = PROGRAM_NEXT(declarations);
+        }
+
+        if (global.verbosity >= 1) {
+            fprintf(outfile, "\n ; global vardefs\n");
+        }
 
         printGlobalVardefs(arg_info);
 
-        fprintf(outfile, "\n ; import functions:\n");
+        if (global.verbosity >= 1) {
+            fprintf(outfile, "\n ; import functions:\n");
+        }
 
         declarations = arg_node;
 
@@ -265,7 +307,11 @@ node *GBCprogram(node *arg_node, info *arg_info)
             declarations = PROGRAM_NEXT(declarations);
         }
 
-        fprintf(outfile, "\n\n");
+        if (global.verbosity >= 1) {
+            fprintf(outfile, "\n ; import vars: \n");
+        }
+
+        printImportVars(arg_info);
     }
 
     DBUG_RETURN(arg_node);
@@ -280,13 +326,15 @@ node *GBCfun(node *arg_node, info *arg_info)
     }
 
     // Print some debug information
-    fprintf(
-        outfile,
-        "\n; function '%s' with %d parameters and %d local vars\n",
-        FUN_ID(arg_node),
-        SYMBOLTABLE_PARAMCOUNT(FUN_SYMBOLTABLE(arg_node)),
-        SYMBOLTABLE_VARCOUNT(FUN_SYMBOLTABLE(arg_node))
-    );
+    if (global.verbosity >= 1) {
+        fprintf(
+            outfile,
+            "\n; function '%s' with %d parameters and %d local vars\n",
+            FUN_ID(arg_node),
+            SYMBOLTABLE_PARAMCOUNT(FUN_SYMBOLTABLE(arg_node)),
+            SYMBOLTABLE_VARCOUNT(FUN_SYMBOLTABLE(arg_node))
+        );
+    }
 
     fprintf(outfile, "%s:\n", FUN_ID(arg_node));
 
@@ -371,13 +419,14 @@ node *GBCvardef(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCvardef");
 
-    if (INFO_GLOBAL(arg_info) == TRUE || SYMBOLTABLEENTRY_NESTINGLVL(VARDEF_SYMBOLTABLEENTRY(arg_node)) == 0) {
-        listItem *item = MEMmalloc(sizeof(listItem));
+    if (VARDEF_GLOBAL(arg_node) == TRUE || SYMBOLTABLEENTRY_NESTINGLVL(VARDEF_SYMBOLTABLEENTRY(arg_node)) == 0) {
+        if (VARDEF_PREFIX(arg_node) != global_prefix_extern) {
+            listItem *item = MEMmalloc(sizeof(listItem));
 
-        item->index  = list_length(INFO_CONSTANTSLIST(arg_info));
-        item->type   = VARDEF_TY(arg_node);
-
-        list_reversepush(INFO_GLOBALSLIST(arg_info), item);
+            item->index  = list_length(INFO_CONSTANTSLIST(arg_info));
+            item->type   = VARDEF_TY(arg_node);
+            list_reversepush(INFO_GLOBALSLIST(arg_info), item);
+        }
     }
 
     // nothing to do here
@@ -449,11 +498,12 @@ node *GBCvar(node *arg_node, info *arg_info)
         symbolTableEntry = FUNPARAM_SYMBOLTABLEENTRY(VAR_DECL(arg_node));
     }
 
-    DBUG_PRINT("GBC", ("Tralalala %d - %d - %d", SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry), SYMBOLTABLEENTRY_INDEX(symbolTableEntry), SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry)));
+    DBUG_PRINT("GBC", ("SymbolTableData %d - %d - %d", SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry), SYMBOLTABLEENTRY_INDEX(symbolTableEntry), SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry)));
 
     switch (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry)) {
         case -1:
             scopeStr = "e";
+            addImportVar(arg_info, arg_node);
             break;
         case 0:
             scopeStr = "g";
@@ -465,7 +515,7 @@ node *GBCvar(node *arg_node, info *arg_info)
     int index = SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry);
     DBUG_PRINT("GBC", ("%s", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry))));
 
-    if (index < 4 && SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) != 0) {
+    if (index < 4 && SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) > 0) {
         fprintf(outfile, "    %sload_%d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), index);
     } else {
         fprintf(outfile, "    %sload%s %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), scopeStr, index);

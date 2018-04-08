@@ -109,4 +109,5 @@ TEST_CIVAS := ../../../bin/civas
 TEST_CIVVM := ../../../bin/civvm
 
 # Path to your compiler binary, relative to the root directory.
+#TEST_CIVCC := ../../../bin/civcc
 TEST_CIVCC := bin/civicc

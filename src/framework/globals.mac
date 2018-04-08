@@ -79,7 +79,7 @@ GLOBAL( bool, treecheck, FALSE)
  * Compile time information globals
  */
 
-GLOBAL( int, verbosity, 3)
+GLOBAL( int, verbosity, 0)
 
 
 /*
