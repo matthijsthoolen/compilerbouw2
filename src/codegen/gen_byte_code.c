@@ -102,8 +102,8 @@ static int addFloatConstant(info *arg_info, float value)
 
     item = MEMmalloc(sizeof(listItem));
 
-    item->index  = list_length(INFO_CONSTANTSLIST(arg_info));
-    item->type   = TY_float;
+    item->index    = list_length(INFO_CONSTANTSLIST(arg_info));
+    item->type     = TY_float;
     item->valFloat = value;
 
     list_reversepush(INFO_CONSTANTSLIST(arg_info), item);
@@ -380,8 +380,6 @@ node *GBCfunparam(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCfunparam");
 
-
-
     DBUG_RETURN(arg_node);
 }
 
@@ -434,12 +432,6 @@ node *GBCvardef(node *arg_node, info *arg_info)
         DBUG_RETURN(arg_node);
     }
 
-    // if (VARDEF_TY(arg_node) == TY_int) {
-    //     addIntConstant(arg_info, INT_VALUE(VARDEF_INIT(arg_node)));
-    // } else if (VARDEF_TY(arg_node) == TY_float) {
-    //     addFloatConstant(arg_info, FLOAT_VALUE(VARDEF_INIT(arg_node)));
-    // }
-
     DBUG_RETURN(arg_node);
 }
 
@@ -477,8 +469,6 @@ node *GBCassign(node *arg_node, info *arg_info)
     if (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) == 0) {
         global = "g";
     }
-
-    // DBUG_PRINT("GBCassign", ("Node type = %s", get_type_name(NODE_TYPE(ASSIGN_RIGHT(arg_node)))));
 
     fprintf(outfile, "    %sstore%s %d\n", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry)), global, SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry));
 
@@ -733,7 +723,6 @@ node *GBCfor(node *arg_node, info *arg_info)
 
 void export_assembly(info *info) {
 }
-
 
 /*
  * Traversal start function

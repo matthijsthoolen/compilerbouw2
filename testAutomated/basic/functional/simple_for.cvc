@@ -8,8 +8,8 @@ export int main()
 
 	for(int i=0,m)
 	{
-            printInt(i);
-			printSpaces(1);
+    	printInt(i);
+		printSpaces(1);
 	}
 	printNewlines(1);
 	return 0;
