@@ -493,7 +493,7 @@ node *GBCfloat(node *arg_node, info *arg_info)
     }
 
     FLOAT_CONSTINDEX(arg_node) = addFloatConstant(arg_info, FLOAT_VALUE(arg_node));
-    fprintf(outfile, "    fload%s %d\n", scopeStr, list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
+    fprintf(outfile, "    fload%s %d\n", scopeStr, FLOAT_CONSTINDEX(arg_node));
 
     DBUG_RETURN(arg_node);
 }
@@ -516,7 +516,7 @@ node *GBCint(node *arg_node, info *arg_info)
             break;
         default:
             INT_CONSTINDEX(arg_node) = addIntConstant(arg_info, INT_VALUE(arg_node));
-            fprintf(outfile, "    iload%s %d\n", scopeStr, list_length(INFO_CONSTANTSLIST(arg_info)) - 1);
+            fprintf(outfile, "    iload%s %d\n", scopeStr, INT_CONSTINDEX(arg_node));
     }
 
     DBUG_RETURN(arg_node);
