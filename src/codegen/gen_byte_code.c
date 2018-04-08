@@ -438,6 +438,15 @@ node *GBCmonop(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCbinop");
 
+    TRAVdo(MONOP_EXPR(arg_node), arg_info);
+
+    fprintf(
+        outfile,
+        "    %s%s\n",
+        getShortNodeType(arg_node),
+        MONOP_OP(arg_node) == MO_neg ? "neg" : "not"
+    );
+
     DBUG_RETURN(arg_node);
 }
 

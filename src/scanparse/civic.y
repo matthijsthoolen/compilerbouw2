@@ -269,7 +269,7 @@ expr3: expr3 binop3 expr2               { $$ = TBmakeBinop(TY_unknown, $2, $1, $
      | expr2                            { $$ = $1; }
      ;
 expr2: BRACKET_L ty BRACKET_R expr2     { $$ = TBmakeCast($2, $4); }
-     | monop2 expr2                     { $$ = TBmakeMonop($1, $2); }
+     | monop2 expr2                     { $$ = TBmakeMonop(TY_unknown, $1, $2); }
      | expr0                            { $$ = $1; }
      ;
 expr0: call                             { $$ = $1; }

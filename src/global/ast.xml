@@ -1109,6 +1109,17 @@
                 </son>
             </sons>
             <attributes>
+                <attribute name="Type">
+                    <type name="Type">
+                        <targets>
+                            <target mandatory="yes">
+                                <phases>
+                                    <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
                 <description>operator type</description>
                 <attribute name="Op">
                     <type name="MonOp">

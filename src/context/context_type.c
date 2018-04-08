@@ -287,6 +287,8 @@ node *CATCmonop(node *arg_node, info *arg_info)
             break;
     }
 
+    MONOP_TYPE(arg_node) = getNodeType(MONOP_EXPR(arg_node));
+
     DBUG_RETURN(arg_node);
 }
 

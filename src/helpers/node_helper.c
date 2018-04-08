@@ -78,6 +78,10 @@ type getNodeType(node *arg_node)
             DBUG_PRINT("GETNODETYPE", ("N_binop"));
             type = BINOP_TYPE(arg_node);
             break;
+        case N_monop:
+            DBUG_PRINT("GETNODETYPE", ("N_monop"));
+            type = MONOP_TYPE(arg_node);
+            break;
         case N_fun:
             DBUG_PRINT("GETNODETYPE", ("N_fun"));
             type = FUN_RETTY(arg_node);
