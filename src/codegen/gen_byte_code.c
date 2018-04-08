@@ -330,7 +330,7 @@ node *GBCvardef(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("GBCvardef");
 
-    if (INFO_GLOBAL(arg_info) == TRUE) {
+    if (INFO_GLOBAL(arg_info) == TRUE || SYMBOLTABLEENTRY_NESTINGLVL(VARDEF_SYMBOLTABLEENTRY(arg_node)) == 0) {
         listItem *item = MEMmalloc(sizeof(listItem));
 
         item->index  = list_length(INFO_CONSTANTSLIST(arg_info));
@@ -428,7 +428,10 @@ node *GBCcast(node *arg_node, info *arg_info)
     TRAVdo(CAST_EXPR(arg_node), arg_info);
 
     if (getNodeType(CAST_EXPR(arg_node)) != TY_bool && CAST_TY(arg_node) != TY_bool) {
-        fprintf(outfile, "    %s2%s\n", getShortNodeType(CAST_EXPR(arg_node)), getShortType(CAST_TY(arg_node)));
+        // Prevent cast to same type
+        if (getShortNodeType(CAST_EXPR(arg_node)) != getShortType(CAST_TY(arg_node))) {
+            fprintf(outfile, "    %s2%s\n", getShortNodeType(CAST_EXPR(arg_node)), getShortType(CAST_TY(arg_node)));
+        }
     }
 
     DBUG_RETURN(arg_node);
