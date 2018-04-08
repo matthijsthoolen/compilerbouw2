@@ -18,6 +18,7 @@
 #include "copy_node.h"
 #include "copy.h"
 #include "free_node.h"
+#include "math.h"
 
 struct INFO {
     type returnType;

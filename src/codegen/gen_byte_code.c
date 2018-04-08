@@ -407,7 +407,9 @@ node *GBCvar(node *arg_node, info *arg_info)
         symbolTableEntry = FUNPARAM_SYMBOLTABLEENTRY(VAR_DECL(arg_node));
     }
 
-    char *scopeStr = (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) == 0) ? "g" : "c";
+    DBUG_PRINT("GBC", ("Tralalala %d - %d - %d", SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry), SYMBOLTABLEENTRY_INDEX(symbolTableEntry), SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry)));
+
+    char *scopeStr = (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) == 0) ? "g" : "";
 
     int index = SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry);
     DBUG_PRINT("GBC", ("%s", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry))));
