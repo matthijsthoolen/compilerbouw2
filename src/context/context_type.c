@@ -15,6 +15,9 @@
 #include "dbug.h"
 #include "str.h"
 #include "node_helper.h"
+#include "copy_node.h"
+#include "copy.h"
+#include "free_node.h"
 
 struct INFO {
     type returnType;
@@ -106,7 +109,7 @@ node *CATCreturn(node *arg_node, info *arg_info)
     DBUG_ENTER("CATCreturn");
 
     if (RETURN_EXPR(arg_node) != NULL) {
-        TRAVdo(RETURN_EXPR(arg_node), arg_info);
+        RETURN_EXPR(arg_node) = TRAVdo(RETURN_EXPR(arg_node), arg_info);
         RETURN_TY(arg_node) = INFO_TYPE(arg_info);
     } else {
         RETURN_TY(arg_node) = TY_void;
@@ -141,7 +144,7 @@ node *CATCassign(node *arg_node, info *arg_info)
         leftType = FUNPARAM_TY(VAR_DECL(ASSIGN_LEFT(arg_node)));
     }
 
-    TRAVdo(ASSIGN_RIGHT(arg_node), arg_info);
+    ASSIGN_RIGHT(arg_node) = TRAVdo(ASSIGN_RIGHT(arg_node), arg_info);
 
     if (leftType != TY_unknown && INFO_TYPE(arg_info) != TY_unknown && leftType != INFO_TYPE(arg_info)) {
         CTIerror(
@@ -220,7 +223,7 @@ node *CATCif(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCif");
 
-    TRAVdo(IF_COND(arg_node), arg_info);
+    IF_COND(arg_node) = TRAVdo(IF_COND(arg_node), arg_info);
 
     if (INFO_TYPE(arg_info) != TY_bool) {
         CTIerror(
@@ -261,7 +264,7 @@ node *CATCmonop(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCmonop");
 
-    TRAVdo(MONOP_EXPR(arg_node), arg_info);
+    MONOP_EXPR(arg_node) = TRAVdo(MONOP_EXPR(arg_node), arg_info);
 
     switch(MONOP_OP(arg_node))
     {
@@ -304,10 +307,10 @@ node *CATCbinop(node *arg_node, info *arg_info)
 
     DBUG_ENTER("CATCbinop");
 
-    TRAVdo(BINOP_LEFT(arg_node), arg_info);
+    BINOP_LEFT(arg_node) = TRAVdo(BINOP_LEFT(arg_node), arg_info);
     left = INFO_TYPE(arg_info);
 
-    TRAVdo(BINOP_RIGHT(arg_node), arg_info);
+    BINOP_RIGHT(arg_node) = TRAVdo(BINOP_RIGHT(arg_node), arg_info);
     right = INFO_TYPE(arg_info);
 
     if (left == TY_unknown || right == TY_unknown) {
@@ -411,6 +414,15 @@ node *CATCint(node *arg_node, info *arg_info)
 
     INFO_TYPE(arg_info) = TY_int;
 
+    if (INT_VALUE(arg_node) < 0) {
+        node *monOp = TBmakeMonop(TY_int, MO_neg, TBmakeInt(abs(INT_VALUE(arg_node))));
+
+        arg_node = FREEint(arg_node, arg_info);
+        arg_node = monOp;
+
+        DBUG_RETURN(arg_node);
+    }
+
     DBUG_RETURN(arg_node);
 }
 
@@ -419,6 +431,15 @@ node *CATCfloat(node *arg_node, info *arg_info)
     DBUG_ENTER("CATCfloat");
 
     INFO_TYPE(arg_info) = TY_float;
+
+    if (FLOAT_VALUE(arg_node) < 0.0) {
+        node *monOp = TBmakeMonop(TY_float, MO_neg, TBmakeFloat(fabs(FLOAT_VALUE(arg_node))));
+
+        arg_node = FREEint(arg_node, arg_info);
+        arg_node = monOp;
+
+        DBUG_RETURN(arg_node);
+    }
 
     DBUG_RETURN(arg_node);
 }
@@ -436,7 +457,7 @@ node *CATCcast(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("CATCcast");
 
-    TRAVdo(CAST_EXPR(arg_node), arg_info);
+    CAST_EXPR(arg_node) = TRAVdo(CAST_EXPR(arg_node), arg_info);
 
     switch(INFO_TYPE(arg_info))
     {
@@ -505,7 +526,7 @@ node *CATCcall(node *arg_node, info *arg_info)
     list2 = FUN_PARAMS(CALL_DECL(arg_node));
 
     while (list) {
-        TRAVdo(EXPRLIST_EXPR(list), arg_info);
+        EXPRLIST_EXPR(list) = TRAVdo(EXPRLIST_EXPR(list), arg_info);
         exprType    = INFO_TYPE(arg_info);
         paramType   = FUNPARAM_TY(FUNPARAMLIST_PARAM(list2));
 
@@ -513,8 +534,8 @@ node *CATCcall(node *arg_node, info *arg_info)
             CTIerror(
                 "Row: '%d': incorrect function argument given. Expected %s but got %s for argument nr '%d'",
                 NODE_LINE(EXPRLIST_EXPR(list)),
-                pretty_print_type(exprType),
                 pretty_print_type(paramType),
+                pretty_print_type(exprType),
                 i
             );
         }

@@ -439,9 +439,11 @@ node *GBCcast(node *arg_node, info *arg_info)
 
 node *GBCmonop(node *arg_node, info *arg_info)
 {
-    DBUG_ENTER("GBCbinop");
+    DBUG_ENTER("GBCmonop");
 
     TRAVdo(MONOP_EXPR(arg_node), arg_info);
+
+    DBUG_PRINT("GBCTEST", ("Printing a monop"));
 
     fprintf(
         outfile,
