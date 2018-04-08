@@ -99,7 +99,7 @@ type getNodeType(node *arg_node)
             type = CAST_TY(arg_node);
             break;
         case N_ternop:
-            DBUG_PRINT("GETNODETYPE", ("N_ternop"));
+            DBUG_PRINT("GETNODETYPE", ("N_ternop = %d", TERNOP_TYPE(arg_node)));
             type = TERNOP_TYPE(arg_node);
             break;
         case N_return:

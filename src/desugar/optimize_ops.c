@@ -48,12 +48,12 @@ node *DSOObinop(node *arg_node, info *arg_info)
 
     if (BINOP_OP(arg_node) == BO_or) {
         TernOp = TBmakeTernop(BINOP_LEFT(arg_node), TBmakeBool(TRUE), BINOP_RIGHT(arg_node));
-        TERNOP_TYPE(arg_node) = BO_or;
+        TERNOP_TYPE(TernOp) = BINOP_TYPE(arg_node);
     }
 
     if (BINOP_OP(arg_node) == BO_and) {
         TernOp = TBmakeTernop(BINOP_LEFT(arg_node), BINOP_RIGHT(arg_node), TBmakeBool(FALSE));
-        TERNOP_TYPE(arg_node) = BO_and;
+        TERNOP_TYPE(TernOp) = BINOP_TYPE(arg_node);
     }
 
     BINOP_LEFT(arg_node) = NULL;
