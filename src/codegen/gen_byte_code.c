@@ -15,6 +15,7 @@
 struct INFO {
     list* constants_list;
     list* globals_list;
+    list* importvar_list;
     int labels_if;
     int labels_while;
     int labels_dowhile;
@@ -31,8 +32,15 @@ typedef struct CONSTANT_LIST_ITEM {
     };
 } listItem;
 
+typedef struct IMPORT_VAR_ITEM {
+    int index;
+    char name;
+    type type;
+} importVarItem;
+
 #define INFO_CONSTANTSLIST(n) ((n)->constants_list)
 #define INFO_GLOBALSLIST(n) ((n)->globals_list)
+#define INFO_IMPORTVARLIST(n) ((n)->importvar_list)
 #define INFO_LABELS_IF(n) ((n)->labels_if)
 #define INFO_LABELS_WHILE(n) ((n)->labels_while)
 #define INFO_LABELS_DOWHILE(n) ((n)->labels_dowhile)
@@ -50,7 +58,8 @@ static info *MakeInfo()
     result = MEMmalloc(sizeof(info));
 
     INFO_CONSTANTSLIST(result)  = list_new();
-    INFO_GLOBALSLIST(result)   = list_new();
+    INFO_GLOBALSLIST(result)    = list_new();
+    INFO_IMPORTVARLIST(result)  = list_new();
     INFO_LABELS_IF(result)      = 0;
     INFO_LABELS_WHILE(result)   = 0;
     INFO_LABELS_DOWHILE(result) = 0;
@@ -66,6 +75,7 @@ static info *FreeInfo(info *info)
 
     list_free(INFO_CONSTANTSLIST(info));
     list_free(INFO_GLOBALSLIST(info));
+    list_free(INFO_IMPORTVARLIST(info));
 
     info = MEMfree(info);
 
@@ -130,6 +140,21 @@ static int addIntConstant(info *arg_info, int value)
     DBUG_RETURN(item->index);
 }
 
+static int addImportVar(info *arg_info, char name, type type) {
+    DBUG_ENTER("addImportVar");
+
+    importVarItem *item;
+
+    item = MEMmalloc(sizeof(listItem));
+    item->index  = list_length(INFO_IMPORTVARLIST(arg_info));
+    item->type   = type;
+    item->name   = name;
+
+    list_reversepush(INFO_IMPORTVARLIST(arg_info), item);
+
+    DBUG_RETURN(item->index);
+}
+
 static void printConstants(info *arg_info)
 {
     DBUG_ENTER("printConstants");
@@ -161,6 +186,22 @@ static void printGlobalVardefs(info *arg_info)
         item = current->value;
 
         fprintf(outfile, ".global %s\n", get_type_name(item->type));
+    }
+
+    DBUG_VOID_RETURN;
+}
+
+static void printImportVars(info *arg_info)
+{
+    DBUG_ENTER("printImportVars");
+
+    list *current = INFO_IMPORTVARLIST(arg_info);
+    importVarItem *item;
+
+    while((current = current->next)) {
+        item = current->value;
+
+        fprintf(outfile, ".importvar \"%s\" %s\n", item->name, get_type_name(item->type));
     }
 
     DBUG_VOID_RETURN;
@@ -400,6 +441,7 @@ node *GBCvar(node *arg_node, info *arg_info)
     DBUG_ENTER("GBCvar");
 
     node *symbolTableEntry;
+    char *scopeStr;
 
     if (NODE_TYPE(VAR_DECL(arg_node)) == N_vardef) {
         symbolTableEntry = VARDEF_SYMBOLTABLEENTRY(VAR_DECL(arg_node));
@@ -409,7 +451,16 @@ node *GBCvar(node *arg_node, info *arg_info)
 
     DBUG_PRINT("GBC", ("Tralalala %d - %d - %d", SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry), SYMBOLTABLEENTRY_INDEX(symbolTableEntry), SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry)));
 
-    char *scopeStr = (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry) == 0) ? "g" : "";
+    switch (SYMBOLTABLEENTRY_NESTINGLVL(symbolTableEntry)) {
+        case -1:
+            scopeStr = "e";
+            break;
+        case 0:
+            scopeStr = "g";
+            break;
+        default:
+            scopeStr = "";
+    }
 
     int index = SYMBOLTABLEENTRY_VARINDEX(symbolTableEntry);
     DBUG_PRINT("GBC", ("%s", getShortType(SYMBOLTABLEENTRY_TYPE(symbolTableEntry))));

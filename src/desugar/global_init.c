@@ -62,7 +62,9 @@ node *DSGIprogram(node *arg_node, info *arg_info)
         if (NODE_TYPE(PROGRAM_HEAD(declarations)) == N_vardef) {
             node *varDef = PROGRAM_HEAD(declarations);
 
-            if (VARDEF_PREFIX(varDef) == global_prefix_var && VARDEF_INIT(varDef) != NULL) {
+            DBUG_PRINT("DSGIVARDEF", ("Found global vardef '%s'", VARDEF_ID(varDef)));
+
+            if (VARDEF_GLOBAL(varDef) == TRUE && VARDEF_INIT(varDef) != NULL) {
 
                 DBUG_PRINT("DSGIVARDEF", ("Found global vardef '%s'", VARDEF_ID(varDef)));
 

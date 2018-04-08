@@ -146,7 +146,7 @@ node *CAVvardef(node *arg_node, info *arg_info)
     DBUG_PRINT("CAV", ("Processing variable definition '%s'", VARDEF_ID(arg_node)));
 
     //if global prefix is none (so just local) else add to global list
-    if (VARDEF_PREFIX(arg_node) == global_prefix_none) {
+    if (VARDEF_GLOBAL(arg_node) == FALSE) {
 
         DBUG_PRINT("CAV", ("Variable %s is local", VARDEF_ID(arg_node)));
 

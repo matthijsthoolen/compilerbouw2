@@ -120,13 +120,23 @@ node *CAvardef(node *arg_node, info *arg_info)
         DBUG_PRINT("CA", ("Sending local scope"));
     }
 
+    int nestingLvl;
+
+    if (VARDEF_PREFIX(arg_node) == global_prefix_extern) {
+        nestingLvl = -1;
+    } else if (VARDEF_GLOBAL(arg_node) == TRUE || INFO_GLOBAL(arg_info) == TRUE) {
+        nestingLvl = 0;
+    } else {
+        nestingLvl = 1;
+    }
+
     node *symbolTableEntry = addToSymboltable(
         (INFO_GLOBAL(arg_info) == TRUE) ? INFO_GLOBSYMBOLTABLE(arg_info) : INFO_CURSYMBOLTABLE(arg_info),
         arg_node,
         VARDEF_ID(arg_node),
         VARDEF_TY(arg_node),
         (INFO_GLOBAL(arg_info) == TRUE) ? INFO_GLOBCONSTCOUNT(arg_info) : INFO_CONSTCOUNT(arg_info),
-        (INFO_GLOBAL(arg_info) == TRUE) ? 0 : 1,
+        nestingLvl,
         (INFO_GLOBAL(arg_info) == TRUE) ? SYMBOLTABLE_VARCOUNT(INFO_GLOBSYMBOLTABLE(arg_info)) : SYMBOLTABLE_VARCOUNT(INFO_CURSYMBOLTABLE(arg_info)) + SYMBOLTABLE_PARAMCOUNT(INFO_CURSYMBOLTABLE(arg_info))
     );
 

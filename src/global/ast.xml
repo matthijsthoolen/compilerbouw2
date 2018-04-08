@@ -577,6 +577,18 @@
                         </targets>
                     </type>
                 </attribute>
+                <attribute name="Global">
+                    <description>Is this a global vardef</description>
+                    <type name="Bool">
+                        <targets>
+                            <target mandatory="no">
+                                <phases>
+                                    <all/>
+                                </phases>
+                            </target>
+                        </targets>
+                    </type>
+                </attribute>
             </attributes>
         </node>
 

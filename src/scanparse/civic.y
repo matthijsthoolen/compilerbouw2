@@ -91,7 +91,7 @@ decl: fundef
     }
     | vardef
     {
-        VARDEF_PREFIX($1) = global_prefix_var;
+        VARDEF_GLOBAL($1) = TRUE;
         $$ = $1;
     };
 
@@ -131,7 +131,9 @@ vardef: global_prefix ty ID LET expr SEMICOLON
     }
     | global_prefix ty ID SEMICOLON
     {
-        $$ = TBmakeVardef($1, $2, $3, NULL, NULL, TBmakeInt(0));
+        node *vardef = TBmakeVardef($1, $2, $3, NULL, NULL, TBmakeInt(0));
+        VARDEF_PREFIX(vardef) = $1;
+        $$ = vardef;
     };
 
 funheader: global_prefix ty ID BRACKET_L fun_params BRACKET_R

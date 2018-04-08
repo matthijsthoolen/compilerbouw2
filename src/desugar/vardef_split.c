@@ -110,7 +110,7 @@ node *DSVSvardef(node *arg_node, info *arg_info)
 
     DBUG_ENTER("DSVSvardef");
 
-    if (VARDEF_PREFIX(arg_node) == global_prefix_var) {
+    if (VARDEF_GLOBAL(arg_node) == TRUE) {
         VARDEF_WASINIT(arg_node) = FALSE;
         DBUG_RETURN(arg_node);
     }
