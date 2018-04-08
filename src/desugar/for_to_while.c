@@ -18,11 +18,13 @@ struct INFO {
     node *curFun;
     node *curStmt;
     node *prevStmt;
+    list *newStmts;
 };
 
 #define INFO_CURFUN(n)             ((n)->curFun)
 #define INFO_CURSTMT(n)            ((n)->curStmt)
 #define INFO_PREVSTMT(n)           ((n)->prevStmt)
+#define INFO_NEWSTMTS(n)           ((n)->newStmts)
 
 static info *MakeInfo()
 {
@@ -35,6 +37,7 @@ static info *MakeInfo()
     INFO_CURFUN(result) = NULL;
     INFO_PREVSTMT(result) = NULL;
     INFO_CURSTMT(result) = NULL;
+    INFO_NEWSTMTS(result) = list_new();
 
     DBUG_RETURN(result);
 }
@@ -42,6 +45,8 @@ static info *MakeInfo()
 static info *FreeInfo(info *info)
 {
     DBUG_ENTER("FreeInfo");
+
+    list_free(INFO_NEWSTMTS(info));
 
     info = MEMfree(info);
 
@@ -57,6 +62,8 @@ node *DSFWfun(node *arg_node, info *arg_info)
 
     TRAVopt(FUN_BODY(arg_node), arg_info);
 
+    // INNERBLOCK_STMTS(FUN_BODY(arg_node)) = stmts;
+
     INFO_CURFUN(arg_info) = tmp;
 
     DBUG_RETURN(arg_node);
@@ -69,8 +76,90 @@ node *DSFWinnerblock(node *arg_node, info *arg_info)
     TRAVopt(INNERBLOCK_VARS(arg_node), arg_info);
 
     INFO_CURSTMT(arg_info) = INNERBLOCK_STMTS(arg_node);
+    node *holdMe = INNERBLOCK_STMTS(arg_node);
 
     TRAVopt(INNERBLOCK_STMTS(arg_node), arg_info);
+
+    if (list_length(INFO_NEWSTMTS(arg_info)) > 0) {
+
+        node *next = holdMe;
+        node *prev = NULL;
+        node *newStmts = NULL;
+
+        while (STMTS_NEXT(next)) {
+            DBUG_PRINT("ForWhile", ("STOP! %d", NODE_TYPE(STMTS_STMT(next))));
+            if (NODE_TYPE(STMTS_STMT(next)) == N_while) {
+                DBUG_PRINT("ForWhile", ("STOP!"));
+                holdMe = next;
+                break;
+            }
+
+            if (newStmts == NULL) {
+                newStmts = TBmakeStmts(
+                    STMTS_STMT(next),
+                    NULL
+                );
+            } else {
+                node *tail = newStmts;
+
+                while (STMTS_NEXT(tail)) {
+                    tail = STMTS_NEXT(tail);
+                }
+                STMTS_NEXT(tail) = TBmakeStmts(
+                    STMTS_STMT(next),
+                    NULL
+                );
+            }
+
+            prev = next;
+            next = STMTS_NEXT(next);
+        }
+
+        node *newStmt;
+        list *current = INFO_NEWSTMTS(arg_info);
+
+        // If int value is already in the list, return the index
+        while((current = current->next)) {
+            DBUG_PRINT("ForWhile", ("AddANewStmt"));
+            newStmt = current->value;
+
+            if (newStmts == NULL) {
+                DBUG_PRINT("ForWhile", ("Create New"));
+                newStmts = TBmakeStmts(
+                    newStmt,
+                    NULL
+                );
+            } else {
+                DBUG_PRINT("ForWhile", ("Just add"));
+
+                node *tail = newStmts;
+
+                while (STMTS_NEXT(tail)) {
+                    tail = STMTS_NEXT(tail);
+                }
+                STMTS_NEXT(tail) = TBmakeStmts(
+                    newStmt,
+                    NULL
+                );
+            }
+        }
+
+        // STMTS_STMT(newStmts) = TBmakeAssign(TBmakeVar("Test", NULL), TBmakeInt(5));
+
+        // Get all the new stmts
+        // newStmts = INFO_NEWSTMTS(arg_info);
+        //
+        if (newStmts != NULL) {
+            node *tail = newStmts;
+
+            while (STMTS_NEXT(tail)) {
+                tail = STMTS_NEXT(tail);
+            }
+            STMTS_NEXT(tail) = holdMe;
+
+            INNERBLOCK_STMTS(arg_node) = newStmts;
+        }
+    }
 
     DBUG_RETURN(arg_node);
 }
@@ -100,9 +189,13 @@ node *DSFWfor(node *arg_node, info *arg_info)
 
     DBUG_PRINT("DSEfor", ("Point 2"));
 
-    STMTS_NEXT(INFO_PREVSTMT(arg_info)) = TBmakeStmts(
-        assign,
-        STMTS_NEXT(INFO_PREVSTMT(arg_info))
+    // STMTS_NEXT(INFO_PREVSTMT(arg_info)) = TBmakeStmts(
+    //     assign,
+    //     STMTS_NEXT(INFO_PREVSTMT(arg_info))
+    // );
+    list_reversepush(
+        INFO_NEWSTMTS(arg_info),
+        assign
     );
 
     node *step       = TBmakeVar(STRcat(VAR_NAME(whileLoopVar), "_step"), NULL);
@@ -111,9 +204,13 @@ node *DSFWfor(node *arg_node, info *arg_info)
     node *stepVardef = TBmakeVardef(0, TY_int, VAR_NAME(step), NULL, NULL, TBmakeInt(0));
     VAR_DECL(step)   = stepVardef;
     INNERBLOCK_VARS(innerblock)         = TBmakeVardeflist(stepVardef, INNERBLOCK_VARS(innerblock));
-    STMTS_NEXT(INFO_PREVSTMT(arg_info)) = TBmakeStmts(
-        TBmakeAssign(COPYdoCopy(step), COPYdoCopy(FOR_STEP(arg_node))),
-        STMTS_NEXT(INFO_PREVSTMT(arg_info))
+    // STMTS_NEXT(INFO_PREVSTMT(arg_info)) = TBmakeStmts(
+    //     TBmakeAssign(COPYdoCopy(step), COPYdoCopy(FOR_STEP(arg_node))),
+    //     STMTS_NEXT(INFO_PREVSTMT(arg_info))
+    // );
+    list_reversepush(
+        INFO_NEWSTMTS(arg_info),
+        TBmakeAssign(COPYdoCopy(step), COPYdoCopy(FOR_STEP(arg_node)))
     );
 
     DBUG_PRINT("DSEfor", ("Point 3"));
@@ -124,10 +221,15 @@ node *DSFWfor(node *arg_node, info *arg_info)
     node *upperVardef = TBmakeVardef(0, TY_int, VAR_NAME(upper), NULL, NULL, TBmakeInt(0));
     VAR_DECL(upper)   = upperVardef;
     INNERBLOCK_VARS(innerblock) = TBmakeVardeflist(upperVardef, INNERBLOCK_VARS(innerblock));
-    STMTS_NEXT(INFO_PREVSTMT(arg_info)) = TBmakeStmts(
-        TBmakeAssign(COPYdoCopy(upper), COPYdoCopy(FOR_UPPER(arg_node))),
-        STMTS_NEXT(INFO_PREVSTMT(arg_info))
+    // STMTS_NEXT(INFO_PREVSTMT(arg_info)) = TBmakeStmts(
+    //     TBmakeAssign(COPYdoCopy(upper), COPYdoCopy(FOR_UPPER(arg_node))),
+    //     STMTS_NEXT(INFO_PREVSTMT(arg_info))
+    // );
+    list_reversepush(
+        INFO_NEWSTMTS(arg_info),
+        TBmakeAssign(COPYdoCopy(upper), COPYdoCopy(FOR_UPPER(arg_node)))
     );
+
 
     DBUG_PRINT("DSEfor", ("Point 4"));
 
