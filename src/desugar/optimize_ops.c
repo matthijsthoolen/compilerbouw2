@@ -80,7 +80,7 @@ node *DSOOcast(node *arg_node, info *arg_info)
             ternOp = TBmakeTernop(
                 CAST_EXPR(arg_node),
                 (CAST_TY(arg_node) == TY_int) ? TBmakeInt(1) : TBmakeFloat(1.0),
-                (CAST_TY(arg_node) == TY_int) ? TBmakeInt(0) : TBmakeFloat(1.0)
+                (CAST_TY(arg_node) == TY_int) ? TBmakeInt(0) : TBmakeFloat(0.0)
             );
             TERNOP_TYPE(ternOp) = CAST_TY(arg_node);
 
